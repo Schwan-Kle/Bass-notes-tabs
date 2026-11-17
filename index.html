@@ -100,7 +100,40 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 #pad.closed .keys,#pad.closed .hint{display:none}
 #pad.m-note #fretKeys{display:none}
 #pad:not(.m-note) .nk{display:none}
-#dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.songbar{display:flex;align-items:center;gap:8px}
+#menuBtn{font-weight:700;color:var(--main);white-space:nowrap}
+.stitle{flex:1;min-width:0;text-align:left;border:none;background:transparent;font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.drawer{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:6}
+.drawer.open{display:block}
+.dpanel{position:absolute;left:0;top:0;bottom:0;width:min(420px,92vw);background:var(--surface);display:flex;flex-direction:column;gap:8px;padding:12px;box-shadow:2px 0 12px rgba(0,0,0,.25)}
+.dhead{display:flex;align-items:center;justify-content:space-between}
+.dhead h2{margin:0;font-size:18px;color:var(--main)}
+.dacts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#dSearch{background:var(--bg);border:1px solid var(--line);border-radius:6px;min-height:36px;padding:0 8px}
+#dList{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+.sitem{border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.sitem.cur{border-color:var(--main);border-width:2px}
+.srow{display:flex}
+.sopen{flex:1;min-width:0;text-align:left;border:none;background:transparent;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.sname{font-weight:700;overflow-wrap:anywhere}
+.sname em{font-style:normal;font-weight:400;font-size:12px;color:var(--accent)}
+.sopen small{color:var(--muted);font-size:12px}
+.smore{border:none;border-left:1px solid var(--line);border-radius:0 6px 6px 0;min-width:44px;font-size:18px}
+.sacts{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-top:1px solid var(--line);background:var(--shade)}
+.sacts .ren{display:flex;gap:6px;width:100%}
+.sacts .ren input{flex:1;min-width:0}
+.sacts button{flex:1 1 auto}
+button.danger{color:var(--warn);border-color:var(--warn)}
+.empty{color:var(--muted);padding:8px}
+.dfoot{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:8px}
+.dfoot p{margin:0;font-size:12px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:7}
+.modal.open{display:flex}
+.modal .box{background:var(--surface);border-radius:8px;padding:14px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:8px}
+.modal h2{margin:0;font-size:17px;color:var(--main)}
+.modal p{margin:0;font-size:13px;color:var(--muted)}
+.plist{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:8}
 #dlg.open{display:flex}
 #dlg .box{background:var(--surface);border-radius:8px;padding:14px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px}
 #dlg h2{margin:0;font-size:17px;color:var(--main)}
@@ -111,6 +144,10 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 </head>
 <body>
 <header>
+  <div class="songbar">
+    <button id="menuBtn" aria-label="Meine Stücke öffnen">☰ Meine Stücke</button>
+    <button id="songTitle" class="stitle" title="Stück wechseln, umbenennen, sichern"></button>
+  </div>
   <div class="transport">
     <button id="play" class="primary">▶ Start</button>
     <div class="tempo">
@@ -121,7 +158,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
     </div>
   </div>
   <details id="optsBox">
-    <summary>Metronom, Schleife, Stück</summary>
+    <summary>Metronom, Schleife, Einstellungen</summary>
     <div class="opts">
       <div class="row">
         <h2>Metronom</h2>
@@ -147,11 +184,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
         <button id="loopAll">Alle Takte</button>
       </div>
       <div class="row">
-        <h2>Stück</h2>
-        <select id="songSel" aria-label="Stück wählen"></select>
-        <input type="text" id="songName" aria-label="Name des Stücks" maxlength="60">
-        <button id="songNew">Neues Stück</button>
-        <button id="songDel">Stück löschen</button>
+        <h2>Dieses Stück</h2>
         <label>Taktart <select id="sig"><option>4/4</option><option>3/4</option><option>2/4</option><option>6/8</option></select></label>
         <label>Saiten <select id="strings"><option value="4">4 (E A D G)</option><option value="5">5 (H E A D G)</option></select></label>
         <label>Tonart <select id="keySel">
@@ -166,7 +199,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
         </select></label>
         <label>Ohne Tonart schreiben als <select id="accMode"><option value="b">♭</option><option value="#">♯</option></select></label>
         <label><input type="checkbox" id="showNotes"> Noten über der Tabulatur anzeigen</label>
-        <button id="exportBtn">Sichern / Laden als Text</button>
+
       </div>
     </div>
   </details>
@@ -213,17 +246,34 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
     <button id="undoBtn">↶ Zurück</button>
   </div>
 </section>
+<div id="drawer" class="drawer" aria-hidden="true">
+  <div class="dpanel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="dhead"><h2 id="dTitle">Meine Stücke</h2><button id="drawerClose" aria-label="Menü schließen">✕</button></div>
+    <div class="dacts">
+      <button id="dNew" class="primary">+ Neues Stück</button>
+      <button id="dOpen">Datei öffnen</button>
+    </div>
+    <input type="search" id="dSearch" placeholder="Stück suchen" aria-label="Stück suchen">
+    <ul id="dList"></ul>
+    <div class="dfoot">
+      <button id="dBackup">Alle Stücke sichern (Backup-Datei)</button>
+      <button id="dPaste">Text einfügen</button>
+      <p>„Datei öffnen“ lädt eigene Stücke und Backups (.json) sowie Noten als MusicXML (.musicxml, .xml, .mxl), z. B. aus MuseScore oder einer Notenscanner-App. Alles wird automatisch auf diesem Gerät gespeichert.</p>
+    </div>
+  </div>
+</div>
+<input type="file" id="fileIn" hidden>
+<div id="pick" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickT">
+  <div class="box"><h2 id="pickT"></h2><p id="pickP"></p><div id="pickL" class="plist"></div><button id="pickClose">Abbrechen</button></div>
+</div>
 <div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
   <div class="box">
     <h2 id="dlgT">Stück sichern oder laden</h2>
-    <p>Der Text unten ist dein aktuelles Stück. Kopiere ihn und hebe ihn auf (Notiz, Mail an dich selbst). Zum Laden einen gesicherten Text einfügen und auf „Als neues Stück laden“ tippen.</p>
+    <p>Kopiere den Text und hebe ihn auf, oder füge einen gesicherten Text (bzw. MusicXML) ein und tippe auf „Als neues Stück laden“.</p>
     <textarea id="dlgTxt" spellcheck="false" aria-label="Stück als Text"></textarea>
     <p id="dlgMsg"></p>
     <div class="row">
       <button id="dlgCopy" class="primary">Text kopieren</button>
-      <button id="dlgFile" class="solo">Als Datei speichern</button>
-      <button id="dlgOpen" class="solo">Datei öffnen</button>
-      <input type="file" id="fileIn" accept=".json,application/json,text/plain" hidden>
       <button id="dlgLoad">Als neues Stück laden</button>
       <button id="dlgClose">Schließen</button>
     </div>
@@ -232,7 +282,16 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 <script>
 (function(){
 "use strict";
-var SIGS={"4/4":{steps:16,beat:4},"3/4":{steps:12,beat:4},"2/4":{steps:8,beat:4},"6/8":{steps:12,beat:6}};
+function sigOf(str){
+  var p=String(str||"").split("/"),b=parseInt(p[0],10),t=parseInt(p[1],10);
+  if(!(b>0&&b<=16&&(t===2||t===4||t===8||t===16)))return {steps:16,beat:4};
+  var beat=t===8&&b%3===0&&b>=6?6:16/t;
+  return {steps:b*16/t,beat:beat};
+}
+function validSig(str){
+  var p=String(str||"").split("/"),b=parseInt(p[0],10),t=parseInt(p[1],10);
+  return (b>0&&b<=16&&(t===2||t===4||t===8||t===16))?b+"/"+t:"4/4";
+}
 var OPEN={4:[43,38,33,28],5:[43,38,33,28,23]};
 var SNAME={4:["G","D","A","E"],5:["G","D","A","E","H"]};
 var NOTES=["C","C#","D","Eb","E","F","F#","G","Ab","A","B","H"];
@@ -258,9 +317,9 @@ var loopOn=false,loopA=1,loopB=1;
 var saveT=null;
 
 function song(){return S.songs[S.cur]}
-function sig(){return SIGS[song().sig]||SIGS["4/4"]}
+function sig(){return sigOf(song().sig)}
 function nstr(){return song().strings===5?5:4}
-function save(){clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
+function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
 function pushUndo(){undo.push(JSON.stringify(song().bars));if(undo.length>60)undo.shift()}
 function noteAt(b,s,t){var bar=song().bars[b];return bar?bar.n[s+"_"+t]:null}
 function midiName(m){return NOTES[m%12]+(Math.floor(m/12)-1)}
@@ -742,7 +801,7 @@ function afterBars(){clampLoop();render();save();var el=cellEl(cursor);if(el)el.
 var lastKeyT=0;
 document.addEventListener("keydown",function(e){
   var tg=e.target.tagName;
-  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open"))return;
+  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open")||$("drawer").classList.contains("open")||$("pick").classList.contains("open"))return;
   var k=e.key;
   if(k>="0"&&k<="9"){
     var d=+k,now=Date.now();
@@ -905,89 +964,369 @@ $("loopB").onchange=function(){loopB=+this.value;if(loopB<loopA)loopA=Math.max(1
 $("loopCur").onclick=function(){loopA=loopB=cursor.bar+1;loopOn=true;$("loopOn").checked=true;clampLoop();render()};
 $("loopAll").onclick=function(){loopA=1;loopB=song().bars.length;clampLoop();render()};
 
-function fillSongs(){
-  var h="";
-  S.songs.forEach(function(s,i){h+='<option value="'+i+'">'+esc(s.name)+'</option>'});
-  $("songSel").innerHTML=h;$("songSel").value=S.cur;
-}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fillSongs(){$("songTitle").textContent=song().name||"Ohne Namen";if($("drawer").classList.contains("open"))renderList();}
+function ensureSigOption(v){
+  var sel=$("sig");
+  for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===v)return;
+  var o=document.createElement("option");o.value=o.textContent=v;sel.appendChild(o);
+}
 function loadSong(){
   if(P)stop();
   undo=[];last=null;
   var s=song();
-  if(!SIGS[s.sig])s.sig="4/4";
+  s.sig=validSig(s.sig);
   if(!s.bars||!s.bars.length)s.bars=[emptyBar()];
   cursor={bar:0,step:0,str:nstr()-1};
   loopA=1;loopB=s.bars.length;clampLoop();
-  $("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(keyN());$("songName").value=s.name;$("sig").value=s.sig;$("strings").value=String(nstr());
+  ensureSigOption(s.sig);
+  $("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(keyN());$("sig").value=s.sig;$("strings").value=String(nstr());
   setBpm(s.bpm||80);fillSongs();render();flagButtons();
   var n0=noteAt(0,cursor.str,0);setLen(n0?n0.len:1,true);
 }
-$("songSel").onchange=function(){S.cur=+this.value;loadSong();save()};
-$("songName").oninput=function(){song().name=this.value||"Ohne Namen";fillSongs();save()};
-$("songNew").onclick=function(){
-  S.songs.push({id:uid(),name:"Neues Stück "+(S.songs.length+1),bpm:80,sig:"4/4",strings:4,bars:[emptyBar(),emptyBar(),emptyBar(),emptyBar()]});
-  S.cur=S.songs.length-1;loadSong();save();
-};
-var delArm=0;
-$("songDel").onclick=function(){
-  var btn=this;
-  if(Date.now()-delArm>4000){delArm=Date.now();btn.textContent="Wirklich löschen?";setTimeout(function(){btn.textContent="Stück löschen"},4000);return;}
-  delArm=0;btn.textContent="Stück löschen";
-  S.songs.splice(S.cur,1);
-  if(!S.songs.length)S.songs.push({id:uid(),name:"Neues Stück",bpm:80,sig:"4/4",strings:4,bars:[emptyBar(),emptyBar()]});
-  S.cur=Math.min(S.cur,S.songs.length-1);loadSong();save();
-};
 $("keySel").onchange=function(){song().key=+this.value;render();save()};
 $("accMode").onchange=function(){song().acc=this.value;render();save()};
 $("showNotes").onchange=function(){S.showNotes=this.checked;render();save()};
 $("sig").onchange=function(){if(P)stop();song().sig=this.value;cursor.step=0;render();save()};
 $("strings").onchange=function(){if(P)stop();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
 
-/* Sichern / Laden */
-$("exportBtn").onclick=function(){$("dlgTxt").value=JSON.stringify(song());$("dlgMsg").textContent="";$("dlg").classList.add("open")};
+/* ---------- Menü „Meine Stücke“ ---------- */
+var openItem=-1,delArmI=-1,delArmT=0;
+function newSongObj(name){return {id:uid(),name:name,bpm:80,sig:"4/4",strings:4,key:0,mod:Date.now(),bars:[emptyBar(),emptyBar(),emptyBar(),emptyBar()]}}
+function fmtDate(t){if(!t)return "";var d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."+String(d.getFullYear()).slice(2)}
+function openDrawer(){openItem=-1;$("dSearch").value="";renderList();$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false");setTimeout(function(){$("drawerClose").focus()},50)}
+function closeDrawer(){$("drawer").classList.remove("open");$("drawer").setAttribute("aria-hidden","true")}
+function renderList(){
+  var q=$("dSearch").value.trim().toLowerCase(),idx=[];
+  S.songs.forEach(function(s,i){if(!q||String(s.name).toLowerCase().indexOf(q)>=0)idx.push(i)});
+  idx.sort(function(a,b){return (S.songs[b].mod||0)-(S.songs[a].mod||0)});
+  var h="";
+  idx.forEach(function(i){
+    var s=S.songs[i],cur=i===S.cur;
+    h+='<li class="sitem'+(cur?' cur':'')+'"><div class="srow"><button class="sopen" data-open="'+i+'"><span class="sname">'+esc(s.name||"Ohne Namen")+(cur?' <em>geöffnet</em>':'')+'</span><small>'+(s.bars?s.bars.length:0)+' Takte · '+esc(s.sig||"4/4")+' · '+(s.bpm||80)+' bpm'+(s.mod?' · '+fmtDate(s.mod):'')+'</small></button><button class="smore" data-more="'+i+'" aria-label="Optionen für '+esc(s.name)+'" aria-expanded="'+(openItem===i)+'">⋯</button></div>';
+    if(openItem===i){
+      h+='<div class="sacts"><div class="ren"><input type="text" id="ren'+i+'" value="'+esc(s.name)+'" maxlength="60" aria-label="Neuer Name"><button data-ren="'+i+'">Umbenennen</button></div>'+
+        '<button data-dup="'+i+'">Duplizieren</button><button data-file="'+i+'">Als Datei speichern</button><button data-txt="'+i+'">Als Text</button>'+
+        '<button data-del="'+i+'" class="danger">'+(delArmI===i&&Date.now()-delArmT<4000?'Wirklich löschen?':'Löschen')+'</button></div>';
+    }
+    h+='</li>';
+  });
+  if(!idx.length)h='<li class="empty">Kein Stück gefunden.</li>';
+  $("dList").innerHTML=h;
+}
+$("menuBtn").onclick=openDrawer;
+$("songTitle").onclick=openDrawer;
+$("drawerClose").onclick=closeDrawer;
+$("drawer").addEventListener("click",function(e){if(e.target===$("drawer"))closeDrawer()});
+$("dSearch").oninput=renderList;
+$("dNew").onclick=function(){
+  S.songs.push(newSongObj("Neues Stück "+(S.songs.length+1)));S.cur=S.songs.length-1;loadSong();save();closeDrawer();
+  status("Neues Stück angelegt. Den Namen änderst du im Menü unter ⋯.");
+};
+$("dOpen").onclick=function(){$("fileIn").click()};
+$("dPaste").onclick=function(){openTextDlg("",true)};
+$("dBackup").onclick=function(){
+  var d=new Date(),n="Bass-Tabs-Backup-"+d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)+".json";
+  saveFile(n,JSON.stringify({app:"bass-tab-uebungsplayer",version:1,songs:S.songs}),"Backup mit "+S.songs.length+" Stücken");
+};
+$("dList").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  var d=b.dataset,i;
+  if(d.open!==undefined){S.cur=+d.open;loadSong();save();closeDrawer();return;}
+  if(d.more!==undefined){i=+d.more;openItem=openItem===i?-1:i;renderList();return;}
+  if(d.ren!==undefined){i=+d.ren;var v=$("ren"+i).value.trim();if(v){S.songs[i].name=v.slice(0,60);S.songs[i].mod=Date.now();fillSongs();save();}openItem=-1;renderList();return;}
+  if(d.dup!==undefined){i=+d.dup;var c=JSON.parse(JSON.stringify(S.songs[i]));c.id=uid();c.name=(c.name+" (Kopie)").slice(0,60);c.mod=Date.now();S.songs.push(c);openItem=-1;save();renderList();return;}
+  if(d.file!==undefined){i=+d.file;saveFile(fileName(S.songs[i].name)+".json",JSON.stringify(S.songs[i]),"„"+S.songs[i].name+"“");return;}
+  if(d.txt!==undefined){i=+d.txt;openTextDlg(JSON.stringify(S.songs[i]),false);return;}
+  if(d.del!==undefined){
+    i=+d.del;
+    if(delArmI!==i||Date.now()-delArmT>4000){delArmI=i;delArmT=Date.now();renderList();setTimeout(function(){if(delArmI===i){delArmI=-1;renderList()}},4000);return;}
+    delArmI=-1;var curId=song().id;
+    S.songs.splice(i,1);
+    if(!S.songs.length)S.songs.push(newSongObj("Neues Stück"));
+    var ni=-1;S.songs.forEach(function(s,k){if(s.id===curId)ni=k});
+    S.cur=ni>=0?ni:0;openItem=-1;loadSong();save();renderList();
+  }
+});
+$("dList").addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&e.target.id&&e.target.id.indexOf("ren")===0){var b=e.target.parentNode.querySelector("button");if(b)b.click();}
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open")}});
+
+function fileName(n){return String(n||"stueck").replace(/[^\wäöüÄÖÜß -]/g,"_").trim()||"stueck"}
+var dlAPI;
+function getDownloads(){
+  if(dlAPI!==undefined)return Promise.resolve(dlAPI);
+  if(!(window.claude&&typeof window.claude.use==="function")){dlAPI=null;return Promise.resolve(null);}
+  return window.claude.use("downloads").then(function(d){dlAPI=d||null;return dlAPI},function(){dlAPI=null;return null});
+}
+function saveFile(name,text,what){
+  getDownloads().then(function(d){
+    if(d){
+      return d.save({filename:name,data:text}).then(function(){status(what+" gespeichert (Downloads).")},function(err){
+        if(err&&err.code==="declined")status("Speichern abgebrochen.");
+        else status("Speichern als Datei geht hier nicht. Nutze „Als Text“ und kopiere den Text.");
+      });
+    }
+    try{
+      var blob=new Blob([text],{type:"application/json"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
+      status(what+" gespeichert (Ordner Downloads).");
+    }catch(e){status("Speichern als Datei geht hier nicht. Nutze „Als Text“ und kopiere den Text.");}
+  });
+}
+
+/* Text-Dialog */
+function openTextDlg(txt,forLoad){
+  $("dlgTxt").value=txt;$("dlgMsg").textContent="";
+  $("dlgT").textContent=forLoad?"Stück aus Text laden":"Stück als Text";
+  $("dlgCopy").style.display=forLoad?"none":"";
+  $("dlg").classList.add("open");
+  if(forLoad)setTimeout(function(){$("dlgTxt").focus()},50);
+}
 $("dlgClose").onclick=function(){$("dlg").classList.remove("open")};
 $("dlgCopy").onclick=function(){
   var ta=$("dlgTxt");
   try{navigator.clipboard.writeText(ta.value).then(function(){$("dlgMsg").textContent="Kopiert."},function(){ta.select();$("dlgMsg").textContent="Bitte den markierten Text von Hand kopieren."})}
   catch(e){ta.select();$("dlgMsg").textContent="Bitte den markierten Text von Hand kopieren.";}
 };
-$("dlgFile").onclick=function(){
-  try{
-    var blob=new Blob([JSON.stringify(song())],{type:"application/json"});
-    var a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download=(song().name||"stueck").replace(/[^\wäöüÄÖÜß -]/g,"_")+".json";
-    document.body.appendChild(a);a.click();a.remove();
-    $("dlgMsg").textContent="Datei gespeichert (Ordner Downloads).";
-  }catch(e){$("dlgMsg").textContent="Speichern als Datei geht hier nicht. Bitte Text kopieren.";}
-};
-$("dlgOpen").onclick=function(){$("fileIn").click()};
-$("fileIn").onchange=function(){
-  var f=this.files&&this.files[0];if(!f)return;
-  var rd=new FileReader();
-  rd.onload=function(){$("dlgTxt").value=rd.result;$("dlgLoad").click();};
-  rd.readAsText(f);this.value="";
-};
 $("dlgLoad").onclick=function(){
-  try{
-    var o=JSON.parse($("dlgTxt").value);
-    if(!o||!Array.isArray(o.bars)||!o.bars.length)throw 0;
-    var bars=o.bars.map(function(b){
-      var nb=emptyBar();
-      if(b&&b.n)for(var k in b.n){
-        var n=b.n[k];
-        if(!/^\d+_\d+$/.test(k)||!n)continue;
-        var f=n.f==="x"?"x":Math.max(0,Math.min(24,parseInt(n.f,10)||0));
-        var c={f:f,len:Math.max(1,Math.min(64,parseInt(n.len,10)||1))};
-        if(n.h)c.h=1;if(n.a)c.a=1;nb.n[k]=c;
-      }
-      return nb;
-    });
-    S.songs.push({id:uid(),name:String(o.name||"Geladenes Stück").slice(0,60),bpm:+o.bpm||80,acc:o.acc==="#"?"#":"b",key:Math.max(-7,Math.min(7,parseInt(o.key,10)||0)),sig:SIGS[o.sig]?o.sig:"4/4",strings:o.strings===5?5:4,bars:bars});
-    S.cur=S.songs.length-1;loadSong();save();
-    $("dlg").classList.remove("open");
-  }catch(e){$("dlgMsg").textContent="Dieser Text ist kein gesichertes Stück. Bitte den vollständigen Text einfügen, von der ersten bis zur letzten geschweiften Klammer.";}
+  var r=importText($("dlgTxt").value,"Geladenes Stück");
+  if(r)$("dlg").classList.remove("open");
+  else $("dlgMsg").textContent="Dieser Text ist kein gesichertes Stück und kein MusicXML. Bitte den vollständigen Text einfügen.";
 };
+
+/* Laden: eigene Stücke, Backups, MusicXML */
+function normSong(o){
+  if(!o||!Array.isArray(o.bars)||!o.bars.length)return null;
+  var bars=o.bars.map(function(b){
+    var nb=emptyBar();
+    if(b&&b.n)for(var k in b.n){
+      var n=b.n[k];
+      if(!/^\d+_\d+$/.test(k)||!n)continue;
+      var f=n.f==="x"?"x":Math.max(0,Math.min(24,parseInt(n.f,10)||0));
+      var c={f:f,len:Math.max(1,Math.min(256,parseInt(n.len,10)||1))};
+      if(n.h)c.h=1;if(n.a)c.a=1;nb.n[k]=c;
+    }
+    return nb;
+  });
+  return {id:typeof o.id==="string"?o.id.slice(0,20):uid(),name:String(o.name||"Geladenes Stück").slice(0,60),bpm:Math.max(30,Math.min(220,+o.bpm||80)),acc:o.acc==="#"?"#":"b",key:Math.max(-7,Math.min(7,parseInt(o.key,10)||0)),sig:validSig(o.sig),strings:o.strings===5?5:4,mod:Date.now(),bars:bars};
+}
+function addSongs(list){
+  var added=0,replaced=0,lastIdx=-1;
+  list.forEach(function(o){
+    var s=normSong(o);if(!s)return;
+    var ex=-1;S.songs.forEach(function(x,k){if(x.id===s.id)ex=k});
+    if(ex>=0){
+      if(JSON.stringify(S.songs[ex].bars)===JSON.stringify(s.bars)&&S.songs[ex].name===s.name){lastIdx=ex;return;}
+      s.id=uid();
+    }
+    S.songs.push(s);lastIdx=S.songs.length-1;added++;
+  });
+  return {added:added,last:lastIdx};
+}
+function importText(txt,fname){
+  txt=String(txt||"").replace(/^﻿/,"").trim();
+  if(txt.charAt(0)==="{"){
+    var o;try{o=JSON.parse(txt)}catch(e){return false}
+    var r=Array.isArray(o.songs)?addSongs(o.songs):addSongs([o]);
+    if(r.last<0)return false;
+    S.cur=r.last;loadSong();save();
+    status(Array.isArray(o.songs)?"Backup geladen: "+r.added+" Stücke neu hinzugefügt (schon vorhandene übersprungen).":"Stück „"+song().name+"“ geladen.");
+    return true;
+  }
+  if(/<score-(partwise|timewise)/.test(txt)){importMusicXML(txt,fname);return true;}
+  return false;
+}
+$("fileIn").onchange=function(){
+  var f=this.files&&this.files[0];this.value="";if(!f)return;
+  var nm=f.name.replace(/\.[^.]+$/,"");
+  closeDrawer();
+  status("Lese „"+f.name+"“ …");
+  if(/\.mxl$/i.test(f.name)){
+    f.arrayBuffer().then(unzipMXL).then(function(x){importMusicXML(x,nm)}).catch(function(e){status("Die Datei „"+f.name+"“ ließ sich nicht entpacken. Exportiere sie bitte als unkomprimiertes MusicXML (.musicxml oder .xml).")});
+    return;
+  }
+  f.text().then(function(t){
+    if(!importText(t,nm))status("„"+f.name+"“ ist weder ein gesichertes Stück noch MusicXML.");
+  },function(){status("Die Datei ließ sich nicht lesen.")});
+};
+
+/* .mxl (gepacktes MusicXML) entpacken */
+function unzipMXL(buf){
+  var dv=new DataView(buf),u8=new Uint8Array(buf),i,files={},td=new TextDecoder();
+  for(i=buf.byteLength-22;i>=0;i--)if(dv.getUint32(i,true)===0x06054b50)break;
+  if(i<0)return Promise.reject("kein zip");
+  var n=dv.getUint16(i+10,true),p=dv.getUint32(i+16,true);
+  for(var k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    var nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true);
+    files[td.decode(u8.subarray(p+46,p+46+nl))]={m:dv.getUint16(p+10,true),cs:dv.getUint32(p+20,true),lh:dv.getUint32(p+42,true)};
+    p+=46+nl+el+cl;
+  }
+  function read(name){
+    var f=files[name];if(!f)return Promise.reject("fehlt");
+    var o=f.lh+30+dv.getUint16(f.lh+26,true)+dv.getUint16(f.lh+28,true),data=u8.slice(o,o+f.cs);
+    if(f.m===0)return Promise.resolve(td.decode(data));
+    if(f.m!==8||typeof DecompressionStream==="undefined")return Promise.reject("methode");
+    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+  }
+  var pick=function(){for(var nm in files)if(!/^META-INF\//.test(nm)&&/\.(xml|musicxml)$/i.test(nm))return nm;return null};
+  if(files["META-INF/container.xml"]){
+    return read("META-INF/container.xml").then(function(c){
+      var m=c.match(/full-path="([^"]+)"/);return read(m&&files[m[1]]?m[1]:pick());
+    });
+  }
+  return read(pick());
+}
+
+/* Auswahl-Dialog */
+function pickDialog(title,text,opts,cb){
+  $("pickT").textContent=title;$("pickP").textContent=text;
+  var h="";opts.forEach(function(o,i){h+='<button data-pk="'+i+'">'+esc(o)+'</button>'});
+  $("pickL").innerHTML=h;$("pick").classList.add("open");
+  $("pickL").onclick=function(e){var b=e.target.closest("button");if(!b)return;$("pick").classList.remove("open");cb(+b.dataset.pk)};
+}
+$("pickClose").onclick=function(){$("pick").classList.remove("open")};
+
+/* ---------- MusicXML-Import ---------- */
+function kids(el,name){var r=[];for(var c=el.firstElementChild;c;c=c.nextElementSibling)if(!name||c.nodeName===name)r.push(c);return r}
+function kid(el,name){for(var c=el&&el.firstElementChild;c;c=c.nextElementSibling)if(c.nodeName===name)return c;return null}
+function txtOf(el,name){var k=kid(el,name);return k?k.textContent.trim():""}
+function importMusicXML(xml,fname){
+  var doc;
+  try{doc=new DOMParser().parseFromString(xml,"application/xml")}catch(e){doc=null}
+  if(!doc||doc.getElementsByTagName("parsererror").length){status("Die MusicXML-Datei ist beschädigt oder unvollständig.");return;}
+  var root=doc.documentElement;
+  if(root.nodeName!=="score-partwise"){status("Diese MusicXML-Variante (zeitweise geordnet) wird nicht unterstützt. Bitte als normales MusicXML exportieren.");return;}
+  var names={};
+  var pl=kid(root,"part-list");
+  if(pl)kids(pl,"score-part").forEach(function(sp){names[sp.getAttribute("id")]=txtOf(sp,"part-name")||sp.getAttribute("id")});
+  var parts=kids(root,"part");
+  if(!parts.length){status("In der Datei sind keine Noten.");return;}
+  var title=txtOf(kid(root,"work"),"work-title")||txtOf(root,"movement-title")||fname||"MusicXML-Import";
+  function go(i){convertPart(parts[i],parts.length>1?title+" – "+(names[parts[i].getAttribute("id")]||"Stimme "+(i+1)):title)}
+  if(parts.length===1)go(0);
+  else pickDialog("Welche Stimme übernehmen?","Die Datei enthält "+parts.length+" Stimmen. Wähle die Bass-Stimme:",parts.map(function(p,i){return names[p.getAttribute("id")]||"Stimme "+(i+1)}),go);
+}
+function convertPart(part,title){
+  var div=1,beats=4,btype=4,fifths=null,tempo=0,trans=null,sigStr=null,warn={},maxString=0;
+  var evs=[],measures=kids(part,"measure");
+  measures.forEach(function(m,mi){
+    var t=0,lastStart=0,voice1=null;
+    kids(m).forEach(function(c){
+      var nn=c.nodeName;
+      if(nn==="attributes"){
+        var d=+txtOf(c,"divisions");if(d>0)div=d;
+        var tm=kid(c,"time");
+        if(tm){var b=parseInt(txtOf(tm,"beats"),10),bt=parseInt(txtOf(tm,"beat-type"),10);if(b>0&&bt>0){if(sigStr&&sigStr!==b+"/"+bt)warn.sig=1;if(!sigStr){sigStr=b+"/"+bt;beats=b;btype=bt;}}}
+        var ky=kid(c,"key");if(ky&&fifths===null&&txtOf(ky,"fifths")!=="")fifths=parseInt(txtOf(ky,"fifths"),10)||0;
+        var tr=kid(c,"transpose");if(tr&&!trans)trans={ch:parseInt(txtOf(tr,"chromatic"),10)||0,oc:parseInt(txtOf(tr,"octave-change"),10)||0};
+      }else if(nn==="direction"||nn==="sound"){
+        var snd=nn==="sound"?c:c.getElementsByTagName("sound")[0];
+        if(snd&&snd.getAttribute("tempo")&&!tempo)tempo=Math.round(+snd.getAttribute("tempo"));
+        var pm=c.getElementsByTagName("per-minute")[0];if(pm&&!tempo)tempo=Math.round(parseFloat(pm.textContent));
+      }else if(nn==="backup"){t-=(+txtOf(c,"duration")||0);if(t<0)t=0;}
+      else if(nn==="forward"){t+=(+txtOf(c,"duration")||0);}
+      else if(nn==="note"){
+        if(kid(c,"grace")){warn.grace=1;return;}
+        var dur=+txtOf(c,"duration")||0,chord=!!kid(c,"chord"),voice=txtOf(c,"voice")||"1";
+        var start=chord?lastStart:t;
+        if(!chord){t+=dur;lastStart=start;}
+        if(voice1===null)voice1=voice;
+        if(voice!==voice1){warn.voices=1;return;}
+        if(kid(c,"time-modification"))warn.tuplet=1;
+        if(kid(c,"rest"))return;
+        var ev={bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div)),midi:null,s:null,f:null};
+        var pt=kid(c,"pitch");
+        if(pt){
+          var stp="CDEFGAB".indexOf(txtOf(pt,"step"));
+          var w=(parseInt(txtOf(pt,"octave"),10)+1)*12+[0,2,4,5,7,9,11][stp]+Math.round(parseFloat(txtOf(pt,"alter"))||0);
+          ev.midi=trans?w+trans.ch+12*trans.oc:w-12;
+        }else if(kid(c,"unpitched")){ev.dead=1;}
+        var nh=txtOf(c,"notehead");if(nh==="x"||nh==="cross")ev.dead=1;
+        var nots=c.getElementsByTagName("notations")[0];
+        if(nots){
+          var tech=nots.getElementsByTagName("technical")[0];
+          if(tech){
+            var sN=parseInt(txtOf(tech,"string"),10),fN=parseInt(txtOf(tech,"fret"),10);
+            if(sN>0&&fN>=0){ev.s=sN-1;ev.f=fN;if(sN>maxString)maxString=sN;}
+            if(nots.querySelector("hammer-on[type=stop],pull-off[type=stop]"))ev.h=1;
+          }
+          if(nots.querySelector("slur[type=stop],slide[type=stop],glissando[type=stop]"))ev.h=1;
+          if(nots.querySelector("articulations accent, articulations strong-accent"))ev.a=1;
+          var ties=nots.getElementsByTagName("tied");
+          for(var q=0;q<ties.length;q++){var ty=ties[q].getAttribute("type");if(ty==="start")ev.tieStart=1;if(ty==="stop")ev.tieStop=1;}
+        }
+        kids(c,"tie").forEach(function(te){var ty=te.getAttribute("type");if(ty==="start")ev.tieStart=1;if(ty==="stop")ev.tieStop=1;});
+        if(ev.midi===null&&!ev.dead)return;
+        evs.push(ev);
+      }
+    });
+  });
+  if(!evs.length){status("In dieser Stimme sind keine Noten.");return;}
+  var sg=validSig(sigStr||"4/4"),steps=sigOf(sg).steps;
+  var ns=maxString>4?5:4,useTab=maxString>0&&maxString<=5;
+  /* Oktavlage an das Griffbrett anpassen */
+  var lo=OPEN[ns][ns-1],hi=OPEN[ns][0]+24,pit=evs.filter(function(e){return e.midi!==null&&!(useTab&&e.s!==null)});
+  function frac(fn){if(!pit.length)return 0;var k=0;pit.forEach(function(e){if(fn(e.midi+shift))k++});return k/pit.length}
+  var shift=0,g=0;
+  while(frac(function(m){return m<lo})>0.1&&g++<4)shift+=12;
+  g=0;while(frac(function(m){return m>hi})>0.1&&frac(function(m){return m-12<lo})<0.1&&g++<4)shift-=12;
+  if(shift)warn.shift=shift;
+  /* Bindebögen zusammenfassen */
+  var out=[],pend={};
+  evs.forEach(function(e){
+    if(e.midi!==null)e.midi+=shift;
+    var key=e.dead?"x":e.midi;
+    if(e.tieStop&&pend[key]){pend[key].len+=e.len;if(!e.tieStart)delete pend[key];return;}
+    out.push(e);
+    if(e.tieStart)pend[key]=e;
+  });
+  /* Saite und Bund festlegen */
+  var bars=[];for(var b=0;b<measures.length;b++)bars.push(emptyBar());
+  var ref=3,dropped=0;
+  out.sort(function(a,c){return a.bar-c.bar||a.pos-c.pos||(c.midi||0)-(a.midi||0)});
+  out.forEach(function(e){
+    if(e.pos>=steps){dropped++;return;}
+    var bar=bars[e.bar],s=null,f=null;
+    if(useTab&&e.s!==null&&e.s<ns&&e.f<=24&&!bar.n[e.s+"_"+e.pos]){s=e.s;f=e.f;}
+    else if(e.midi!==null){
+      var m=e.midi;
+      while(m<lo)m+=12;while(m>hi)m-=12;
+      if(m!==e.midi)warn.oct=1;
+      var best=null,bs=1e9;
+      for(var k=0;k<ns;k++){
+        var ff=m-OPEN[ns][k];if(ff<0||ff>24||bar.n[k+"_"+e.pos])continue;
+        var sc=Math.abs(ff-ref)+(ff>12?0.5:0);
+        if(sc<bs){bs=sc;best={s:k,f:ff};}
+      }
+      if(!best){dropped++;return;}
+      s=best.s;f=best.f;
+    }else{
+      for(var k2=ns-1;k2>=0;k2--)if(!bar.n[k2+"_"+e.pos]){s=k2;break;}
+      if(s===null){dropped++;return;}
+    }
+    var n={f:e.dead?"x":f,len:Math.min(e.len,256)};
+    if(e.h)n.h=1;if(e.a)n.a=1;
+    bar.n[s+"_"+e.pos]=n;
+    if(typeof f==="number"&&f>0)ref=f;
+  });
+  var sn={id:uid(),name:String(title).slice(0,60),bpm:Math.max(30,Math.min(220,tempo||80)),sig:sg,strings:ns,key:fifths===null?0:Math.max(-7,Math.min(7,fifths)),acc:"b",mod:Date.now(),bars:bars};
+  S.songs.push(sn);S.cur=S.songs.length-1;loadSong();save();
+  var notes=[];
+  if(warn.voices)notes.push("nur Stimme 1 übernommen");
+  if(warn.tuplet)notes.push("Triolen auf Sechzehntel gerundet");
+  if(warn.grace)notes.push("Vorschläge weggelassen");
+  if(warn.sig)notes.push("Taktwechsel nicht übernommen ("+sg+" durchgehend)");
+  if(dropped)notes.push(dropped+" Noten passten nicht in den Takt");
+  if(warn.shift)notes.push("um "+Math.abs(warn.shift/12)+" Oktave(n) "+(warn.shift>0?"höher":"tiefer")+" gesetzt");
+  if(warn.oct)notes.push("einzelne Töne außerhalb des Griffbretts oktaviert");
+  notes.push("Wiederholungen nicht ausgeschrieben");
+  status("Importiert: „"+sn.name+"“, "+bars.length+" Takte"+(useTab?" (mit Tab-Angaben)":"")+". Hinweis: "+notes.join("; ")+".");
+}
 
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
