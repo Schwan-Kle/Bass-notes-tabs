@@ -77,7 +77,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .staff .op{fill:var(--surface);stroke:currentColor;stroke-width:1.5}
 .staff text{fill:currentColor;font-family:var(--font)}
 .staff .ac{fill:var(--warn)}
-.ph{grid-row:1/-1;background:var(--second);opacity:.35;pointer-events:none;border-radius:3px}
+.ph{position:absolute;top:0;bottom:0;background:var(--second);opacity:.35;pointer-events:none;border-radius:3px}
 #pad{background:var(--surface);border-top:1px solid var(--line);padding:6px 10px 10px;display:flex;flex-direction:column;gap:5px}
 .modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
 .modes button{min-height:30px;font-size:13px}
@@ -850,7 +850,8 @@ function draw(){
       if(g){
         if(!ph){ph=document.createElement("div");ph.className="ph";}
         if(ph.parentNode!==g)g.appendChild(ph);
-        ph.style.gridColumn=String(ev.s+2);
+        var gu=GUT(),tot=gu+sig().steps;
+        ph.style.left=((gu+ev.s)/tot*100)+"%";ph.style.width=(100/tot)+"%";
         if(ev.b!==phBar){phBar=ev.b;g.parentNode.scrollIntoView({block:"nearest"});status("Spielt Takt "+(ev.b+1));}
       }
     }
