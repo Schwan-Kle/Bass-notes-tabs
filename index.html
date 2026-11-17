@@ -173,6 +173,32 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .strs span.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
 .level{height:8px;background:var(--shade);border-radius:4px;overflow:hidden}
 .level span{display:block;height:100%;width:0;background:var(--second)}
+#helpBtn{min-width:40px;font-size:16px}
+.helpov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:9}
+.helpov.open{display:flex;justify-content:center}
+.hpanel{background:var(--surface);width:100%;max-width:720px;height:100%;display:flex;flex-direction:column;gap:8px;padding:12px}
+.htabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#hSearch{background:var(--bg);border:1px solid var(--line);border-radius:6px;min-height:36px;padding:0 8px}
+#hList{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;padding-bottom:20px}
+.hitem{border:1px solid var(--line);border-radius:6px}
+.hitem summary{padding:10px;font-weight:700;color:var(--text);cursor:pointer}
+.hitem summary small{font-weight:400;color:var(--accent);margin-right:4px}
+.hitem[open] summary{border-bottom:1px solid var(--line);background:var(--shade)}
+.hbody{padding:8px 12px;font-size:14px;line-height:1.5;max-width:65ch}
+.hbody p{margin:6px 0}.hbody ul{margin:6px 0;padding-left:20px}
+.hbody table{border-collapse:collapse;margin:6px 0;font-size:13px}
+.hbody td,.hbody th{border-bottom:1px solid var(--line);padding:3px 8px 3px 0;text-align:left;vertical-align:top}
+.hbody th{color:var(--main)}
+.ex{max-width:420px;margin:6px 0}
+.extab{display:grid;max-width:420px;margin:6px 0;font-size:12px}
+.extab span{height:22px;display:flex;align-items:center;justify-content:center;position:relative}
+.extab span.c::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--line)}
+.extab span.bt{border-left:1px solid var(--line)}
+.extab b{position:relative;background:var(--surface);padding:0 1px}
+.extab .sl{color:var(--muted)}
+.hplay{margin:4px 6px 4px 0;min-height:32px;font-size:13px;color:var(--main);border-color:var(--second)}
+.sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.sw.y{background:var(--hi)}.sw.g{background:var(--second)}
 #dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:8}
 #dlg.open{display:flex}
 #dlg .box{background:var(--surface);border-radius:8px;padding:14px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px}
@@ -187,6 +213,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
   <div class="songbar">
     <button id="menuBtn" aria-label="Meine Stücke öffnen">☰ Meine Stücke</button>
     <button id="songTitle" class="stitle" title="Stück wechseln, umbenennen, sichern"></button>
+    <button id="helpBtn" aria-label="Hilfe und Musikwissen" title="Hilfe, Musikzeichen, Wiki">❓</button>
   </div>
   <div class="transport">
     <button id="play" class="primary">▶ Start</button>
@@ -339,6 +366,14 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 <input type="file" id="fileIn" hidden>
 <div id="pick" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickT">
   <div class="box"><h2 id="pickT"></h2><p id="pickP"></p><div id="pickL" class="plist"></div><button id="pickClose">Abbrechen</button></div>
+</div>
+<div id="help" class="helpov" role="dialog" aria-modal="true" aria-labelledby="hTitle">
+  <div class="hpanel">
+    <div class="dhead"><h2 id="hTitle">Hilfe &amp; Wissen</h2><button id="hClose" aria-label="Hilfe schließen">✕</button></div>
+    <div class="htabs"><button id="htab-e">Eingabe</button><button id="htab-z">Musikzeichen</button><button id="htab-w">Wiki</button></div>
+    <input type="search" id="hSearch" placeholder="Suchen, z. B. Terz, Pause, Slash-Akkord" aria-label="Hilfe durchsuchen">
+    <div id="hList"></div>
+  </div>
 </div>
 <div id="barDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="barDlgT">
   <div class="box">
@@ -920,7 +955,7 @@ function afterBars(){clampLoop();render();save();var el=cellEl(cursor);if(el)el.
 var lastKeyT=0;
 document.addEventListener("keydown",function(e){
   var tg=e.target.tagName;
-  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open")||$("drawer").classList.contains("open")||document.querySelector(".modal.open"))return;
+  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open")||$("drawer").classList.contains("open")||document.querySelector(".modal.open")||$("help").classList.contains("open"))return;
   var k=e.key;
   if(k>="0"&&k<="9"){
     var d=+k,now=Date.now();
@@ -1237,7 +1272,7 @@ $("dList").addEventListener("click",function(e){
 $("dList").addEventListener("keydown",function(e){
   if(e.key==="Enter"&&e.target.id&&e.target.id.indexOf("ren")===0){var b=e.target.parentNode.querySelector("button");if(b)b.click();}
 });
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();$("help").classList.remove("open");}});
 
 function fileName(n){return String(n||"stueck").replace(/[^\wäöüÄÖÜß -]/g,"_").trim()||"stueck"}
 var dlAPI;
@@ -1900,6 +1935,98 @@ function segment(fr,thr){
   }
   return out;
 }
+
+/* ---------- Hilfe & Wissen ---------- */
+function exStaff(nl,opt){
+  opt=opt||{};var bar={n:{}};
+  (nl||[]).forEach(function(x){var n={f:x[2],len:x[3]};if(x[4]==="h")n.h=1;if(x[4]==="a")n.a=1;bar.n[x[0]+"_"+x[1]]=n;});
+  if(opt.rs)bar.rs=1;if(opt.re)bar.re=1;if(opt.v)bar.v=opt.v;
+  var keep=S.cur,tmp={id:"ex",name:"ex",bpm:80,sig:opt.sig||"4/4",strings:4,key:opt.key||0,acc:"b",bars:[bar]},svg="";
+  S.songs.push(tmp);S.cur=S.songs.length-1;
+  try{svg=staffSVG(0,noteInfo())}catch(e){svg=""}
+  S.songs.pop();S.cur=keep;
+  return '<div class="ex">'+svg+'</div>';
+}
+function exTab(nl,steps){
+  steps=steps||16;var h='<div class="extab" style="grid-template-columns:18px repeat('+steps+',1fr)">',S2=["G","D","A","E"];
+  for(var s=0;s<4;s++){h+='<span class="sl">'+S2[s]+'</span>';for(var t=0;t<steps;t++){var v="";nl.forEach(function(x){if(x[0]===s&&x[1]===t)v=x[2]});h+='<span class="c'+(t%4===0?' bt':'')+'">'+(v!==""?'<b>'+v+'</b>':'')+'</span>';}}
+  return h+'</div>';
+}
+function ply(seq,label){return '<button class="hplay" data-seq="'+seq+'">▶ '+(label||"Anhören")+'</button>'}
+function playSeq(str){
+  if(!audioReady())return;
+  var t=ctx.currentTime+0.08,q=60/90/4;
+  str.split(" ").forEach(function(tok){
+    if(!tok)return;var p=tok.split(":"),len=+(p[1]||4);
+    p[0].split("+").forEach(function(m){if(m!=="r")playNote({f:+m-28},3,t,len*q);});
+    t+=len*q;
+  });
+}
+var HELP=[
+/* ===== Eingabe ===== */
+{t:"e",h:"So funktioniert die Eingabe",b:"<p>Jedes Kästchen in der Tabulatur ist ein <b>Sechzehntel</b> auf einer Saite. Tippe ein Kästchen an – das gelbe Feld ist der <b>Cursor</b> (Takt, Saite, Zeitpunkt). Dann zuerst die <b>Notenlänge</b> wählen und danach den <b>Bund</b> (Tab-Eingabe) oder den <b>Ton</b> (Noten-Eingabe).</p><p>Mit <b>Auto→</b> springt der Cursor nach jeder Note um ihre Länge weiter, so kannst du eine Linie einfach durchtippen. Die Statuszeile unter dem Kopf zeigt immer Takt, Schlag, Saite, Bund und Tonname am Cursor.</p>",k:"cursor auto statuszeile anfang"},
+{t:"e",h:"Notenlängen 1/16 … 1/1",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt.</p>",k:"länge dauer punktiert"},
+{t:"e",h:"Tab-Eingabe (Bund 0–24, x, ⌫)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
+{t:"e",h:"Noten-Eingabe (C–H, ♭ ♮ ♯, Okt, Lage)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
+{t:"e",h:"Navigation und Zusatzzeichen (← → ↑ ↓, Pause, ⌒, >, Auto→)",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>Pause</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
+{t:"e",h:"Diese Note / Takt greifen ab Bund",b:"<p><b>Diese Note</b> zeigt alle Stellen, an denen der Ton am Cursor spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Takt greifen ab Bund</b> verteilt den ganzen Takt so, dass er möglichst in dieser Lage (etwa 5 Bünde breit) liegt.</p>",k:"lage saite umlegen fingersatz"},
+{t:"e",h:"Takt-Leiste (+ Takt, kopieren, leeren, löschen, ‖: Wdh., ↶)",b:"<ul><li><b>+ Takt</b> fügt hinter dem Cursor-Takt einen leeren Takt ein.</li><li><b>Takt kopieren</b> setzt eine Kopie dahinter.</li><li><b>Takt leeren</b> löscht alle Noten (Wiederholungszeichen bleiben).</li><li><b>Takt löschen</b> entfernt den Takt.</li><li><b>‖: Wdh.</b> Wiederholungszeichen und Klammern für diesen Takt.</li><li><b>↶ Zurück</b> nimmt die letzten Schritte zurück (auch Einspielen und Umlegen).</li></ul>",k:"takt kopieren rückgängig undo"},
+{t:"e",h:"Kopfleiste und Werkzeuge",b:"<ul><li><b>☰ Meine Stücke</b>: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup.</li><li><b>▶ Start / ■ Stopp</b>, daneben das Tempo (30–220 bpm).</li><li><b>🎙 Einspielen</b>: mit dem Bass einspielen, die App notiert mit (nur installierte App).</li><li><b>🎯 Stimmen</b>: Stimmgerät (nur installierte App).</li><li><b>🎸 Griffbrett</b>: zeigt die Töne auf dem Griffbrett; Antippen setzt eine Note.</li><li><b>📷 Vorlage</b>: Foto deiner Noten zum Abtippen einblenden.</li><li><b>❓</b>: diese Hilfe.</li></ul>",k:"menü werkzeuge kopf"},
+{t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Noten ein/aus.</li></ul>",k:"metronom schleife trainer tonart taktart"},
+{t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
+{t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und '</td><td>Oktave tiefer / höher</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
+{t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
+/* ===== Musikzeichen ===== */
+{t:"z",h:"Notensystem und Bassschlüssel",b:"<p>Fünf Linien bilden das <b>Notensystem</b>. Der <b>Bassschlüssel</b> (F-Schlüssel) markiert mit seinen zwei Punkten die vierte Linie von unten als Ton <b>F</b>. Von unten gelesen: Linien G-H-D-F-A, Zwischenräume A-C-E-G.</p>"+exStaff([[3,0,3,4],[3,4,7,4],[2,8,5,4],[1,12,3,4]])+"<p>Bass-Noten werden eine <b>Oktave höher notiert als sie klingen</b> – sonst bräuchte man sehr viele Hilfslinien. Die App rechnet das automatisch um.</p>",k:"schlüssel f-schlüssel linien"},
+{t:"z",h:"Notenwerte",b:"<p>Ganze (16), Halbe (8), Viertel (4), Achtel (2), Sechzehntel (1) – in Klammern die Anzahl Sechzehntel. Achtel und Sechzehntel haben Fähnchen oder werden pro Schlag mit <b>Balken</b> verbunden. Beispiel: Halbe, Viertel, Achtel, zwei Sechzehntel.</p>"+exStaff([[3,0,5,8],[3,8,5,4],[3,12,5,2],[3,14,5,1],[3,15,5,1]])+ply("33:8 33:4 33:2 33:1 33:1"),k:"ganze halbe viertel achtel sechzehntel balken"},
+{t:"z",h:"Punktierung",b:"<p>Ein <b>Punkt</b> hinter der Note verlängert sie um die Hälfte: punktierte Viertel = 3 Achtel, punktierte Achtel = 3 Sechzehntel. Typisch: punktierte Viertel + Achtel.</p>"+exStaff([[2,0,3,6],[2,6,3,2],[2,8,5,3],[2,11,5,1],[2,12,7,4]])+ply("36:6 36:2 38:3 38:1 40:4"),k:"punkt punktiert"},
+{t:"z",h:"Pausen",b:"<p>Für jeden Notenwert gibt es eine Pause gleicher Länge. Ein leerer Takt bekommt die <b>Ganze Pause</b> (Balken unter der 4. Linie). In der App entstehen Pausen automatisch überall, wo keine Note klingt.</p>"+exStaff([[3,4,0,4],[3,10,0,2]]),k:"pause stille"},
+{t:"z",h:"Haltebogen, Bindebogen, Hammer-on, Pull-off, Slide",b:"<p>Ein <b>Haltebogen</b> verbindet zwei gleiche Töne zu einem langen Ton. Ein <b>Bindebogen</b> zwischen verschiedenen Tönen heißt: gebunden spielen, nur der erste wird angeschlagen – auf dem Bass als <b>Hammer-on</b> (aufschlagen, höher), <b>Pull-off</b> (abziehen, tiefer) oder <b>Slide</b> (rutschen). In der App: Knopf <b>⌒</b>.</p>"+exStaff([[2,0,5,4],[2,4,7,4,"h"],[2,8,7,4],[2,12,5,4,"h"]])+ply("38:4 40:4 40:4 38:4"),k:"bogen legato hammer pull slide"},
+{t:"z",h:"Vorzeichen ♯ ♭ ♮",b:"<p><b>♯ (Kreuz)</b> erhöht um einen Halbton (einen Bund), <b>♭ (B)</b> erniedrigt um einen Halbton, <b>♮ (Auflösungszeichen)</b> hebt ein Vorzeichen auf. Ein Vorzeichen vor einer Note gilt bis zum Ende des Takts für diese Tonhöhe.</p>"+exStaff([[2,0,3,4],[2,4,4,4],[2,8,4,4],[2,12,3,4]])+ply("36:4 37:4 37:4 36:4"),k:"kreuz b auflösung halbton"},
+{t:"z",h:"Tonart-Vorzeichen (Generalvorzeichen)",b:"<p>Vorzeichen direkt hinter dem Schlüssel gelten für das <b>ganze Stück</b> und jede Oktave. Vier ♭ (B, Es, As, Des) bedeuten As-Dur oder f-Moll – wie in deiner Jazz-Linie.</p>"+exStaff([[3,0,1,4],[3,4,4,4],[2,8,3,4],[2,12,6,4]],{key:-4})+ply("29:4 32:4 36:4 39:4"),k:"tonart vorzeichnung generalvorzeichen"},
+{t:"z",h:"Taktart und Taktstrich",b:"<p>Die Taktangabe zeigt, wie viele Schläge ein Takt hat und welcher Notenwert ein Schlag ist: <b>4/4</b> = vier Viertel, <b>3/4</b> = drei Viertel (Walzer), <b>6/8</b> = sechs Achtel in zwei Gruppen zu je drei. Taktstriche trennen die Takte.</p>",k:"takt taktart 4/4 3/4 6/8"},
+{t:"z",h:"Hilfslinien",b:"<p>Töne über oder unter den fünf Linien bekommen kurze <b>Hilfslinien</b>. Die leere E-Saite steht im Bassschlüssel auf der ersten Hilfslinie unter dem System.</p>"+exStaff([[3,0,0,4],[3,4,1,4],[3,8,3,4],[2,12,0,4]])+ply("28:4 29:4 31:4 33:4"),k:"hilfslinie tief"},
+{t:"z",h:"Akzent, Staccato, Dead Note (Ghost Note)",b:"<p><b>&gt; Akzent</b>: Note betont, lauter. <b>Staccato</b> (Punkt über/unter dem Notenkopf): kurz, abgesetzt spielen – in der App über eine kürzere Notenlänge plus Pause darstellen. <b>x-Notenkopf</b>: Dead Note bzw. Ghost Note – Saite abdämpfen und anschlagen, klingt perkussiv ohne Tonhöhe.</p>"+exStaff([[3,0,5,2,"a"],[2,2,"x",2],[3,4,5,2],[2,6,"x",2],[3,8,5,2,"a"],[2,10,"x",2],[2,12,7,4]])+ply("33:2 r:2 33:2 r:2 33:2 r:2 40:4"),k:"akzent staccato ghost dead"},
+{t:"z",h:"Wiederholungszeichen und Klammern",b:"<p><b>‖:</b> Beginn und <b>:‖</b> Ende einer Wiederholung – der Abschnitt wird (meist) zweimal gespielt. Steht kein Beginn-Zeichen, wiederholt man ab Anfang. <b>Klammern 1. / 2.</b>: beim ersten Durchgang die 1. Klammer, beim Wiederholen stattdessen die 2. Klammer. In der App: <b>‖: Wdh.</b></p>"+exStaff([[3,0,5,8],[3,8,5,8]],{rs:1})+exStaff([[2,0,3,16]],{v:1,re:1}),k:"wiederholung klammer volta"},
+{t:"z",h:"Segno, D.S., D.C., Fine, Coda, Fermate",b:"<ul><li><b>Segno</b> (𝄋, geschwungenes S): Sprungmarke.</li><li><b>D.S. (Dal Segno)</b>: zurück zum Segno. <b>D.C. (Da Capo)</b>: zurück zum Anfang.</li><li><b>al Fine</b>: dann bis „Fine“ (Ende) spielen.</li><li><b>al Coda</b>: bis zum Coda-Zeichen (Kreis mit Kreuz), dann zur Coda springen.</li><li><b>Fermate</b> (Bogen mit Punkt): Ton länger aushalten als notiert.</li></ul><p>Diese Sprünge kann die App noch nicht abspielen – schreib die Teile bei Bedarf mit „Takt kopieren“ aus.</p>",k:"segno dal segno da capo fine coda fermate sprung"},
+{t:"z",h:"Akkordsymbole über den Noten",b:"<p>Buchstabe = Grundton, Zusatz = Akkordtyp:</p><table><tr><td>F</td><td>F-Dur</td></tr><tr><td>Fm, F-</td><td>f-Moll</td></tr><tr><td>F7</td><td>Dominantseptakkord (kleine Septime)</td></tr><tr><td>Fmaj7, FΔ</td><td>große Septime</td></tr><tr><td>Fm7</td><td>Moll mit kleiner Septime</td></tr><tr><td>F9, F11</td><td>Septakkord plus None bzw. Undezime</td></tr><tr><td>Fsus4, F2</td><td>Terz ersetzt durch Quarte bzw. Sekunde</td></tr><tr><td>F°, Fø</td><td>vermindert, halbvermindert</td></tr><tr><td>E♭/A♭</td><td><b>Slash-Akkord</b>: Es-Dur über dem Basston As – der Bass spielt As!</td></tr></table>",k:"akkord symbol slash maj7 m7 sus"},
+{t:"z",h:"Lagenangabe (VIII) und Fingersatz",b:"<p>Eine römische Zahl wie <b>VIII</b> bedeutet: in der <b>8. Lage</b> spielen, der Zeigefinger liegt im 8. Bund. Kleine arabische Zahlen an Noten (1–4) sind Fingersätze: 1 = Zeigefinger … 4 = kleiner Finger.</p>",k:"lage römisch fingersatz"},
+{t:"z",h:"Tabulatur lesen",b:"<p>Vier Linien = vier Saiten, <b>oben G</b>, unten E (5-Saiter: unten H). Die <b>Zahl</b> ist der Bund, 0 = leere Saite. Übereinander stehende Zahlen werden gleichzeitig gespielt. Rhythmus steht in der Tab nur angedeutet – darum zeigt die App die Noten darüber.</p>"+exTab([[3,0,"3"],[2,2,"5"],[1,4,"5"],[2,6,"3"],[3,8,"3"],[3,12,"5"]]),k:"tab tabulatur lesen"},
+/* ===== Wiki ===== */
+{t:"w",h:"Tonnamen (deutsch) und Halbtöne",b:"<p>Stammtöne: <b>C D E F G A H</b>. Im Deutschen ist <b>H</b> das englische B, und <b>B</b> ist H erniedrigt (englisch B♭).</p><ul><li>Erhöht mit <b>-is</b>: Cis, Dis, Fis, Gis, Ais.</li><li>Erniedrigt mit <b>-es</b>: Des, Ges, Ces; Ausnahmen <b>Es</b>, <b>As</b>, <b>B</b>.</li><li>Gleich klingende Töne mit verschiedenem Namen (Fis = Ges) heißen <b>enharmonisch</b>.</li><li>Zwischen E–F und H–C liegt nur ein <b>Halbton</b>, sonst ein Ganzton. Ein Bund = ein Halbton.</li></ul>"+ply("36:2 37:2 38:2 39:2 40:2 41:2 42:2 43:2 44:2 45:2 46:2 47:2 48:4","Chromatisch von C"),k:"tonname h b is es enharmonisch halbton"},
+{t:"w",h:"Leere Saiten, Oktaven und Frequenzen",b:"<table><tr><th>Saite</th><th>Ton</th><th>Hz</th></tr><tr><td>(5-Saiter) H</td><td>H0</td><td>30,9</td></tr><tr><td>E</td><td>E1</td><td>41,2</td></tr><tr><td>A</td><td>A1</td><td>55,0</td></tr><tr><td>D</td><td>D2</td><td>73,4</td></tr><tr><td>G</td><td>G2</td><td>98,0</td></tr></table><p>Die Zahl nach dem Ton ist die Oktave (wissenschaftliche Schreibweise, eine neue Oktave beginnt bei C). Bund 12 = gleicher Ton eine Oktave höher, doppelte Frequenz. Stimmton: a¹ = A4 = 440 Hz.</p>"+ply("28:4 33:4 38:4 43:4","Leere Saiten"),k:"saite stimmung frequenz hz oktave"},
+{t:"w",h:"Intervalle",b:"<p>Abstand zweier Töne in Halbtönen (= Bünden), mit typischem Griff auf dem Bass:</p><table><tr><th>HT</th><th>Intervall</th><th>Griff</th></tr><tr><td>1</td><td>kleine Sekunde</td><td>1 Bund weiter</td></tr><tr><td>2</td><td>große Sekunde</td><td>2 Bünde</td></tr><tr><td>3</td><td>kleine Terz</td><td>3 Bünde / nächste Saite 2 zurück</td></tr><tr><td>4</td><td>große Terz</td><td>nächste Saite 1 zurück</td></tr><tr><td>5</td><td>Quarte</td><td>nächste Saite, gleicher Bund</td></tr><tr><td>6</td><td>Tritonus</td><td>nächste Saite +1</td></tr><tr><td>7</td><td>Quinte</td><td>nächste Saite +2</td></tr><tr><td>8</td><td>kleine Sexte</td><td>übernächste Saite −2</td></tr><tr><td>9</td><td>große Sexte</td><td>übernächste Saite −1</td></tr><tr><td>10</td><td>kleine Septime</td><td>übernächste Saite, gleicher Bund</td></tr><tr><td>11</td><td>große Septime</td><td>übernächste Saite +1</td></tr><tr><td>12</td><td>Oktave</td><td>übernächste Saite +2</td></tr></table>"+ply("33:4 36:4","kl. Terz")+ply("33:4 37:4","gr. Terz")+ply("33:4 40:4","Quinte")+ply("33:4 45:4","Oktave"),k:"intervall terz quinte quarte oktave septime"},
+{t:"w",h:"Dur-Tonleiter",b:"<p>Schrittfolge <b>Ganz – Ganz – Halb – Ganz – Ganz – Ganz – Halb</b>. Stufen 1–7, die 8 ist wieder der Grundton. Beispiel C-Dur: C D E F G A H C.</p>"+exTab([[2,0,"3"],[2,2,"5"],[1,4,"2"],[1,6,"3"],[1,8,"5"],[0,10,"2"],[0,12,"4"],[0,14,"5"]])+ply("36:2 38:2 40:2 41:2 43:2 45:2 47:2 48:4","C-Dur"),k:"dur tonleiter skala ionisch"},
+{t:"w",h:"Moll-Tonleitern",b:"<ul><li><b>Natürlich Moll</b>: Ganz – Halb – Ganz – Ganz – Halb – Ganz – Ganz (a-Moll: A H C D E F G A).</li><li><b>Harmonisch Moll</b>: 7. Stufe erhöht (Gis in a-Moll) – typisch für Klassik und Latin.</li><li><b>Melodisch Moll</b> (Jazz): 6. und 7. Stufe erhöht.</li></ul><p>Jede Dur-Tonart hat eine <b>parallele Molltonart</b> mit gleichen Vorzeichen, eine kleine Terz tiefer: C-Dur ↔ a-Moll, As-Dur ↔ f-Moll.</p>"+ply("33:2 35:2 36:2 38:2 40:2 41:2 43:2 45:4","a-Moll")+ply("33:2 35:2 36:2 38:2 40:2 41:2 44:2 45:4","a harmonisch"),k:"moll natürlich harmonisch melodisch parallel"},
+{t:"w",h:"Pentatonik und Blues-Tonleiter",b:"<ul><li><b>Moll-Pentatonik</b>: 1 – ♭3 – 4 – 5 – ♭7 (A: A C D E G). Die wichtigste Skala für Rock- und Blues-Bass.</li><li><b>Dur-Pentatonik</b>: 1 – 2 – 3 – 5 – 6 (C: C D E G A).</li><li><b>Blues-Tonleiter</b>: Moll-Pentatonik plus ♭5 (A: A C D Es E G).</li></ul>"+exTab([[3,0,"5"],[3,2,"8"],[2,4,"5"],[2,6,"7"],[1,8,"5"],[1,10,"7"]])+ply("33:2 36:2 38:2 40:2 43:2 45:4","A-Moll-Pentatonik")+ply("33:2 36:2 38:2 39:2 40:2 43:2 45:4","A-Blues"),k:"pentatonik blues skala"},
+{t:"w",h:"Kirchentonarten (Modi)",b:"<p>Die sieben Modi entstehen, wenn man die Dur-Tonleiter auf jeder Stufe beginnt:</p><table><tr><td>Ionisch</td><td>= Dur</td></tr><tr><td>Dorisch</td><td>Moll mit großer Sexte – Funk, Jazz (über m7-Akkorden)</td></tr><tr><td>Phrygisch</td><td>Moll mit kleiner Sekunde – spanisch, Metal</td></tr><tr><td>Lydisch</td><td>Dur mit übermäßiger Quarte</td></tr><tr><td>Mixolydisch</td><td>Dur mit kleiner Septime – über 7-Akkorden, Rock, Blues</td></tr><tr><td>Äolisch</td><td>= natürlich Moll</td></tr><tr><td>Lokrisch</td><td>vermindert, über m7♭5</td></tr></table>"+ply("38:2 40:2 41:2 43:2 45:2 47:2 48:2 50:4","D dorisch"),k:"modus kirchentonart dorisch mixolydisch phrygisch lydisch"},
+{t:"w",h:"Tonarten und Quintenzirkel",b:"<p>Im <b>Quintenzirkel</b> folgen die Tonarten im Quintabstand aufeinander; jeder Schritt bringt ein Vorzeichen dazu.</p><ul><li>Kreuz-Tonarten: G (1♯), D, A, E, H, Fis (6♯) – Merksatz „<i>Geh Du Alter Esel, Hole Fisch</i>“. Kreuze in der Reihenfolge Fis, Cis, Gis, Dis, Ais, Eis.</li><li>B-Tonarten: F (1♭), B, Es, As, Des, Ges (6♭). Die ♭ kommen in der Reihenfolge B, Es, As, Des, Ges, Ces.</li><li>Die Molltonart mit gleichen Vorzeichen liegt eine kleine Terz tiefer.</li></ul><p>Für den Bass wichtig: Akkordfolgen bewegen sich oft im Quintenzirkel (z. B. Dm7 – G7 – C).</p>",k:"quintenzirkel tonart vorzeichen merksatz"},
+{t:"w",h:"Akkorde und Arpeggien",b:"<table><tr><th>Akkord</th><th>Stufen</th><th>Beispiel C</th></tr><tr><td>Dur</td><td>1 3 5</td><td>C E G</td></tr><tr><td>Moll</td><td>1 ♭3 5</td><td>C Es G</td></tr><tr><td>vermindert</td><td>1 ♭3 ♭5</td><td>C Es Ges</td></tr><tr><td>übermäßig</td><td>1 3 ♯5</td><td>C E Gis</td></tr><tr><td>maj7</td><td>1 3 5 7</td><td>C E G H</td></tr><tr><td>7</td><td>1 3 5 ♭7</td><td>C E G B</td></tr><tr><td>m7</td><td>1 ♭3 5 ♭7</td><td>C Es G B</td></tr><tr><td>m7♭5</td><td>1 ♭3 ♭5 ♭7</td><td>C Es Ges B</td></tr></table><p>Ein <b>Arpeggio</b> spielt die Akkordtöne nacheinander – die Basis vieler Basslinien.</p>"+ply("36:2 40:2 43:2 47:2 48:4","Cmaj7")+ply("36:2 40:2 43:2 46:2 48:4","C7")+ply("36:2 39:2 43:2 46:2 48:4","Cm7"),k:"akkord dreiklang septakkord arpeggio"},
+{t:"w",h:"Rhythmus zählen",b:"<ul><li>Viertel: <b>1 2 3 4</b></li><li>Achtel: <b>1 + 2 + 3 + 4 +</b> („eins und zwei und …“)</li><li>Sechzehntel: <b>1 e + e 2 e + e …</b></li><li>Triolen: drei Noten auf einen Schlag, „1-ta-ta“ (in der App noch nicht eingebbar).</li><li><b>Synkope</b>: Betonung zwischen den Schlägen, z. B. auf der „+“.</li><li><b>Shuffle/Swing</b>: Achtel ungleich lang gespielt, lang-kurz.</li><li><b>Auftakt</b>: unvollständiger Takt vor dem ersten vollen Takt.</li></ul>"+ply("33:2 33:2 r:2 33:2 r:2 33:2 33:4","Synkope"),k:"rhythmus zählen synkope swing shuffle triole auftakt"},
+{t:"w",h:"Tempo",b:"<p>Das Tempo wird in <b>bpm</b> (Schläge pro Minute) angegeben. Italienische Bezeichnungen, ungefähre Bereiche: Largo ~40–60, Adagio ~66–76, Andante ~76–108, Moderato ~108–120, Allegro ~120–156, Presto ~168–200. Zum Üben: so langsam beginnen, dass es fehlerfrei klappt, dann mit dem Tempo-Trainer steigern.</p>",k:"tempo bpm allegro andante"},
+{t:"w",h:"Griffbrett-Muster",b:"<ul><li><b>Oktave</b>: zwei Saiten höher, zwei Bünde weiter.</li><li><b>Quinte</b>: eine Saite höher, zwei Bünde weiter.</li><li><b>Quarte</b>: eine Saite höher, gleicher Bund.</li><li><b>Gleicher Ton</b>: eine Saite höher, fünf Bünde tiefer (Bund 5 = nächste leere Saite).</li><li><b>Lage</b>: eine Hand deckt 4 Bünde ab (ein Finger pro Bund).</li></ul>"+exTab([[3,0,"5"],[2,4,"7"],[1,8,"7"],[3,12,"5"]])+ply("33:4 40:4 45:4 33:4","Grundton – Quinte – Oktave"),k:"griffbrett muster oktave quinte lage"},
+{t:"w",h:"Die Rolle des Basses",b:"<ul><li><b>Grundton auf die 1</b>: gibt dem Akkord das Fundament.</li><li><b>Grundton – Quinte</b>: Klassiker in Country, Rock, Polka.</li><li><b>Approach Note</b>: ein Ton einen Halbton über oder unter dem nächsten Zielton führt dorthin.</li><li><b>Walking Bass</b> (Jazz): durchgehende Viertel, Grundton auf der 1, auf Schlag 4 eine Annäherung an den nächsten Akkord.</li><li><b>ii – V – I</b> (z. B. Dm7 – G7 – C): die häufigste Jazz-Akkordfolge.</li></ul>"+ply("38:4 41:4 45:4 44:4 43:4 47:4 50:4 37:4 36:16","Walking Dm7–G7–C"),k:"rolle groove walking approach grundton 2 5 1"},
+{t:"w",h:"Stimmungen",b:"<ul><li><b>Standard</b>: E A D G (5-Saiter: H E A D G).</li><li><b>Drop D</b>: tiefe E-Saite einen Ganzton tiefer auf D.</li><li><b>Halbton tiefer</b>: Es As Des Ges – häufig im Rock.</li></ul><p>Die App rechnet zurzeit mit Standardstimmung.</p>",k:"stimmung tuning drop d 5-saiter"},
+{t:"w",h:"Spieltechniken",b:"<ul><li><b>Fingerstyle</b>: Zeige- und Mittelfinger im Wechsel.</li><li><b>Plektrum</b>: Ab- und Aufschlag.</li><li><b>Slap</b> (Daumen auf die tiefe Saite) und <b>Pop</b> (Saite anreißen).</li><li><b>Hammer-on / Pull-off / Slide</b>: gebunden spielen.</li><li><b>Ghost/Dead Note</b>: gedämpft, perkussiv.</li><li><b>Palm Mute</b>: Handballen dämpft die Saiten am Steg.</li><li><b>Vibrato</b>: Ton leicht schwingen lassen.</li></ul>",k:"technik slap pop plektrum fingerstyle vibrato"},
+{t:"w",h:"Glossar",b:"<table><tr><td>Riff</td><td>kurze, wiederholte Figur</td></tr><tr><td>Lick</td><td>kurze melodische Floskel</td></tr><tr><td>Fill</td><td>Überleitung am Ende eines Abschnitts</td></tr><tr><td>Groove</td><td>rhythmisches Gefühl einer Linie</td></tr><tr><td>Turnaround</td><td>Akkordfolge, die zum Anfang zurückführt</td></tr><tr><td>Chorus</td><td>ein Durchgang der Form (Jazz) bzw. Refrain</td></tr><tr><td>Voicing</td><td>Lage und Verteilung der Akkordtöne</td></tr><tr><td>Leitton</td><td>Ton einen Halbton unter dem Grundton</td></tr><tr><td>Chromatik</td><td>Fortschreitung in Halbtönen</td></tr><tr><td>Diatonik</td><td>nur Töne der Tonart</td></tr></table>",k:"glossar begriff riff lick fill groove"}
+];
+var helpTab="e";
+function renderHelp(){
+  var q=$("hSearch").value.trim().toLowerCase(),h="";
+  ["e","z","w"].forEach(function(t){$("htab-"+t).classList.toggle("on",!q&&t===helpTab)});
+  HELP.forEach(function(x,i){
+    if(q){var txt=(x.h+" "+x.k+" "+x.b.replace(/<[^>]+>/g," ")).toLowerCase();if(txt.indexOf(q)<0)return;}
+    else if(x.t!==helpTab)return;
+    if(!x.html)x.html=x.b;
+    h+='<details class="hitem"'+(q?' open':'')+'><summary>'+(q?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+esc(x.h)+'</summary><div class="hbody">'+x.html+'</div></details>';
+  });
+  $("hList").innerHTML=h||'<p class="empty">Nichts gefunden. Probiere ein anderes Wort, z. B. „Terz“, „Pause“ oder „Bund“.</p>';
+}
+$("helpBtn").onclick=function(){$("help").classList.add("open");renderHelp();};
+$("hClose").onclick=function(){$("help").classList.remove("open")};
+$("hSearch").oninput=renderHelp;
+["e","z","w"].forEach(function(t){$("htab-"+t).onclick=function(){helpTab=t;$("hSearch").value="";renderHelp();$("hList").scrollTop=0;}});
+$("hList").addEventListener("click",function(e){var b=e.target.closest(".hplay");if(b)playSeq(b.dataset.seq);});
 
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
