@@ -133,6 +133,15 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .modal h2{margin:0;font-size:17px;color:var(--main)}
 .modal p{margin:0;font-size:13px;color:var(--muted)}
 .plist{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+#refBtn{white-space:nowrap}
+.ref{border-bottom:2px solid var(--main);background:var(--shade);display:flex;flex-direction:column}
+.ref[hidden]{display:none}
+.refbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 8px}
+.refbar button{min-height:32px;font-size:13px;padding:0 8px}
+#refInfo{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+#refView{overflow:auto;background:#fff;cursor:grab;-webkit-overflow-scrolling:touch}
+#refImg{display:block;max-width:none;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.sz-s #refView{height:18vh}.sz-m #refView{height:28vh}.sz-l #refView{height:42vh}
 #dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:8}
 #dlg.open{display:flex}
 #dlg .box{background:var(--surface);border-radius:8px;padding:14px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px}
@@ -147,6 +156,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
   <div class="songbar">
     <button id="menuBtn" aria-label="Meine Stücke öffnen">☰ Meine Stücke</button>
     <button id="songTitle" class="stitle" title="Stück wechseln, umbenennen, sichern"></button>
+    <button id="refBtn" title="Foto deiner Noten als Vorlage einblenden">📷 Vorlage</button>
   </div>
   <div class="transport">
     <button id="play" class="primary">▶ Start</button>
@@ -205,6 +215,22 @@ button.danger{color:var(--warn);border-color:var(--warn)}
   </details>
 </header>
 <div id="status" aria-live="polite"></div>
+<section id="ref" class="ref sz-m" hidden aria-label="Notenvorlage">
+  <div class="refbar">
+    <button id="refPrev" aria-label="Vorheriges Foto">‹</button>
+    <span id="refInfo"></span>
+    <button id="refNext" aria-label="Nächstes Foto">›</button>
+    <button id="refZoomOut" aria-label="Kleiner zoomen">−</button>
+    <button id="refZoomIn" aria-label="Größer zoomen">+</button>
+    <button id="refSize" title="Höhe der Vorlage: klein, mittel, groß">Höhe</button>
+    <button id="refRot" title="Foto um 90° drehen">⟳</button>
+    <button id="refAdd">+ Foto</button>
+    <button id="refDel" class="danger">Löschen</button>
+    <button id="refHide" aria-label="Vorlage ausblenden">✕</button>
+  </div>
+  <div id="refView"><img id="refImg" alt="Foto deiner Noten"></div>
+</section>
+<input type="file" id="photoIn" accept="image/*" multiple hidden>
 <main id="score"></main>
 <section id="pad" aria-label="Eingabe">
   <div class="modes">
@@ -258,6 +284,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
     <div class="dfoot">
       <button id="dBackup">Alle Stücke sichern (Backup-Datei)</button>
       <button id="dPaste">Text einfügen</button>
+      <p>Fotos als Vorlage (📷) bleiben nur auf diesem Gerät und sind nicht im Backup enthalten.</p>
       <p>„Datei öffnen“ lädt eigene Stücke und Backups (.json) sowie Noten als MusicXML (.musicxml, .xml, .mxl), z. B. aus MuseScore oder einer Notenscanner-App. Alles wird automatisch auf diesem Gerät gespeichert.</p>
     </div>
   </div>
@@ -983,6 +1010,7 @@ function loadSong(){
   $("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(keyN());$("sig").value=s.sig;$("strings").value=String(nstr());
   setBpm(s.bpm||80);fillSongs();render();flagButtons();
   var n0=noteAt(0,cursor.str,0);setLen(n0?n0.len:1,true);
+  if(typeof refLoad==="function")refLoad();
 }
 $("keySel").onchange=function(){song().key=+this.value;render();save()};
 $("accMode").onchange=function(){song().acc=this.value;render();save()};
@@ -1042,6 +1070,7 @@ $("dList").addEventListener("click",function(e){
     i=+d.del;
     if(delArmI!==i||Date.now()-delArmT>4000){delArmI=i;delArmT=Date.now();renderList();setTimeout(function(){if(delArmI===i){delArmI=-1;renderList()}},4000);return;}
     delArmI=-1;var curId=song().id;
+    delSongPhotos(S.songs[i].id);
     S.songs.splice(i,1);
     if(!S.songs.length)S.songs.push(newSongObj("Neues Stück"));
     var ni=-1;S.songs.forEach(function(s,k){if(s.id===curId)ni=k});
@@ -1328,11 +1357,125 @@ function convertPart(part,title){
   status("Importiert: „"+sn.name+"“, "+bars.length+" Takte"+(useTab?" (mit Tab-Angaben)":"")+". Hinweis: "+notes.join("; ")+".");
 }
 
+/* ---------- Foto als Vorlage ---------- */
+var REF={list:[],i:0,mem:[],db:null,dbFail:false};
+function idb(){
+  return new Promise(function(res,rej){
+    if(REF.db)return res(REF.db);
+    if(REF.dbFail||!window.indexedDB)return rej("aus");
+    try{
+      var r=indexedDB.open("basstab-fotos",1);
+      r.onupgradeneeded=function(){r.result.createObjectStore("photos",{keyPath:"id"})};
+      r.onsuccess=function(){REF.db=r.result;res(REF.db)};
+      r.onerror=function(){REF.dbFail=true;rej(r.error)};
+    }catch(e){REF.dbFail=true;rej(e)}
+  });
+}
+function txStore(mode){return idb().then(function(db){return db.transaction("photos",mode).objectStore("photos")})}
+function reqP(r){return new Promise(function(res,rej){r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+function photosOf(sid){
+  return txStore("readonly").then(function(st){return reqP(st.getAll())}).then(function(all){
+    return all.filter(function(p){return p.song===sid}).sort(function(a,b){return a.t-b.t});
+  },function(){return REF.mem.filter(function(p){return p.song===sid})});
+}
+function putPhoto(p){return txStore("readwrite").then(function(st){return reqP(st.put(p))},function(){var k=REF.mem.findIndex(function(x){return x.id===p.id});if(k>=0)REF.mem[k]=p;else REF.mem.push(p);})}
+function delPhoto(id){return txStore("readwrite").then(function(st){return reqP(st.delete(id))},function(){REF.mem=REF.mem.filter(function(x){return x.id!==id})})}
+function delSongPhotos(sid){photosOf(sid).then(function(l){l.forEach(function(p){delPhoto(p.id)})})}
+function shrink(blob,rot){
+  return createImageBitmap(blob).then(function(bm){
+    var w=bm.width,h=bm.height,mx=2200,sc=Math.min(1,mx/Math.max(w,h));
+    var cw=Math.round(w*sc),ch=Math.round(h*sc),r=((rot||0)%360+360)%360;
+    var cv=document.createElement("canvas");
+    cv.width=(r===90||r===270)?ch:cw;cv.height=(r===90||r===270)?cw:ch;
+    var c=cv.getContext("2d");
+    c.translate(cv.width/2,cv.height/2);c.rotate(r*Math.PI/180);c.drawImage(bm,-cw/2,-ch/2,cw,ch);
+    return new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej("blob")},"image/jpeg",0.85)});
+  });
+}
+var refURL=null;
+function refShow(){
+  var has=REF.list.length>0,open=has&&S.refOpen;
+  $("ref").hidden=!open;
+  $("refBtn").classList.toggle("on",open);
+  $("refBtn").textContent=has?"📷 Vorlage ("+REF.list.length+")":"📷 Vorlage";
+  if(!open)return;
+  if(REF.i>=REF.list.length)REF.i=REF.list.length-1;
+  var p=REF.list[REF.i];
+  if(refURL)URL.revokeObjectURL(refURL);
+  refURL=URL.createObjectURL(p.blob);
+  $("refImg").src=refURL;
+  $("refImg").style.width=(S.refZoom*100)+"%";
+  $("refInfo").textContent="Foto "+(REF.i+1)+"/"+REF.list.length;
+  $("refPrev").disabled=REF.i===0;$("refNext").disabled=REF.i>=REF.list.length-1;
+  $("ref").className="ref sz-"+S.refSize;
+  $("refDel").textContent="Löschen";
+}
+function refLoad(){
+  var sid=song().id;
+  photosOf(sid).then(function(l){if(song().id!==sid)return;REF.list=l;REF.i=0;refShow();});
+}
+$("refBtn").onclick=function(){
+  if(!REF.list.length){$("photoIn").click();return;}
+  S.refOpen=!S.refOpen;save();refShow();
+};
+$("refAdd").onclick=function(){$("photoIn").click()};
+$("photoIn").onchange=function(){
+  var fs=Array.prototype.slice.call(this.files||[]);this.value="";if(!fs.length)return;
+  var sid=song().id;status("Foto wird vorbereitet …");
+  var chain=Promise.resolve(),n=0;
+  fs.forEach(function(f,k){
+    chain=chain.then(function(){return shrink(f,0)}).then(function(b){n++;return putPhoto({id:uid()+uid(),song:sid,t:Date.now()+k,blob:b})}).catch(function(){});
+  });
+  chain.then(function(){
+    if(!n){status("Das Foto ließ sich nicht öffnen. Bitte JPG oder PNG wählen.");return;}
+    S.refOpen=true;save();
+    photosOf(sid).then(function(l){REF.list=l;REF.i=l.length-1;refShow();
+      status(n===1?"Foto als Vorlage hinzugefügt. Zoomen mit + / −, verschieben durch Wischen im Bild.":n+" Fotos als Vorlage hinzugefügt.");
+      if(REF.dbFail)status("Foto angezeigt, aber dieser Browser speichert es nicht dauerhaft. Nach dem Schließen ist es weg.");
+    });
+  });
+};
+$("refPrev").onclick=function(){if(REF.i>0){REF.i--;refShow();$("refView").scrollTop=0;}};
+$("refNext").onclick=function(){if(REF.i<REF.list.length-1){REF.i++;refShow();$("refView").scrollTop=0;}};
+var ZOOMS=[1,1.5,2,2.5,3,4];
+function refZoom(d){
+  var v=$("refView"),k=ZOOMS.indexOf(S.refZoom);if(k<0)k=0;
+  var nk=Math.max(0,Math.min(ZOOMS.length-1,k+d));if(nk===k)return;
+  var cx=(v.scrollLeft+v.clientWidth/2)/v.scrollWidth,cy=(v.scrollTop+v.clientHeight/2)/v.scrollHeight;
+  S.refZoom=ZOOMS[nk];save();
+  $("refImg").style.width=(S.refZoom*100)+"%";
+  v.scrollLeft=cx*v.scrollWidth-v.clientWidth/2;v.scrollTop=cy*v.scrollHeight-v.clientHeight/2;
+}
+$("refZoomIn").onclick=function(){refZoom(1)};
+$("refZoomOut").onclick=function(){refZoom(-1)};
+$("refSize").onclick=function(){S.refSize=S.refSize==="s"?"m":S.refSize==="m"?"l":"s";save();refShow();};
+$("refRot").onclick=function(){
+  var p=REF.list[REF.i];if(!p)return;
+  shrink(p.blob,90).then(function(b){p.blob=b;return putPhoto(p)}).then(refShow,function(){status("Drehen hat nicht geklappt.")});
+};
+var refDelT=0;
+$("refDel").onclick=function(){
+  var p=REF.list[REF.i];if(!p)return;
+  if(Date.now()-refDelT>4000){refDelT=Date.now();this.textContent="Wirklich löschen?";var me=this;setTimeout(function(){me.textContent="Löschen"},4000);return;}
+  refDelT=0;
+  delPhoto(p.id).then(function(){REF.list.splice(REF.i,1);if(REF.i>0&&REF.i>=REF.list.length)REF.i--;refShow();status("Foto gelöscht.");});
+};
+$("refHide").onclick=function(){S.refOpen=false;save();refShow()};
+/* Wischen/Ziehen im Bild mit der Maus */
+(function(){
+  var v=$("refView"),drag=null;
+  v.addEventListener("mousedown",function(e){drag={x:e.clientX,y:e.clientY,l:v.scrollLeft,t:v.scrollTop};e.preventDefault()});
+  window.addEventListener("mousemove",function(e){if(drag){v.scrollLeft=drag.l-(e.clientX-drag.x);v.scrollTop=drag.t-(e.clientY-drag.y);}});
+  window.addEventListener("mouseup",function(){drag=null});
+})();
+
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
 $("metMode").value=S.metMode;$("metAcc").checked=!!S.metAcc;$("countIn").checked=!!S.countIn;
 $("metVol").value=S.metVol;$("bassVol").value=S.bassVol;$("octUp").checked=!!S.octUp;
 $("showNotes").checked=S.showNotes!==false;
+if(["s","m","l"].indexOf(S.refSize)<0)S.refSize="s";
+if(ZOOMS.indexOf(S.refZoom)<0)S.refZoom=1;
 setMode(S.mode==="note"?"note":"tab");
 padState();setLen(1,true);loadSong();
 })();
