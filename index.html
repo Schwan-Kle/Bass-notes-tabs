@@ -166,6 +166,8 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .tools button{min-height:32px;font-size:13px;padding:0 4px;white-space:nowrap}
 .k6{grid-template-columns:repeat(6,1fr)}
 .rep{font-weight:400;color:var(--accent)}
+.staff .jmt{font:italic 700 10px Georgia,serif;fill:#1A1A1A}.staff .dyt{font:italic 700 13px Georgia,serif;fill:#1A1A1A}.staff .dyt.dyw{font-size:11px;font-weight:600}
+.dyrow{margin-top:8px}
 .fb{border-bottom:1px solid var(--line);background:var(--surface)}
 .fb[hidden]{display:none}
 #fbView{overflow-x:auto;padding:4px 8px}
@@ -984,7 +986,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
   <div class="box"><h2 id="spT">Auswahl</h2><div id="spL" class="spgrid"></div><button id="spClose">Abbrechen</button></div>
 </div>
 <div id="techDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="techT">
-  <div class="box"><h2 id="techT">Technik</h2><div id="techL" class="techl"></div><p>Mehrfach wählbar. Für Hammer-on/Pull-off den Knopf ⌒, für Akzent &gt;, für Dead Note x.</p><button id="techOk" class="primary">Fertig</button></div>
+  <div class="box"><h2 id="techT">Technik</h2><div id="techL" class="techl"></div><div class="secbox dyrow"><b>🔉 Lautstärke ab dieser Note</b><div class="chips" id="dynChips"></div></div><p>Mehrfach wählbar. Für Hammer-on/Pull-off den Knopf ⌒, für Akzent &gt;, für Dead Note x.</p><button id="techOk" class="primary">Fertig</button></div>
 </div>
 <div id="restDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="restT">
   <div class="box"><h2 id="restT">Pause</h2><p id="restInfo"></p>
@@ -1091,6 +1093,11 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
       <div class="chips kchips" id="tkChips"></div>
       <div class="row"><label>Tempo ab hier <input type="number" id="tbIn" class="narrow" min="30" max="260" placeholder="–"> bpm</label><button id="tbDel">wie vorher</button></div>
       <p>Gilt ab diesem Takt bis zur nächsten Änderung. „wie vorher“ übernimmt Taktart, Tonart bzw. Tempo von davor.</p>
+    </div>
+    <div class="secbox"><b>🔀 Sprünge: D.C. · D.S. · Coda · Fine</b>
+      <p class="lyhint">Am Anfang dieses Takts:</p><div class="chips" id="jmA"><button data-jm="sgn"><svg viewBox="-8 -9 16 18" width="14" height="16" style="vertical-align:-3px;stroke:currentColor;fill:currentColor"><path fill="none" stroke-width="1.7" stroke-linecap="round" d="M3.4 -4.2 C1 -7.6 -4.6 -6 -3.4 -2.4 C-2.4 0.4 3.6 -0.6 3.6 3 C4.4 6.8 -1.2 7.6 -3.6 4.4"/><path stroke-width="1.1" d="M-5 6.5 L5 -6.5"/><circle cx="-5" cy="1" r="1.2" stroke="none"/><circle cx="5" cy="-1" r="1.2" stroke="none"/></svg> Segno (Ziel für D.S.)</button><button data-jm="coda">⊕ Coda beginnt hier</button></div>
+      <p class="lyhint">Am Ende dieses Takts:</p><div class="chips" id="jmE"><button data-jm="toc">⊕ To Coda</button><button data-jm="fine">Fine</button><button data-jj="dc">D.C.</button><button data-jj="dc_f">D.C. al Fine</button><button data-jj="dc_c">D.C. al Coda</button><button data-jj="ds">D.S.</button><button data-jj="ds_f">D.S. al Fine</button><button data-jj="ds_c">D.S. al Coda</button></div>
+      <p class="lyhint">D.C. = zurück zum Anfang, D.S. = zurück zum Segno. Danach keine Wiederholungen mehr, bei Klammern nur die letzte. „al Fine“ endet bei Fine, „al Coda“ springt bei „To Coda“ zur Coda.</p>
     </div>
     <label class="ck"><input type="checkbox" id="rsChk"> Wiederholung beginnt hier (‖:)</label>
     <label class="ck"><input type="checkbox" id="reChk"> Wiederholung endet hier (:‖)</label>
@@ -1395,7 +1402,7 @@ function barBody(b,NI,sus){
 function render(){song().bars.forEach(cleanRests);if(typeof loopUI==="function")loopUI();if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg,st,bars=song().bars,b;
   var sus=computeSus(),NI=noteInfo(),PL=partList(),ap=actPart(),all=PL&&showAllParts(),oth=[],gtx=all&&PL.some(function(p,i){return partInst(i)==="guitar"});
-  var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.key,x.ch,x.tb,x.rs,x.re,x.v,x.rt]})]):"";
+  var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.key,x.ch,x.tb,x.rs,x.re,x.v,x.rt,x.dy,x.jmp,x.sgn,x.coda,x.toc,x.fine]})]):"";
   if(all&&OTHC.k===sigK&&OTHC.id===song().id)oth=OTHC.v;
   else if(all)PL.forEach(function(p,i){if(i===ap)return;oth[i]=withPart(i,function(){song().bars.forEach(cleanRests);var su=computeSus(),ni=noteInfo(),arr=[];PART.noCh=i!==0||gtx;PART.other=true;
     for(var bq=0;bq<bars.length;bq++)arr.push(barBody(bq,ni,su).replace(/data-(b|s|t)="/g,'data-o$1="'));PART.noCh=false;PART.other=false;return arr;});});
@@ -1734,6 +1741,13 @@ function staffSVG0(b,NI){
   if(bar.rs){var xr=G-12;o.push('<rect class="fl" x="'+r(xr)+'" y="'+Y(8)+'" width="3" height="'+(Y(0)-Y(8))+'"/><line class="st" stroke-width="1" x1="'+r(xr+5)+'" x2="'+r(xr+5)+'" y1="'+Y(8)+'" y2="'+Y(0)+'"/><circle class="fl" cx="'+r(xr+8.5)+'" cy="'+Y(5)+'" r="1.8"/><circle class="fl" cx="'+r(xr+8.5)+'" cy="'+Y(3)+'" r="1.8"/>');}
   if(bar.re){o.push('<rect class="fl" x="'+r(W-3)+'" y="'+Y(8)+'" width="3" height="'+(Y(0)-Y(8))+'"/><line class="st" stroke-width="1" x1="'+r(W-6)+'" x2="'+r(W-6)+'" y1="'+Y(8)+'" y2="'+Y(0)+'"/><circle class="fl" cx="'+r(W-9.5)+'" cy="'+Y(5)+'" r="1.8"/><circle class="fl" cx="'+r(W-9.5)+'" cy="'+Y(3)+'" r="1.8"/>');
     if((bar.rt||2)>2)o.push('<text x="'+r(W-4)+'" y="'+(Y(8)-4)+'" font-size="11" text-anchor="end">×'+bar.rt+'</text>');}
+  if(STAFF.clef!=="bass"){var jy=11,jx=W-(bar.re?12:4),gx=G+(bar.rs?4:6);
+    if(bar.sgn){o.push(segnoSVG(r(gx+3),9));gx+=16;}
+    if(bar.coda)o.push(codaSVG(r(gx+3),9));
+    var je=[];if(bar.toc)je.push("To Coda");if(bar.fine)je.push("Fine");if(bar.jmp&&JML[bar.jmp])je.push(JML[bar.jmp]);
+    if(bar.toc){o.push(codaSVG(r(jx-4),8));jx-=13;}
+    if(je.length)o.push('<text class="jmt" x="'+r(jx)+'" y="'+jy+'" text-anchor="end">'+je.join(" · ")+'</text>');}
+  if(bar.dy&&STAFF.clef!=="treble")for(var dk in bar.dy){var dt=+dk;if(dt>=st||!DYL[bar.dy[dk]])continue;o.push('<text class="dyt'+(DYV[bar.dy[dk]]?'':' dyw')+'" x="'+r(X(dt)-4)+'" y="'+r(H-5)+'">'+DYL[bar.dy[dk]]+'</text>');}
   if(bar.v){var bp=b>0&&song().bars[b-1].v===bar.v,bn=b+1<song().bars.length&&song().bars[b+1].v===bar.v;
     o.push('<path class="st" stroke-width="1.2" d="M'+(bp?0:G)+' '+(bp?16:26)+(bp?'':' V16')+' H'+r(bn?W:W-8)+(bn?'':' V26')+'"/>');
     if(!bp)o.push('<text x="'+r(G+4)+'" y="26" font-size="11" font-weight="700">'+bar.v+'.</text>');}
@@ -2493,7 +2507,7 @@ function toneM(m,t,dur){if(isVoice()&&m>=21&&m<=108)return playVoice({},pIdx(m),
 var NOISE=null;
 function noiseBuf(){if(NOISE)return NOISE;var L=ctx.sampleRate,b=ctx.createBuffer(1,L,L),d=b.getChannelData(0);for(var i=0;i<L;i++)d[i]=Math.random()*2-1;NOISE=b;return b;}
 function playDrum(n,s,t){
-  var v=S.bassVol/100*(n.a?1.35:1);if(v<=0)return;var out=master||ctx.destination;
+  var v=S.bassVol/100*DYN*(n.a?1.35:1);if(v<=0)return;var out=master||ctx.destination;
   function nz(dur,type,fq,q,pk,dec){var src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=noiseBuf();f.type=type;f.frequency.value=fq;f.Q.value=q||0.7;
     g.gain.setValueAtTime(pk*v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dec);src.connect(f);f.connect(g);g.connect(out);src.start(t);src.stop(t+dur);}
   function tone(f0,f1,dec,pk,type){var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dec*0.6);
@@ -2509,7 +2523,7 @@ function playDrum(n,s,t){
   }
 }
 function playVoice(n,s,t,dur){
-  var v=S.bassVol/100;if(v<=0||n.f==="x")return;var m=OPEN[88][s],f=440*Math.pow(2,(m-69)/12),end=t+Math.max(0.12,dur*0.96);
+  var v=S.bassVol/100*DYN;if(v<=0||n.f==="x")return;var m=OPEN[88][s],f=440*Math.pow(2,(m-69)/12),end=t+Math.max(0.12,dur*0.96);
   var g=ctx.createGain(),o1=ctx.createOscillator(),o2=ctx.createOscillator(),og2=ctx.createGain(),bp=ctx.createBiquadFilter(),lp=ctx.createBiquadFilter(),lfo=ctx.createOscillator(),lg=ctx.createGain();
   o1.type="triangle";o2.type="sawtooth";og2.gain.value=0.18;bp.type="bandpass";bp.frequency.value=900;bp.Q.value=1.1;lp.type="lowpass";lp.frequency.value=3200;
   o1.frequency.setValueAtTime(f,t);o2.frequency.setValueAtTime(f,t);
@@ -2519,7 +2533,7 @@ function playVoice(n,s,t,dur){
   [o1,o2,lfo].forEach(function(o){o.start(t);o.stop(end+0.3);});
 }
 function playPiano(n,s,t,dur){
-  var v=S.bassVol/100;if(v<=0||n.f==="x")return;
+  var v=S.bassVol/100*DYN;if(v<=0||n.f==="x")return;
   var m=OPEN[88][s],f=440*Math.pow(2,(m-69)/12),g=ctx.createGain(),fl=ctx.createBiquadFilter();
   fl.type="lowpass";fl.frequency.setValueAtTime(Math.min(9000,f*7),t);fl.frequency.exponentialRampToValueAtTime(Math.max(300,f*2),t+0.6);
   var pk=0.32*v*(n.a?1.4:1),rel=Math.max(0.35,Math.min(2.4,dur*1.25+(m<60?0.5:0.2)));
@@ -2531,7 +2545,7 @@ function playPiano(n,s,t,dur){
   fl.connect(g);g.connect(master||ctx.destination);
 }
 function playGuitar(n,s,t,dur){
-  var v=S.bassVol/100;if(v<=0)return;if(n.sd){var dl=(n.sd==="u"?s:5-s)*0.012;t+=dl;dur=Math.max(0.05,dur-dl);}
+  var v=S.bassVol/100*DYN;if(v<=0)return;if(n.sd){var dl=(n.sd==="u"?s:5-s)*0.012;t+=dl;dur=Math.max(0.05,dur-dl);}
   var dead=n.f==="x"||n.ph,m=OPEN[6][s]+(dead?0:n.f),f=440*Math.pow(2,(m-69)/12);
   var g=ctx.createGain(),fl=ctx.createBiquadFilter();fl.type="lowpass";fl.Q.value=1.2;
   fl.frequency.setValueAtTime(dead?900:Math.min(8000,f*9),t);fl.frequency.exponentialRampToValueAtTime(Math.max(250,f*1.5),t+(dead?0.05:0.5));
@@ -2545,7 +2559,7 @@ function playNote(n,s,t,dur){
   if(isVoice())return playVoice(n,s,t,dur);
   if(isGuitar())return playGuitar(n,s,t,dur);
   if(isDrums())return playDrum(n,s,t);
-  var v=S.bassVol/100;if(v<=0)return;
+  var v=S.bassVol/100*DYN;if(v<=0)return;
   var dead=n.f==="x"||n.ph,fr=dead?0:n.f;
   var base=OPEN[nstr()][s]+(S.octUp?12:0),m=base+fr;
   if(n.hm&&!dead){var HM={12:12,7:19,19:19,5:24,24:24,4:28,9:28,16:28};if(HM[fr]!==undefined)m=base+HM[fr];}
@@ -2581,12 +2595,36 @@ function playOther(pt,nm,tt,t,sd){
   try{var ns=nstr();for(var k in nm){var q=k.split("_");if(+q[1]!==tt||+q[0]>=ns)continue;var n=nm[k];playNote(n,+q[0],t,n.len*sd);}}
   finally{if(ki===undefined)delete sg.inst;else sg.inst=ki;sg.strings=ks;}
 }
+/* Dynamik */
+var DYN=1,DYV={pp:0.45,p:0.62,mp:0.8,mf:1,f:1.2,ff:1.4},DYL={pp:"pp",p:"p",mp:"mp",mf:"mf",f:"f",ff:"ff",cr:"cresc.",dm:"dim."};
+function dynAt(b,t){
+  var bars=song().bars,ev=[],off=0,pos=0,i,k;
+  for(i=0;i<bars.length;i++){var st=sigAt(i).steps;if(i===b)pos=off+t;if(bars[i].dy)for(k in bars[i].dy)ev.push({g:off+(+k),v:bars[i].dy[k]});off+=st;}
+  if(!ev.length)return 1;ev.sort(function(x,y){return x.g-y.g});
+  var lv=1,ramp=null;
+  for(i=0;i<ev.length&&ev[i].g<=pos;i++){var e=ev[i];if(DYV[e.v]){lv=DYV[e.v];ramp=null;}else ramp={g:e.g,v:e.v,from:lv};}
+  if(!ramp)return lv;
+  var nx=null;for(;i<ev.length;i++)if(DYV[ev[i].v]){nx=ev[i];break;}
+  var to=nx?DYV[nx.v]:Math.max(0.45,Math.min(1.4,ramp.from+(ramp.v==="cr"?0.4:-0.4))),len=nx?nx.g-ramp.g:sigAt(b).steps*2;
+  return ramp.from+(to-ramp.from)*Math.min(1,(pos-ramp.g)/Math.max(1,len));
+}
+var JML={dc:"D.C.",dc_f:"D.C. al Fine",dc_c:"D.C. al Coda",ds:"D.S.",ds_f:"D.S. al Fine",ds_c:"D.S. al Coda"};
+function codaSVG(x,y){return '<g class="jm"><ellipse class="st" fill="none" stroke-width="1.5" cx="'+x+'" cy="'+y+'" rx="3.6" ry="4.8"/><path class="st" stroke-width="1.3" d="M'+x+' '+(y-8)+' V'+(y+8)+' M'+(x-7)+' '+y+' H'+(x+7)+'"/></g>';}
+function segnoSVG(x,y){return '<g class="jm"><path class="st" fill="none" stroke-width="1.7" stroke-linecap="round" d="M'+(x+3.4)+' '+(y-4.2)+' C'+(x+1)+' '+(y-7.6)+' '+(x-4.6)+' '+(y-6)+' '+(x-3.4)+' '+(y-2.4)+' C'+(x-2.4)+' '+(y+0.4)+' '+(x+3.6)+' '+(y-0.6)+' '+(x+3.6)+' '+(y+3)+' C'+(x+4.4)+' '+(y+6.8)+' '+(x-1.2)+' '+(y+7.6)+' '+(x-3.6)+' '+(y+4.4)+'"/><path class="st" stroke-width="1.1" d="M'+(x-5)+' '+(y+6.5)+' L'+(x+5)+' '+(y-6.5)+'"/><circle class="fl" cx="'+(x-5)+'" cy="'+(y+1)+'" r="1.2"/><circle class="fl" cx="'+(x+5)+'" cy="'+(y-1)+'" r="1.2"/></g>';}
+function lastVolta(i){var bars=song().bars,a=i,z=i,mx=0;while(a>0&&bars[a-1].v)a--;while(z+1<bars.length&&bars[z+1].v)z++;for(var q=a;q<=z;q++)mx=Math.max(mx,bars[q].v);return mx;}
 /* Reihenfolge mit Wiederholungen und Klammern */
 function playOrder(){
   var F=song().form;if(F&&F.length){var fs=[];F.forEach(function(nm){var r=secRangeByName(nm);if(r)for(var q=r[0];q<=r[1];q++)fs.push(q);});if(fs.length)return fs;}
-  var bars=song().bars,n=bars.length,seq=[],i=0,repStart=0,pass=1,cnt={},guard=0;
+  var bars=song().bars,n=bars.length,seq=[],i=0,repStart=0,pass=1,cnt={},guard=0,J=null;
   while(i<n&&guard++<20000){
     var b=bars[i];
+    if(J){
+      if(b.v&&b.v!==lastVolta(i)){i++;continue;}
+      seq.push(i);
+      if(J.slice(-2)==="_f"&&b.fine)break;
+      if(J.slice(-2)==="_c"&&b.toc){var cd=-1;for(var q=i+1;q<n;q++)if(bars[q].coda){cd=q;break;}if(cd>=0){J="x";i=cd;continue;}}
+      i++;continue;
+    }
     if(b.rs&&repStart!==i){repStart=i;pass=1;}
     if(b.v&&b.v!==pass){
       i++;
@@ -2598,6 +2636,7 @@ function playOrder(){
       if(cnt[i]<times){cnt[i]++;pass++;i=repStart;continue;}
       cnt[i]=1;pass=1;repStart=i+1;
     }else if(b.v&&!(i+1<n&&bars[i+1].v)){pass=1;repStart=i+1;}
+    if(b.jmp&&JML[b.jmp]){J=b.jmp;var tg=0;if(J.charAt(1)==="s")for(var q2=0;q2<n;q2++)if(bars[q2].sgn){tg=q2;break;}i=tg;continue;}
     i++;
   }
   return seq.length?seq:[0];
@@ -2619,8 +2658,9 @@ function scheduleStep(t){
   var bar=song().bars[b];
   if(bar&&!P.rec){var PLx=partList(),apx=actPart();
     if(tt===0&&song().takes)scheduleTakes(b,t);
+    DYN=dynAt(b,tt);
     if(!(PLx&&PLx[apx].mute)&&!(isKeys()&&takeCovers(b,partKey())))for(var s=0;s<nstr();s++){var n=bar.n[s+"_"+tt];if(n)playNote(n,s,t,n.len*sd);}
-    if(PLx&&bar.p)PLx.forEach(function(pt,i){if(i===apx||pt.mute)return;if((pt.inst==="voice"||pt.inst==="piano")&&takeCovers(b,pt.id))return;var d=bar.p[pt.id];if(d&&d.n)playOther(pt,d.n,tt,t,sd);});}
+    if(PLx&&bar.p)PLx.forEach(function(pt,i){if(i===apx||pt.mute)return;if((pt.inst==="voice"||pt.inst==="piano")&&takeCovers(b,pt.id))return;var d=bar.p[pt.id];if(d&&d.n)playOther(pt,d.n,tt,t,sd);});DYN=1;}
   if(!P.rec&&tt===0)toolButtons();
   vq.push({t:t,b:b,s:tt,rec:P.rec});
   P.t++;
@@ -3306,7 +3346,7 @@ function openBarDlg(){
   barDlgB=cursor.bar;var b=song().bars[barDlgB];
   $("barDlgT").textContent="Takt "+(barDlgB+1)+" · Abschnitt & Wiederholung";
   secFill(b);tsFill(b);formFill();$("txIn").value=b.tx||"";$("txEnd").value=song().endTx||"";
-  $("rsChk").checked=!!b.rs;$("reChk").checked=!!b.re;$("rtSel").value=String(b.rt||2);$("vSel").value=String(b.v||0);
+  jmFill(b);$("rsChk").checked=!!b.rs;$("reChk").checked=!!b.re;$("rtSel").value=String(b.rt||2);$("vSel").value=String(b.v||0);
   pushUndo();
   $("barDlg").classList.add("open");
 }
@@ -3318,6 +3358,12 @@ function applyBarDlg(){
   render();save();
 }
 ["rsChk","reChk","rtSel","vSel"].forEach(function(id){$(id).onchange=applyBarDlg});
+function jmFill(b){Array.prototype.forEach.call(document.querySelectorAll("#jmA button,#jmE button"),function(x){x.classList.toggle("on",x.dataset.jm?!!b[x.dataset.jm]:b.jmp===x.dataset.jj)});}
+["jmA","jmE"].forEach(function(id){$(id).addEventListener("click",function(e){var x=e.target.closest("button");if(!x)return;var b=song().bars[barDlgB];
+  if(x.dataset.jm){var k=x.dataset.jm;if(b[k])delete b[k];else b[k]=1;}else{if(b.jmp===x.dataset.jj)delete b.jmp;else b.jmp=x.dataset.jj;}
+  jmFill(b);render();save();
+  if(b.jmp&&b.jmp.charAt(1)==="s"&&!song().bars.some(function(q){return q.sgn}))status("Hinweis: Noch kein Segno gesetzt – D.S. springt sonst zum Anfang.");
+  else if(b.jmp&&b.jmp.slice(-2)==="_c"&&!song().bars.some(function(q){return q.coda}))status("Hinweis: Noch keine Coda gesetzt (⊕ Coda beginnt hier).");});});
 $("barRep").onclick=openBarDlg;
 $("txIn").onchange=function(){var b=song().bars[barDlgB],v=this.value.replace(/\s+$/,"");pushUndo();if(v)b.tx=v;else delete b.tx;render();save();};
 $("txEnd").onchange=function(){var v=this.value.replace(/\s+$/,"");pushUndo();if(v)song().endTx=v;else delete song().endTx;render();save();};
@@ -3385,6 +3431,7 @@ function repLabel(b){
   if(b.rs)x.push("‖: Wdh.-Anfang");
   if(b.v)x.push(b.v+". Klammer");
   if(b.re)x.push(":‖ Wdh.-Ende"+((b.rt||2)>2?" ×"+b.rt:""));
+  if(b.sgn)x.push("Segno");if(b.coda)x.push("Coda");if(b.toc)x.push("To Coda");if(b.fine)x.push("Fine");if(b.jmp&&JML[b.jmp])x.push(JML[b.jmp]);
   return x.length?' <span class="rep">'+x.join(" · ")+'</span>':'';
 }
 
@@ -3722,6 +3769,8 @@ var HELP=[
 {t:"z",h:"Hilfslinien",b:"<p>Töne über oder unter den fünf Linien bekommen kurze <b>Hilfslinien</b>. Die leere E-Saite steht im Bassschlüssel auf der ersten Hilfslinie unter dem System.</p>"+exStaff([[3,0,0,4],[3,4,1,4],[3,8,3,4],[2,12,0,4]])+ply("28:4 29:4 31:4 33:4"),k:"hilfslinie tief"},
 {t:"z",h:"Akzent, Staccato, Dead Note (Ghost Note)",b:"<p><b>&gt; Akzent</b>: Note betont, lauter. <b>Staccato</b> (Punkt über/unter dem Notenkopf): kurz, abgesetzt spielen – in der App unter <b>Technik</b>. <b>x-Notenkopf</b>: Dead Note bzw. Ghost Note – Saite abdämpfen und anschlagen, klingt perkussiv ohne Tonhöhe.</p>"+exStaff([[3,0,5,2,"a"],[2,2,"x",2],[3,4,5,2],[2,6,"x",2],[3,8,5,2,"a"],[2,10,"x",2],[2,12,7,4]])+ply("33:2 r:2 33:2 r:2 33:2 r:2 40:4"),k:"akzent staccato ghost dead"},
 {t:"z",h:"Wiederholungszeichen und Klammern",b:"<p><b>‖:</b> Beginn und <b>:‖</b> Ende einer Wiederholung – der Abschnitt wird (meist) zweimal gespielt. Steht kein Beginn-Zeichen, wiederholt man ab Anfang. <b>Klammern 1. / 2.</b>: beim ersten Durchgang die 1. Klammer, beim Wiederholen stattdessen die 2. Klammer. In der App: <b>📍 Abschn.</b> (untere Reihe).</p>"+exStaff([[3,0,5,8],[3,8,5,8]],{rs:1})+exStaff([[2,0,3,16]],{v:1,re:1}),k:"wiederholung klammer volta"},
+{t:"z",h:"D.C., D.S., Coda und Fine",b:"<p><b>D.C.</b> (da capo) = zurück zum Anfang. <b>D.S.</b> (dal segno) = zurück zum Zeichen <b>Segno</b> (geschwungenes S mit Schrägstrich und zwei Punkten). <b>al Fine</b>: dann bis <b>Fine</b> spielen und dort aufhören. <b>al Coda</b>: dann bis <b>⊕ To Coda</b> spielen und zur <b>⊕ Coda</b> springen (eigener Schlussteil). Nach dem Rücksprung werden Wiederholungen nicht mehr gespielt, bei 1./2. Klammer nur die letzte Klammer. In der App: <b>📍 Abschn.</b> → 🔀 Sprünge; die App spielt das beim Abspielen genau so ab.</p>",k:"da capo dal segno coda fine sprung"},
+{t:"z",h:"Lautstärke: pp p mp mf f ff, cresc., dim.",b:"<p><b>pp</b> sehr leise, <b>p</b> leise, <b>mp</b> mittelleise, <b>mf</b> mittellaut, <b>f</b> laut, <b>ff</b> sehr laut. <b>cresc.</b> (Gabel &lt;) = allmählich lauter, <b>dim.</b> (Gabel &gt;) = allmählich leiser – bis zum nächsten Zeichen. Gilt ab der Note, bis ein neues Zeichen kommt. In der App: Note antippen → <b>✋ Technik</b> → Lautstärke. Steht unter den Noten und wird beim Abspielen hörbar.</p>",k:"dynamik lautstärke piano forte crescendo diminuendo"},
 {t:"z",h:"Segno, D.S., D.C., Fine, Coda, Fermate",b:"<ul><li><b>Segno</b> (𝄋, geschwungenes S): Sprungmarke.</li><li><b>D.S. (Dal Segno)</b>: zurück zum Segno. <b>D.C. (Da Capo)</b>: zurück zum Anfang.</li><li><b>al Fine</b>: dann bis „Fine“ (Ende) spielen.</li><li><b>al Coda</b>: bis zum Coda-Zeichen (Kreis mit Kreuz), dann zur Coda springen.</li><li><b>Fermate</b> (Bogen mit Punkt): Ton länger aushalten als notiert.</li></ul><p>Diese Sprünge kann die App noch nicht abspielen – schreib die Teile bei Bedarf mit „Takt kopieren“ aus.</p>",k:"segno dal segno da capo fine coda fermate sprung"},
 {t:"z",h:"Akkordsymbole über den Noten",b:"<p>Buchstabe = Grundton, Zusatz = Akkordtyp:</p><table><tr><td>F</td><td>F-Dur</td></tr><tr><td>Fm, F-</td><td>f-Moll</td></tr><tr><td>F7</td><td>Dominantseptakkord (kleine Septime)</td></tr><tr><td>Fmaj7, FΔ</td><td>große Septime</td></tr><tr><td>Fm7</td><td>Moll mit kleiner Septime</td></tr><tr><td>F9, F11</td><td>Septakkord plus None bzw. Undezime</td></tr><tr><td>Fsus4, F2</td><td>Terz ersetzt durch Quarte bzw. Sekunde</td></tr><tr><td>F°, Fø</td><td>vermindert, halbvermindert</td></tr><tr><td>E♭/A♭</td><td><b>Slash-Akkord</b>: Es-Dur über dem Basston As – der Bass spielt As!</td></tr></table><p>Leadsheets nutzen meist englische Namen: <b>B</b> = deutsches H, <b>B♭</b> = deutsches B. In der App setzt du Akkorde mit dem Knopf <b>Akkord</b>.</p>",k:"akkord symbol slash maj7 m7 sus"},
 {t:"z",h:"Lagenangabe (VIII) und Fingersatz",b:"<p>Eine römische Zahl wie <b>VIII</b> bedeutet: in der <b>8. Lage</b> spielen, der Zeigefinger liegt im 8. Bund. Kleine arabische Zahlen an Noten (1–4) sind Fingersätze: 1 = Zeigefinger … 4 = kleiner Finger.</p>",k:"lage römisch fingersatz"},
@@ -3908,7 +3957,7 @@ function openTech(){
   if(!n||n.f==="x"){status("Setze den Cursor auf eine Note, dann „Technik“.");return;}
   pushUndo();
   var h="";TECH.forEach(function(t){h+='<button data-tq="'+t[0]+'" class="'+(n[t[0]]?'on':'')+'"><b>'+t[1]+'</b><small>'+t[2]+'</small></button>'});
-  $("techL").innerHTML=h;$("techT").textContent="Technik · "+SNAME[nstr()][cursor.str]+"-Saite Bund "+n.f;
+  $("techL").innerHTML=h;dynFill();$("techT").textContent="Technik · "+SNAME[nstr()][cursor.str]+"-Saite Bund "+n.f;
   $("techDlg").classList.add("open");
 }
 $("techL").addEventListener("click",function(e){
@@ -3921,6 +3970,10 @@ $("techL").addEventListener("click",function(e){
   render();save();hearNote(n,cursor.str);
 });
 $("techOk").onclick=function(){$("techDlg").classList.remove("open")};
+function dynFill(){var bar=song().bars[cursor.bar],cur=bar.dy&&bar.dy[cursor.step];
+  $("dynChips").innerHTML=Object.keys(DYL).map(function(k){return '<button data-dy="'+k+'" class="'+(cur===k?'on':'')+'" style="font:italic 700 15px Georgia,serif">'+DYL[k]+'</button>'}).join("");}
+$("dynChips").addEventListener("click",function(e){var x=e.target.closest("[data-dy]");if(!x)return;var bar=song().bars[cursor.bar],k=x.dataset.dy;bar.dy=bar.dy||{};
+  if(bar.dy[cursor.step]===k)delete bar.dy[cursor.step];else bar.dy[cursor.step]=k;if(!Object.keys(bar.dy).length)delete bar.dy;dynFill();render();save();});
 function tabLabel(n){
   if(isDrums())return n.a?"◉":"●";
   if(n.f==="x")return "x";if(n.ph)return "?";
