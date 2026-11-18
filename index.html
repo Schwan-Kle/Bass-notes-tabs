@@ -310,6 +310,15 @@ body.pqon #lenKeys button{min-height:52px;font-size:16px}
 .kdkeys b{font-size:14px}.kdkeys span{font-size:13px}.kdkeys small{font-size:11px;color:var(--muted)}
 .kdkeys button.on small{color:var(--on-main)}
 .chips button.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
+.segs{display:inline-flex;flex-wrap:wrap;gap:3px;vertical-align:middle}
+.segs button{min-height:34px;padding:0 10px;font-size:13px}
+.segs button.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
+.segpick button{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:60vh;overflow-y:auto}
+.spgrid.sp3{grid-template-columns:repeat(3,1fr)}
+.spgrid button{min-height:44px;font-size:14px;padding:4px}
+.spgrid button.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
+.opts .row label,.modal label,#trHome label{flex-wrap:wrap}
 #scView{flex:1;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:120px}
 #scCanvas{display:block;width:100%;height:auto}
 .scmsg{margin:0;font-size:13px;color:var(--muted)}
@@ -359,7 +368,6 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <button id="fbBtn" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
     <button id="refBtn" role="menuitem">📷 Vorlage</button>
     <button id="trainBtn" role="menuitem">🎓 Notenlese-Training <small>Noten lesen, spielen, Rhythmus</small></button>
-    <button id="scanBtn" role="menuitem">📄 Noten scannen <small>Experiment: Foto oder PDF → Noten</small></button>
     <button id="setBtn" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
     <button id="helpBtn" role="menuitem">❓ Hilfe &amp; Wissen</button>
   </div>
@@ -617,6 +625,9 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <div id="kdStr" class="chips"></div>
     <button id="kdOk" class="primary">Fertig</button>
   </div>
+</div>
+<div id="selPick" class="modal" role="dialog" aria-modal="true" aria-labelledby="spT">
+  <div class="box"><h2 id="spT">Auswahl</h2><div id="spL" class="spgrid"></div><button id="spClose">Abbrechen</button></div>
 </div>
 <div id="techDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="techT">
   <div class="box"><h2 id="techT">Technik</h2><div id="techL" class="techl"></div><p>Mehrfach wählbar. Für Hammer-on/Pull-off den Knopf ⌒, für Akzent &gt;, für Dead Note x.</p><button id="techOk" class="primary">Fertig</button></div>
@@ -2338,7 +2349,6 @@ var HELP=[
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Vier Übungen:</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen (bei Vorzeichen-Stufen vorher ♭/♯ wählen).</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe"},
-{t:"e",h:"Noten scannen (Experiment)",b:"<p>Unter <b>⋯ → 📄 Noten scannen</b>: Foto, Bild oder PDF gedruckter Noten im Bassschlüssel wählen. Die App sucht Notenlinien, Notenköpfe und Taktstriche, richtet schiefe Fotos gerade und zeigt das Ergebnis: <span style='color:var(--warn)'>orange Kreise</span> mit Tonnamen = erkannte Noten, <span style='color:#1E5ADC'>blaue Linien</span> = Taktstriche, grüne Fläche = übersprungener Schlüssel/Vorzeichen-Bereich.</p><ul><li><b>Korrigieren</b>: Markierung antippen öffnet die Bearbeitung: ▲/▼ eine Stufe, ♭ ♮ ♯, Länge (auto = geschätzt), Entfernen. Leere Stelle antippen setzt eine Note, eine Pause oder einen Taktstrich – je nach Auswahl darüber.</li><li><b>Tonfolge übernehmen, Rhythmus tippen</b> (empfohlen): Die App merkt sich die erkannten Töne. Oben zeigt ein Balken den nächsten Ton; du tippst nur seine Länge, die App setzt den Ton und springt weiter. Pausen mit dem Pause-Knopf, „Ton überspringen“ für Fehlerkennungen, ↶ geht einen Ton zurück.</li><li><b>Tonart</b> unter „Einstellungen“ wählen – Vorzeichen im Stück erkennt der Scanner nicht (danach mit −½/+½ korrigieren).</li><li><b>Als neues Stück</b>: Rhythmus wird aus den Abständen geschätzt.</li><li><b>Tonhöhen auf Noten ab Cursor</b>: wenn der Rhythmus schon eingetippt ist.</li></ul><p>Grenzen: keine Handschrift, keine Tab-Zahlen, keine Vorzeichen im Stück, Rhythmus nur geschätzt. Für PDFs wird einmalig eine Bibliothek aus dem Internet geladen.</p>",k:"scan scannen foto pdf erkennung omr"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
 /* ===== Musikzeichen ===== */
 {t:"z",h:"Notensystem und Bassschlüssel",b:"<p>Fünf Linien bilden das <b>Notensystem</b>. Der <b>Bassschlüssel</b> (F-Schlüssel) markiert mit seinen zwei Punkten die vierte Linie von unten als Ton <b>F</b>. Von unten gelesen: Linien G-H-D-F-A, Zwischenräume A-C-E-G.</p>"+exStaff([[3,0,3,4],[3,4,7,4],[2,8,5,4],[1,12,3,4]])+"<p>Bass-Noten werden eine <b>Oktave höher notiert als sie klingen</b> – sonst bräuchte man sehr viele Hilfslinien. Die App rechnet das automatisch um.</p>",k:"schlüssel f-schlüssel linien"},
@@ -2637,7 +2647,7 @@ function scanOpen(){
   $("scSig").innerHTML=$("sig").innerHTML;$("scSig").value=song().sig;
   $("scan").classList.add("open");
 }
-$("scanBtn").onclick=scanOpen;
+
 $("scClose").onclick=function(){$("scan").classList.remove("open")};
 $("scPick").onclick=function(){$("scFile").click()};
 $("scFile").onchange=function(){
@@ -3318,6 +3328,39 @@ $("keyDlg").addEventListener("click",function(e){
   render();save();openKeyDlg($("kdT").textContent.indexOf("Neues")===0);
 });
 $("keyDlg").addEventListener("click",function(e){if(e.target===$("keyDlg"))$("keyDlg").classList.remove("open");});
+/* ---------- Tipp-Knöpfe statt Auswahllisten ---------- */
+var SEGS=[];
+function optLabel(o){return o.textContent.trim()}
+function enhanceSelect(sel){
+  if(!sel||sel.dataset.seg)return;sel.dataset.seg="1";
+  var box=document.createElement("span");box.className="segs";box.id=sel.id+"_seg";
+  sel.style.display="none";sel.parentNode.insertBefore(box,sel.nextSibling);
+  SEGS.push(sel);buildSeg(sel);
+  box.addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;e.preventDefault();
+    if(b.dataset.pick){openSelPick(sel);return;}
+    sel.value=b.dataset.v;sel.dispatchEvent(new Event("change",{bubbles:true}));syncSegs();
+  });
+}
+function buildSeg(sel){
+  var box=$(sel.id+"_seg"),opts=Array.prototype.slice.call(sel.options),big=opts.length>6;
+  box.dataset.n=opts.length;box.classList.toggle("segpick",big);
+  if(big){var cur=opts[sel.selectedIndex];box.innerHTML='<button class="sub" data-pick="1">'+esc(cur?optLabel(cur):"wählen")+'</button>';}
+  else box.innerHTML=opts.map(function(o){return '<button data-v="'+esc(o.value)+'" class="'+(o.value===sel.value?'on':'')+'">'+esc(optLabel(o))+'</button>'}).join("");
+}
+function syncSegs(){SEGS.forEach(function(sel){if(document.body.contains(sel))buildSeg(sel);});}
+function openSelPick(sel){
+  var lab=sel.closest("label"),title=lab?lab.childNodes[0].textContent.trim():"Auswahl";
+  $("spT").textContent=title||"Auswahl";
+  $("spL").innerHTML=Array.prototype.map.call(sel.options,function(o){return '<button data-v="'+esc(o.value)+'" class="'+(o.value===sel.value?'on':'')+'">'+esc(optLabel(o))+'</button>'}).join("");
+  $("spL").className="spgrid"+(sel.options.length>12?" sp3":"");
+  $("selPick").classList.add("open");
+  $("spL").onclick=function(e){var b=e.target.closest("button");if(!b)return;sel.value=b.dataset.v;sel.dispatchEvent(new Event("change",{bubbles:true}));$("selPick").classList.remove("open");syncSegs();};
+}
+$("spClose").onclick=function(){$("selPick").classList.remove("open")};
+["metMode","viewSel","sig","strings","keySel","accMode","rtSel","vSel","trAcc","trCount","trLo","trHi"].forEach(function(id){enhanceSelect($(id))});
+/* Werte, die das Programm direkt setzt, nachziehen */
+document.addEventListener("click",function(){setTimeout(syncSegs,0);},true);
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
 $("metMode").value=S.metMode;$("metAcc").checked=!!S.metAcc;$("countIn").checked=!!S.countIn;
@@ -3331,7 +3374,7 @@ if(["s","m","l"].indexOf(S.refSize)<0)S.refSize="s";
 if(ZOOMS.indexOf(S.refZoom)<0)S.refZoom=1;
 setMode(S.mode==="note"||S.mode==="fb"?S.mode:"tab");
 if(S.hear===undefined)S.hear=true;toolButtons();
-padState();setLen(1,true);loadSong();
+padState();setLen(1,true);loadSong();syncSegs();
 })();
 </script>
 </body>
