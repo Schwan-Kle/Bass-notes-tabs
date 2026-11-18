@@ -357,6 +357,25 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
   #padGrip span{width:44px;height:5px;border-radius:3px;background:#9DB3AC}
   #pad.closed #padGrip{display:none}
 }
+#playBar{display:none;flex-direction:column;gap:6px;padding:6px 8px 8px;background:#E8EEF8;border-top:3px solid var(--a-play);box-shadow:0 -4px 12px rgba(0,30,60,.10)}
+body.playmode #pad{display:none!important}
+body.playmode #playBar{display:flex}
+body.playmode #songInfo,body.playmode .ovl,body.playmode .pdel,body.playmode [data-pdelc]{display:none!important}
+body.playmode .rhit,body.playmode [data-txb]{pointer-events:none}
+body.playmode #score{zoom:var(--pz,1)}
+.pbrow{display:flex;gap:6px;align-items:center}
+.pbrow>button,.pbspd button,.pbseg button{min-height:48px;font-weight:800}
+.pbedit{color:var(--a-in);border-color:var(--a-in);font-size:14px;padding:0 10px}
+.pbspd{display:flex;flex:1;gap:0}.pbspd button{flex:none;width:46px;font-size:22px;color:var(--a-play)}
+.pbspd #pbSpd{flex:1;width:auto;font-size:17px;line-height:1.05;color:#1A1A1A}.pbspd #pbSpd small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+#pbPlay{width:72px;font-size:26px;background:var(--a-play);border-color:var(--a-play);color:#fff}
+.pbsmall>*{min-height:40px}.pbsmall button{min-height:40px}
+.pbl{font-size:12px;font-weight:700;color:var(--muted)}
+.pbseg{display:flex}.pbseg button{min-width:40px;padding:0 8px;border-radius:0;margin-left:-1px;color:var(--a-play)}.pbseg button:first-child{border-radius:8px 0 0 8px}.pbseg button:last-child{border-radius:0 8px 8px 0}
+.pbseg button.on,#pbCin.on{background:var(--a-play);color:#fff;border-color:var(--a-play)}
+#pbCin{color:var(--a-play);font-size:13px;padding:0 8px}
+.pbsmall .pbseg:last-child{margin-left:auto}
+@media (min-width:1000px) and (min-aspect-ratio:5/4){body.playmode{grid-template-columns:minmax(0,1fr)}body.playmode #playBar{grid-column:1;grid-row:6}#playBar .pbrow{max-width:900px;margin:0 auto;width:100%}}
 .legend{display:flex;gap:10px;font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap}
 .legend i{display:inline-block;width:18px;height:12px;border:1px solid var(--line);border-radius:3px;vertical-align:middle;margin-right:3px}
 .legend i.l-sub{background:color-mix(in srgb,var(--hi) 16%,var(--surface));border-style:dashed;border-color:color-mix(in srgb,var(--hi) 70%,var(--line))}
@@ -822,7 +841,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     <button id="modeNote">♪ Namen</button>
     <button id="modeLine" title="Note direkt auf der Notenzeile antippen">🎼 Zeile</button>
     <button id="modeFb">🎸 Griffbr.</button>
-    <button id="padToggle" aria-label="Eingabe aus- oder einblenden">▾ weg</button>
+    <button id="padToggle" aria-label="Übe-Ansicht: nur abspielen, ohne Eingabe" title="Übe-Ansicht: nur abspielen und mitlesen">🎧 Üben</button>
   </div>
   <div class="alts" id="altNote"></div>
   <div class="keys k7 small" id="lenKeys"></div>
@@ -875,6 +894,18 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     <button id="undoBtn" class="ic" title="Rückgängig"><i>↶</i><small>Zurück</small></button>
   </div></div>
   <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span><span id="hlegend" class="hleg"></span></div>
+</section>
+<section id="playBar" aria-label="Übe-Ansicht">
+  <div class="pbrow">
+    <button id="pbEdit" class="pbedit" title="Zurück zum Bearbeiten">✏️ Bearbeiten</button>
+    <div class="pbspd"><button id="pbSlow" aria-label="langsamer">−</button><button id="pbSpd" title="Übe-Tempo zurück auf 100 %"></button><button id="pbFast" aria-label="schneller">+</button></div>
+    <button id="pbPlay" class="primary" aria-label="Start oder Stopp">▶</button>
+  </div>
+  <div class="pbrow pbsmall">
+    <span class="pbl">Klick</span><span class="pbseg" id="pbMet"><button data-met="off">aus</button><button data-met="one">1</button><button data-met="beat">Schlag</button><button data-met="8">Achtel</button></span>
+    <button id="pbCin" title="Einzähler vor dem Start">1·2·3·4</button>
+    <span class="pbseg"><button id="pbZo" aria-label="kleiner">A−</button><button id="pbZi" aria-label="größer">A+</button></span>
+  </div>
 </section>
 <div id="drawer" class="drawer" aria-hidden="true">
   <div class="dpanel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -2438,8 +2469,8 @@ $("score").addEventListener("click",function(e){
   moveCursor(+c.dataset.b,+c.dataset.s,+c.dataset.t,true);flagButtons();
   hearNote(noteAt(cursor.bar,cursor.str,cursor.step),cursor.str);
 });
-$("padToggle").onclick=function(){S.padOpen=!S.padOpen;padState();save()};
-function padState(){$("pad").classList.toggle("closed",!S.padOpen);$("padToggle").textContent=S.padOpen?"▾ weg":"▴ Tastatur";if(S.padOpen&&S.mode==="fb"&&typeof updateFB==="function")updateFB();}
+$("padToggle").onclick=function(){setPlayMode(true)};
+function padState(){S.padOpen=true;$("pad").classList.toggle("closed",false);if(S.padOpen&&S.mode==="fb"&&typeof updateFB==="function")updateFB();}
 
 /* Takte */
 $("barAdd").onclick=function(){pushUndo();song().bars.splice(cursor.bar+1,0,emptyBar());cursor.bar++;cursor.step=0;afterBars()};
@@ -2760,14 +2791,14 @@ function play(opt){
   vq=[];phBar=-1;
   timer=setInterval(tick,25);tick();
   raf=requestAnimationFrame(draw);
-  $("play").textContent="■";
+  $("play").textContent="■";$("pbPlay").textContent="■";
 }
 function stop(){
   if(timer){clearInterval(timer);timer=null;}
   if(typeof TKS!=="undefined"){TKS.forEach(function(x){try{x.stop()}catch(e){}});TKS=[];TKWARN=false;}
   P=null;vq=[];cancelAnimationFrame(raf);
   if(ph&&ph.parentNode)ph.parentNode.removeChild(ph);
-  $("play").textContent="▶";
+  $("play").textContent="▶";$("pbPlay").textContent="▶";
   status();
 }
 function togglePlay(){if(REC.on){recFinish();return;}if(P)stop();else play()}
@@ -3783,7 +3814,8 @@ var HELP=[
 {t:"e",h:"Tonart, Taktart, Saiten",b:"<p>Ganz oben über dem ersten Takt stehen <b>Tonart</b>, <b>Takt</b> und <b>Saiten</b> des Stücks – antippen öffnet die Auswahl. Die Tonart bestimmt die Vorzeichen am Zeilenanfang und welche Töne die Noten-Eingabe automatisch erhöht/erniedrigt (in f-Moll wird aus A automatisch As). Bei einem neuen Stück fragt die App gleich danach.</p>",k:"tonart vorzeichen taktart saiten dur moll"},
 {t:"e",h:"Ansicht: Noten, Tab oder beides",b:"<p>Oben im Menü <b>⋯</b> (und in den Einstellungen) wählst du <b>Noten + Tab</b>, <b>nur Noten</b> oder <b>nur Tab</b>. In der Ansicht „nur Noten“ tippst du in die Notenzeile, um den Cursor zu setzen (gelber Streifen); Saite und Bund legt die App selbst fest und du kannst sie später in der Tab-Ansicht anpassen.</p>",k:"ansicht noten tab beides ausblenden"},
 {t:"e",h:"Knopf-Farben in der Eingabe",b:"<ul><li><b>Weiß</b>: wirkt sofort (z. B. Bund, Länge, −½, − Takt).</li><li><b>Dunkelgrün</b>: Schalter ist an (z. B. 🔊, Rhythmus, Auto→, gewählte Länge).</li><li><b style='color:#B07400'>Gelblich, gestrichelt, ▸</b>: öffnet erst eine Auswahl (Technik ▸, Akkord ▸, 📍 Abschn. ▸, Takte ▸).</li><li><b style='color:var(--warn)'>Orange Schrift</b>: entfernt etwas (− Takt).</li></ul>",k:"farbe knopf legende untermenü"},
-{t:"e",h:"Kopfleiste und Menü ⋯",b:"<ul><li><b>☰</b> Meine Stücke: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup. Auch der Stückname daneben öffnet die Liste.</li><li><b>− 80 +</b> Tempo in bpm; Antippen der Zahl öffnet die Einstellungen mit Tempo-Regler.</li><li><b>▶ / ■</b> Start und Stopp.</li><li><b>⋯</b> Menü mit 🎙 Einspielen, 🎯 Stimmgerät, 🎸 Griffbrett anzeigen, 📷 Vorlage, ⚙ Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück) und ❓ Hilfe.</li><li><b>▾ weg</b> rechts über der Eingabe blendet die Eingabe aus, <b>▴ Tastatur</b> wieder ein.</li></ul>",k:"menü werkzeuge kopf einstellungen tempo"},
+{t:"e",h:"Übe-Ansicht (nur abspielen)",b:"<p><b>🎧 Üben</b> (rechts über der Eingabe) blendet die ganze Eingabe aus. Unten erscheint eine Leiste nur zum Üben:</p><ul><li><b>− 80 % +</b> Übe-Tempo in Schritten 50–100 %; Antippen der Zahl = zurück auf 100 %.</li><li><b>▶ / ■</b> großer Start-Knopf.</li><li><b>Klick</b>: Metronom aus / nur auf die 1 / jeder Schlag / Achtel.</li><li><b>1·2·3·4</b> Einzähler an/aus.</li><li><b>A− A+</b> Noten kleiner/größer.</li></ul><p>Einen Takt antippen = dort starten. Nichts kann versehentlich verändert werden. Der Bildschirm bleibt an, solange die Übe-Ansicht offen ist. Schleife 🔁 und Tempo oben funktionieren wie gewohnt. <b>✏️ Bearbeiten</b> führt zurück zur Eingabe; die App merkt sich, in welcher Ansicht du warst.</p>",k:"abspielmodus spielmodus übemodus üben ansicht lesen"},
+{t:"e",h:"Kopfleiste und Menü ⋯",b:"<ul><li><b>☰</b> Meine Stücke: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup. Auch der Stückname daneben öffnet die Liste.</li><li><b>− 80 +</b> Tempo in bpm; Antippen der Zahl öffnet die Einstellungen mit Tempo-Regler.</li><li><b>▶ / ■</b> Start und Stopp.</li><li><b>⋯</b> Menü mit 🎙 Einspielen, 🎯 Stimmgerät, 🎸 Griffbrett anzeigen, 📷 Vorlage, ⚙ Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück) und ❓ Hilfe.</li><li><b>🎧 Üben</b> rechts über der Eingabe wechselt in die Übe-Ansicht (ohne Eingabe), <b>✏️ Bearbeiten</b> zurück.</li></ul>",k:"menü werkzeuge kopf einstellungen tempo"},
 {t:"e",h:"Schleife mit Klammern (Üben)",b:"<p><b>🔁</b> oben neben ▶ schaltet die Schleife an – zuerst nur für den Takt am Cursor (orange umrandet).</p><ul><li>An den Takt-Rändern sitzen zwei orange <b>Klammern mit Griff</b>. Griff festhalten und auf einen anderen Takt ziehen: links = Anfang, rechts = Ende. Am Bildrand scrollt die Ansicht mit.</li><li>▶ spielt die Takte in Dauerschleife; läuft die Wiedergabe schon, startet sie mit der neuen Schleife neu.</li><li>🔁 nochmal = Schleife aus. Zahlen eintippen geht weiterhin unter ⚙ → 🔁 Üben.</li></ul>"},
 {t:"e",h:"Metronom, Schleife, Tempo-Trainer",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
@@ -3833,7 +3865,7 @@ var HGROUPS={
     ["Noten eingeben",["Notenlängen","Akkorde eingeben","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Mehrere Instrumente",["Spuren","Komponieren","Ablauf","Passende Töne","Schlagzeug","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
-    ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart-, Tonart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
+    ["Üben und Abspielen",["Übe-Ansicht","Metronom, Schleife","Abschnitte","Taktart-, Tonart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern","Als PDF"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
@@ -4004,6 +4036,28 @@ $("techL").addEventListener("click",function(e){
   render();save();hearNote(n,cursor.str);
 });
 $("techOk").onclick=function(){$("techDlg").classList.remove("open")};
+/* Übe-Ansicht */
+var WL=null;
+function wake(on){try{if(on&&navigator.wakeLock&&!WL){navigator.wakeLock.request("screen").then(function(w){WL=w;w.addEventListener("release",function(){WL=null});}).catch(function(){});}else if(!on&&WL){WL.release();WL=null;}}catch(e){}}
+document.addEventListener("visibilitychange",function(){if(S.playMode&&document.visibilityState==="visible")wake(true);});
+function setSel(id,v){var el=$(id);el.value=String(v);el.dispatchEvent(new Event("change"));}
+function pbUI(){
+  var sp=S.speed||100;$("pbSpd").innerHTML=sp+' %<small>'+Math.round(effBpm(cursor?cursor.bar:0))+' bpm</small>';
+  Array.prototype.forEach.call(document.querySelectorAll("#pbMet button"),function(x){x.classList.toggle("on",x.dataset.met===(S.metMode==="16"?"8":S.metMode))});
+  $("pbCin").classList.toggle("on",!!S.countIn);
+  document.documentElement.style.setProperty("--pz",S.pz||1);
+}
+function setPlayMode(on){S.playMode=!!on;document.body.classList.toggle("playmode",S.playMode);wake(S.playMode);if(on)pbUI();save();render();
+  if(on)status("🎧 Übe-Ansicht: Takt antippen = dort starten · ✏️ Bearbeiten = zurück zur Eingabe");}
+$("pbEdit").onclick=function(){setPlayMode(false)};
+$("pbPlay").onclick=function(){togglePlay()};
+var SPDS=[50,60,70,80,90,100];
+function pbSpeed(d){var sp=S.speed||100,i=SPDS.indexOf(sp);if(i<0)i=SPDS.length-1;i=Math.max(0,Math.min(SPDS.length-1,i+d));setSel("spdSel",SPDS[i]);pbUI();}
+$("pbSlow").onclick=function(){pbSpeed(-1)};$("pbFast").onclick=function(){pbSpeed(1)};$("pbSpd").onclick=function(){setSel("spdSel",100);pbUI();};
+$("pbMet").addEventListener("click",function(e){var x=e.target.closest("[data-met]");if(!x)return;setSel("metMode",x.dataset.met);pbUI();});
+$("pbCin").onclick=function(){var c=$("countIn");c.checked=!c.checked;c.dispatchEvent(new Event("change"));pbUI();};
+$("pbZo").onclick=function(){S.pz=Math.max(0.8,Math.round(((S.pz||1)-0.15)*100)/100);pbUI();save();};
+$("pbZi").onclick=function(){S.pz=Math.min(2,Math.round(((S.pz||1)+0.15)*100)/100);pbUI();save();};
 (function(){var g=$("padGrip"),pad=$("pad"),dr=null;if(!g)return;
   function apply(){pad.style.maxHeight=S.padH?S.padH+"px":"";}
   apply();
@@ -4496,7 +4550,7 @@ $("partRow").addEventListener("click",function(e){var b=e.target.closest("button
 $("partRow").addEventListener("change",function(e){var x=e.target;if(x.dataset.pren===undefined)return;var v=x.value.trim().slice(0,24);if(v){song().parts[+x.dataset.pren].name=v;render();save();}});
 $("setBtn").onclick=openSettings;
 $("bpmOut").onclick=openSettings;
-function bpmLabel(){var sp=S.speed||100,o=$("bpmOut");o.textContent=song().bpm;o.setAttribute("data-sub",sp===100?"bpm":"bpm · "+sp+" %");o.classList.toggle("slow",sp!==100);}
+function bpmLabel(){var sp=S.speed||100,o=$("bpmOut");o.textContent=song().bpm;o.setAttribute("data-sub",sp===100?"bpm":"bpm · "+sp+" %");o.classList.toggle("slow",sp!==100);;if(S.playMode&&typeof pbUI==="function")pbUI();}
 $("spdSel").value=String(S.speed||100);
 $("spdSel").onchange=function(){S.speed=+this.value;bpmLabel();save();status(S.speed===100?"Übe-Tempo 100 % – Originaltempo":"Übe-Tempo "+S.speed+" % = "+Math.round(effBpm())+" bpm (Stück bleibt auf "+song().bpm+")");};
 bpmLabel();
@@ -5253,7 +5307,7 @@ if(["s","m","l"].indexOf(S.refSize)<0)S.refSize="s";
 if(ZOOMS.indexOf(S.refZoom)<0)S.refZoom=1;
 setMode(S.mode==="note"||S.mode==="fb"||S.mode==="line"?S.mode:"tab");
 if(S.hear===undefined)S.hear=true;toolButtons();
-padState();setLen(1,true);loadSong();syncSegs();instUI();
+padState();setLen(1,true);loadSong();syncSegs();instUI();if(S.playMode){document.body.classList.add("playmode");pbUI();wake(true);}
 })();
 </script>
 </body>
