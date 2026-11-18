@@ -882,6 +882,12 @@ function cleanRests(bar){
   for(k in bar.r){t=+k;var e=Math.min(st,t+bar.r[k]),a=t;while(a<e&&occ[a])a++;if(a>=e)continue;var z=a;while(z<e&&!occ[z])z++;if(!nr[a])nr[a]=z-a;}
   var keys=Object.keys(nr).map(Number).sort(function(x,y){return x-y});
   for(var j=0;j<keys.length-1;j++){var a2=keys[j];if(a2+nr[a2]>keys[j+1])nr[a2]=keys[j+1]-a2;}
+  var tb=bar.tb&&Object.keys(bar.tb).length,ch=true;
+  while(ch&&!tb){ch=false;keys=Object.keys(nr).map(Number).sort(function(x,y){return x-y});
+    for(j=0;j<keys.length-1;j++){var x0=keys[j],x1=keys[j+1],L=nr[x0]+nr[x1];
+      if(x0+nr[x0]!==x1)continue;
+      var ok=(L===2&&x0%2===0)||(L===4&&x0%4===0)||(L===8&&st===16&&(x0===0||x0===8))||(L===st&&x0===0);
+      if(ok){nr[x0]=L;delete nr[x1];ch=true;break;}}}
   if(keys.length)bar.r=nr;else delete bar.r;
 }
 function countLabel(t,sg,bar){
@@ -1109,11 +1115,16 @@ function staffSVG(b,NI){
   if(bar.r)for(var rk2 in bar.r){var rt=+rk2,rl=bar.r[rk2],rbx=X(rt);
     var rd=(rl===3||rl===6||rl===12),rbase=rd?rl*2/3:rl;
     if(beat===4&&bar.tb&&bar.tb[Math.floor(rt/4)]){rbase=rl>=2?4:2;rd=false;}
+    if(rbase>=16&&rt===0)rbx=G+st*U/2;else if(rbase>=8)rbx=X(rt+2);
     o.push(restSVG(rbase,rd,rbx,ym,Y,sp,r));RH(rt,rbx);}
   if(empty){
     o.push('<rect class="fl" x="'+r(G+st*U/2-6)+'" y="'+Y(6)+'" width="12" height="'+(sp/2)+'"/>');RH(0,G+st*U/2);
   }else{
     for(var bs=0;bs<st;bs+=beat){
+      if(st===16&&beat===4&&(bs===0||bs===8)&&!(bar.tb&&(bar.tb[bs/4]||bar.tb[bs/4+1]))){
+        var hf=true;for(var hx2=bs;hx2<bs+8;hx2++)if(occ[hx2]){hf=false;break;}
+        if(hf){var hxx=X(bs+2);o.push('<rect class="fl" x="'+r(hxx-6)+'" y="'+(Y(4)-sp/2)+'" width="12" height="'+(sp/2)+'"/>');RH(bs,hxx);bs+=beat;continue;}
+      }
       if(beat===4&&bar.tb&&bar.tb[bs/4]){
         for(var tc=0;tc<3;tc++)if(!occ[base+bs+tc]){var rx3=X(bs+tc);o.push('<circle class="fl" cx="'+r(rx3-2)+'" cy="'+(ym-3.5)+'" r="1.7"/><path class="st" stroke-width="1.5" d="M'+r(rx3-2)+' '+(ym-2.5)+' q3 1 5 -2 l-3.5 12"/>');RH(bs+tc,rx3);}
         continue;
