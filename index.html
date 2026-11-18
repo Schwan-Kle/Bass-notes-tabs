@@ -531,6 +531,12 @@ button{border-width:1.5px}
 #pad button.ic.big i{font-size:24px;line-height:.95}
 #noteMods button.ic small,#navKeys button.ic small{font-size:9.5px}
 .bar .no .ovl{min-height:24px;padding:0 8px;margin:0 4px 2px;font-size:12px;font-weight:800;color:#fff;background:var(--a-del);border-color:var(--a-del);border-radius:6px}
+#pad.m-line #lenKeys button,#pad.m-line #restKeys button{touch-action:none}
+.dghost{position:fixed;z-index:999;pointer-events:none;width:56px;height:56px;border-radius:14px;background:#fff;border:2.5px solid var(--a-in);box-shadow:0 6px 18px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:var(--a-in);transform:scale(1.05)}
+.dghost svg{width:40px;height:40px}
+.dghost.r{border-color:#45524D;color:#1A1A1A}
+.dghost.in{border-color:#F6A924;box-shadow:0 0 0 4px rgba(246,169,36,.35),0 6px 18px rgba(0,0,0,.25)}
+body.dragging{user-select:none;-webkit-user-select:none}
 </style>
 </head>
 <body>
@@ -654,7 +660,7 @@ button{border-width:1.5px}
   <div class="keys k7 small" id="restKeys" aria-label="Pausen"></div>
   <div class="keys k9" id="fretKeys"></div>
   <div id="padFb"><div id="padFbView"></div><div class="hint">Wischen = weitere Bünde · Antippen = Note setzen</div></div>
-  <div id="padLine"><div id="lineInfo" aria-live="polite">Rechts auf die Zeile tippen und schieben – loslassen setzt die Note</div><div id="lineView"></div></div>
+  <div id="padLine"><div id="lineInfo" aria-live="polite">Rechts auf die Zeile tippen und schieben – oder einen Notenwert/eine Pause hierher ziehen</div><div id="lineView"></div></div>
   <div class="keys k7 nk" id="letterKeys"></div>
   <div class="keys k8 small nk" id="noteMods">
     <button data-acc="-1" class="ic big" title="Nächste Note erniedrigen"><i>♭</i><small>erniedr.</small></button>
@@ -1669,6 +1675,45 @@ $("modeTab").onclick=function(){setMode("tab")};
 $("modeNote").onclick=function(){setMode("note")};
 $("modeFb").onclick=function(){setMode("fb")};
 $("modeLine").onclick=function(){setMode("line")};
+/* Ziehen: Notenwert/Pause auf die Zeile ziehen (Zeilen-Modus) */
+(function(){
+  var D=null,ghost=null,suppress=0;
+  function over(x,y){var v=$("lineView");if(!v||S.mode!=="line")return false;var rc=v.getBoundingClientRect();return x>=rc.left&&x<=rc.right&&y>=rc.top-6&&y<=rc.bottom+6;}
+  function start(e){
+    if(S.mode!=="line"||S.rhythm)return;
+    var b=e.target.closest("#lenKeys button[data-len],#restKeys button[data-rl]");if(!b)return;
+    D={b:b,rest:!!b.dataset.rl,val:+(b.dataset.rl||b.dataset.len),x:e.clientX,y:e.clientY,on:false,pos:null,id:e.pointerId};
+  }
+  function move(e){
+    if(!D||e.pointerId!==D.id)return;
+    if(!D.on){if(Math.hypot(e.clientX-D.x,e.clientY-D.y)<12)return;D.on=true;
+      ghost=document.createElement("div");ghost.className="dghost"+(D.rest?" r":"");ghost.innerHTML=D.rest?restIcon(D.val):noteIcon(D.val);document.body.appendChild(ghost);
+      document.body.classList.add("dragging");}
+    e.preventDefault();
+    ghost.style.left=(e.clientX-62)+"px";ghost.style.top=(e.clientY-58)+"px";
+    if(over(e.clientX,e.clientY)){
+      if(D.rest){$("lineInfo").className="on";$("lineInfo").innerHTML="<b>Pause</b> loslassen = Pause setzen";D.pos="r";}
+      else{var p=linePosY(e.clientY);if(p!==null&&p!==D.pos){D.pos=p;lineRender({pos:p});var pm=posMidi(p);if(audioReady())playNote({f:pm.m-28},3,ctx.currentTime+0.01,0.15);}}
+      ghost.classList.add("in");
+    }else if(D.pos!==null){D.pos=null;lineRender();ghost.classList.remove("in");}
+  }
+  function end(e,cancel){
+    if(!D||e.pointerId!==D.id)return;var d=D;D=null;
+    if(ghost){ghost.remove();ghost=null;}document.body.classList.remove("dragging");
+    if(!d.on)return;
+    suppress=Date.now();
+    var hit=!cancel&&over(e.clientX,e.clientY);lineRender();
+    if(!hit){status("Abgebrochen – zum Setzen über der Notenzeile loslassen.");return;}
+    if(d.rest){placeRest(d.val);return;}
+    setLen(d.val,true);var p=linePosY(e.clientY);if(p!==null)linePlace(p);
+  }
+  document.addEventListener("pointerdown",start,true);
+  document.addEventListener("pointermove",move,{capture:true,passive:false});
+  document.addEventListener("pointerup",function(e){end(e,false)},true);
+  document.addEventListener("pointercancel",function(e){end(e,true)},true);
+  document.addEventListener("click",function(e){if(Date.now()-suppress<250&&e.target.closest("#lenKeys,#restKeys")){suppress=0;e.stopPropagation();e.preventDefault();}},true);
+})();
+
 document.addEventListener("click",function(e){var x=e.target.closest("[data-ovl]");if(x){e.stopPropagation();fixOverlap(+x.dataset.ovl);}},true);
 /* PDF / Drucken */
 function openPdf(){var sg=song();$("pdfTitle").value=sg.name||"";$("pdfSub").value=sg.sub||"";$("pdfNote").value=sg.note||"";$("pdfView").value=view();if(typeof syncSegs==="function")syncSegs();$("pdfCnt").checked=!!S.count;$("pdfDlg").classList.add("open");}
@@ -1818,13 +1863,14 @@ function lineRender(ghost){
     if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate('+(gx-21)+' '+gy+') scale(1.5) translate('+(-(gx-21))+' '+(-gy)+')">'+accSVG(pm.a,gx-21,gy)+'</g>');
     var lab=spName({m:pm.m,L:pm.L,a:pm.a})+spOct({m:pm.m,L:pm.L,a:pm.a});
     if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – ⇩/⇧ Oktave</span>');}
-  }else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – loslassen setzt die Note";}
+  }else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – oder einen Notenwert/eine Pause hierher ziehen";}
   o.push('</svg>');el.innerHTML=o.join("");
 }
 (function(){
   var v=$("lineView"),drag=null;
-  function posAt(e){
-    var svg=v.querySelector("svg");if(!svg)return null;
+  function posAt(e){return linePosY(e.clientY);}
+  window.linePosY=function(cy){
+    var svg=v.querySelector("svg");if(!svg)return null;var e={clientY:cy};
     var rc=svg.getBoundingClientRect(),R=lineRange(),k=rc.height/(LN.top*2+(R.hi-R.lo)*LN.U/2);
     var yy=(e.clientY-rc.top)/k,p=Math.round(R.hi-(yy-LN.top)/(LN.U/2));
     return Math.max(R.lo,Math.min(R.hi,p));
@@ -1833,12 +1879,15 @@ function lineRender(ghost){
   v.addEventListener("pointermove",function(e){if(!drag)return;var p=posAt(e);if(p!==null&&p!==drag.pos){drag.pos=p;lineRender(drag);var pm=posMidi(p);if(audioReady())playNote({f:pm.m-28},3,ctx.currentTime+0.01,0.18);}});
   function end(e,cancel){
     if(!drag)return;var p=drag.pos;drag=null;lineRender();if(cancel)return;
+    linePlace(p);
+  }
+  window.linePlace=function(p){
     var pm=posMidi(p);armAccN=null;accButtons();
     if(!bestPos(pm.m)){status("Dieser Ton liegt außerhalb des Griffbretts – mit ⇩/⇧ Oktave verschieben.");return;}
     var bar=song().bars[cursor.bar];
     for(var q=0;q<nstr();q++)if(bar.n[q+"_"+cursor.step]){pushUndo();delete bar.n[q+"_"+cursor.step];}
     placeMidi(pm.m);
-  }
+  };
   v.addEventListener("pointerup",function(e){end(e,false)});
   v.addEventListener("pointercancel",function(e){end(e,true)});
 })();
@@ -2995,7 +3044,7 @@ var HELP=[
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
-{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
+{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p><b>Noch schneller:</b> Einen Notenwert (oder eine Pause) aus den Reihen darüber <b>auf die Zeile ziehen</b> und auf der richtigen Linie loslassen – Länge und Tonhöhe in einem Zug. Antippen der Knöpfe funktioniert weiter wie gewohnt.</p><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Sprung, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>⇥ Sprung</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
 {t:"e",h:"Diese Note / Greifen ab Bund",b:"<p><b>Diese Note</b> erscheint, wenn der Cursor auf einer Note steht: alle Stellen, an denen der Ton spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Greifen ab Bund</b> findest du unter <b>Takte…</b>: verteilt einen oder mehrere Takte so, dass sie möglichst in dieser Lage (etwa 5 Bünde breit) liegen.</p>",k:"lage saite umlegen fingersatz"},
