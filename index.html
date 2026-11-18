@@ -1535,7 +1535,7 @@ function staffSVG0(b,NI){
     var spd=spellM2(OPEN[ns][s]+(n.f==="x"?0:n.f));
     if(!evs[t]){evs[t]={t:t,notes:[],len:0};times.push(t);}
     if(slash){if(!evs[t].notes.length)evs[t].notes.push({pos:4,acc:0,slash:true,sn:""});}
-    else evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,sn:isKeys()?"":SNAME[ns][s]});
+    else evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,si:!!n.si,so:!!n.so,sn:isKeys()?"":SNAME[ns][s]});
     if(n.len>evs[t].len)evs[t].len=n.len;
     if(n.h)evs[t].h=1;if(n.a)evs[t].a=1;
     ["st","si","so","bd","vb","sl","pp","hm","pm"].forEach(function(k){if(n[k])evs[t][k]=1;});
@@ -1651,8 +1651,10 @@ function staffSVG0(b,NI){
     if(e.st){o.push('<circle class="fl" cx="'+r(x)+'" cy="'+r(artY)+'" r="1.7"/>');artY-=7;}
     if(e.a){o.push('<path class="ac" d="M'+r(x-4.5)+' '+r(artY-6)+' L'+r(x+4.5)+' '+r(artY-3)+' L'+r(x-4.5)+' '+r(artY)+'" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>');artY-=10;}
     var mk=(e.sl?"T":"")+(e.pp?"P":"")+(e.bd?"b":"")+(e.vb?"~":"");
-    if(e.si){var ys0=Y(e.notes[0].pos);o.push('<line class="st sld" x1="'+r(x-17)+'" y1="'+r(ys0+7)+'" x2="'+r(x-7.5)+'" y2="'+r(ys0+1.5)+'"/>');}
-    if(e.so){var ys1=Y(e.notes[0].pos);o.push('<line class="st sld" x1="'+r(x+7.5)+'" y1="'+r(ys1+1.5)+'" x2="'+r(x+18)+'" y2="'+r(ys1+8)+'"/>');}
+    e.notes.forEach(function(nt){
+      if(nt.si||(nt.slash&&e.si)){var ys0=Y(nt.pos);o.push('<line class="st sld" x1="'+r(x-17)+'" y1="'+r(ys0+7)+'" x2="'+r(x-7.5)+'" y2="'+r(ys0+1.5)+'"/>');}
+      if(nt.so||(nt.slash&&e.so)){var ys1=Y(nt.pos);o.push('<line class="st sld" x1="'+r(x+7.5)+'" y1="'+r(ys1+1.5)+'" x2="'+r(x+18)+'" y2="'+r(ys1+8)+'"/>');}
+    });
     if(mk)o.push('<text x="'+r(x)+'" y="'+r(artY+1)+'" font-size="10" font-weight="700" text-anchor="middle">'+mk+'</text>');
     any=true;
   }
