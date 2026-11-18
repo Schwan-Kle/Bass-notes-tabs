@@ -385,8 +385,8 @@ button{border-width:1.5px}
 #toolKeys button,#barKeys button{--ac:var(--a-edit)!important}
 #barKeys button.danger{--ac:var(--a-del)!important;background:color-mix(in srgb,var(--a-del) 8%,#fff)}
 #pad .keys button.sub{background:color-mix(in srgb,var(--hi) 22%,#fff);border-style:dashed;border-color:color-mix(in srgb,var(--hi) 85%,#000 5%);border-bottom-width:3px}
-#pad button.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:40px;line-height:1.05;padding:2px 1px}
-#pad button.ic i{font-style:normal;font-size:14px;font-weight:800}
+#pad button.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:44px;overflow:hidden;line-height:1.05;padding:2px 1px}
+#pad button.ic i{font-style:normal;font-size:19px;font-weight:800;line-height:1.05}
 #pad button.ic small{font-size:10px;font-weight:700;letter-spacing:-.01em}
 #pad button.sub.ic::after{position:absolute;right:3px;top:2px}
 #pad button.sub{position:relative}
@@ -437,7 +437,7 @@ button{border-width:1.5px}
 #restKeys button{--ac:#45524D!important;background:#F1F3F2}
 #restKeys button svg{display:block;color:#1A1A1A}
 #restKeys button small{font-size:9px}
-#restKeys button.ic{min-height:34px}
+#restKeys button.ic{min-height:38px;overflow:hidden}
 .staff .rhit{cursor:pointer}
 .rsbig{min-height:52px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;font-size:16px;padding:4px 12px;border-width:2px}
 .rsbig small{font-size:12px;color:var(--muted)}
@@ -519,7 +519,7 @@ button{border-width:1.5px}
   #printArea.bw .staff .op{fill:#fff!important}
   #printArea .bar .no .sec,#printArea .bar .no .tsl{background:#fff}
 }
-#lenKeys button.nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1;padding:1px 0;min-height:38px}
+#lenKeys button.nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1;padding:1px 0;min-height:44px;overflow:hidden}
 #lenKeys button.nv svg{display:block}
 #lenKeys button.nv small{font-size:8.5px;font-weight:700;opacity:.75;margin-top:-1px}
 .staff .stem{stroke-linecap:butt}
@@ -680,7 +680,7 @@ button{border-width:1.5px}
     <button id="hearBtn" class="ic" title="Noten beim Eingeben und Antippen hören"><i>🔊</i><small>Hören</small></button>
     <button id="rhyBtn" class="ic" title="Erst nur den Rhythmus tippen"><i>🥁</i><small>Rhythmus</small></button>
     <button id="repBtn" class="ic" title="Tonhöhen der vorhandenen Noten neu vergeben"><i>♪</i><small>Töne</small></button>
-    <button id="trpBtn" class="ic" title="Schlag am Cursor als Achteltriole"><i>³</i><small>Triole</small></button>
+    <button id="trpBtn" class="ic" title="Schlag am Cursor als Achteltriole"><i>⌜3⌝</i><small>Triole</small></button>
     <button id="techBtn" class="sub ic" title="Spieltechnik für die Note am Cursor"><i>✋</i><small>Technik</small></button>
     <button id="chBtn" class="sub ic" title="Akkordsymbol an dieser Stelle"><i>C7</i><small>Akkord</small></button>
   </div>
@@ -1685,7 +1685,7 @@ $("pdfGo").onclick=makePdf;$("pdfCancel").onclick=function(){$("pdfDlg").classLi
 
 /* Pausen: eigene Reihe + Pause antippen */
 function noteIcon(l){
-  var d=(l===3||l===6||l===12),b=d?(l===3?2:l===6?4:8):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
+  var d=(l===3||l===6||l===12),b=d?(l===3?2:l===6?4:8):l,o='<svg viewBox="0 0 30 30" width="30" height="30" aria-hidden="true">';
   var open=b>=8,cx=12,cy=23;
   o+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="5.2" ry="3.7" transform="rotate(-22 '+cx+' '+cy+')" '+(open?'fill="none" stroke="currentColor" stroke-width="1.8"':'fill="currentColor"')+'/>';
   if(b<16)o+='<line x1="16.6" y1="22" x2="16.6" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>';
@@ -1695,7 +1695,7 @@ function noteIcon(l){
   return o+'</svg>';
 }
 function restIcon(l){
-  var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
+  var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="28" height="28" aria-hidden="true">';
   if(b===16)o+='<line x1="5" x2="25" y1="11" y2="11" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="11" width="12" height="5" fill="currentColor"/>';
   else if(b===8)o+='<line x1="5" x2="25" y1="17" y2="17" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="12" width="12" height="5" fill="currentColor"/>';
   else if(b===4)o+='<path d="M12 3 l6 7 l-6 6 l6 7 c-6 -2.5 -9 2.5 -3.5 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
