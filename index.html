@@ -1410,7 +1410,7 @@ function barBody(b,NI,sus){
         h.push('<div class="'+cls+'" data-b="'+b+'" data-s="'+s+'" data-t="'+t+'">'+txt+'</div>');
       }
     }
-  h.push('</div>'+((vw==="tab"||(PRN.on&&vw!=="notes"))&&!isDrums()?tabRhythmSVG(b):'')+(typeof lyricRow==="function"?lyricRow(b):'')+(typeof wavRow==="function"?wavRow(b):''));
+  h.push('</div>'+(vw!=="notes"&&!isDrums()&&!isKeys()?tabRhythmSVG(b):'')+(typeof lyricRow==="function"?lyricRow(b):'')+(typeof wavRow==="function"?wavRow(b):''));
   return h.join("");
 }
 function render(){song().bars.forEach(cleanRests);if(typeof loopUI==="function")loopUI();if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
