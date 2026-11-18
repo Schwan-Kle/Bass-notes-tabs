@@ -530,6 +530,7 @@ button{border-width:1.5px}
 #pad .legend,#pad .hint{color:#33403B}
 #pad button.ic.big i{font-size:24px;line-height:.95}
 #noteMods button.ic small,#navKeys button.ic small{font-size:9.5px}
+.bar .no .ovl{min-height:24px;padding:0 8px;margin:0 4px 2px;font-size:12px;font-weight:800;color:#fff;background:var(--a-del);border-color:var(--a-del);border-radius:6px}
 </style>
 </head>
 <body>
@@ -1097,7 +1098,7 @@ function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lin
     sg=sigAt(b);st=sg.steps;
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
     var vw=view();
-    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no"><span class="bn">'+(b+1)+'</span>'+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+(S.count?countRow(b,st,sg):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)">');
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+(S.count?countRow(b,st,sg):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)">');
     for(s=0;s<ns;s++){
       h.push('<div class="sl s'+SNAME[ns][s]+'">'+SNAME[ns][s]+'</div>');
       for(t=0;t<st;t++){
@@ -1600,6 +1601,16 @@ function fitFollowing(b,t,newEnd,oldEnd){
   if(lost)setTimeout(function(){status(lost+" Note(n) passten nicht mehr in Takt "+(b+1)+" und wurden entfernt – ↶ Zurück holt sie wieder.");},30);
   return lost;
 }
+function barOverlap(b){var bar=song().bars[b],ns=nstr(),ev={},k;
+  for(k in bar.n){var q=k.split("_");if(+q[0]>=ns)continue;var t=+q[1];ev[t]=Math.max(ev[t]||0,bar.n[k].len);}
+  var ts=Object.keys(ev).map(Number).sort(function(a,c){return a-c});
+  for(var i=0;i<ts.length-1;i++)if(ts[i]+ev[ts[i]]>ts[i+1])return true;return false;}
+function fixOverlap(b){pushUndo();var lost=0,g=0,ch=true;
+  while(ch&&g++<64){ch=false;var bar=song().bars[b],ns=nstr(),ev={},k;
+    for(k in bar.n){var q=k.split("_");if(+q[0]>=ns)continue;var t=+q[1];ev[t]=Math.max(ev[t]||0,bar.n[k].len);}
+    var ts=Object.keys(ev).map(Number).sort(function(a,c){return a-c});
+    for(var i=0;i<ts.length-1;i++)if(ts[i]+ev[ts[i]]>ts[i+1]){lost+=fitFollowing(b,ts[i],ts[i]+ev[ts[i]],null);ch=true;break;}}
+  render();save();status("Takt "+(b+1)+": folgende Noten nachgerückt"+(lost?" – "+lost+" passte(n) nicht mehr hinein (↶ Zurück holt sie)":"")+".");}
 function oldEndAt(b,t){var bar=song().bars[b],m=0;for(var q=0;q<nstr();q++){var n=bar.n[q+"_"+t];if(n&&n.len>m)m=n.len;}return m?t+m:null;}
 function setLen(l,silent){
   curLen=l;
@@ -1658,6 +1669,7 @@ $("modeTab").onclick=function(){setMode("tab")};
 $("modeNote").onclick=function(){setMode("note")};
 $("modeFb").onclick=function(){setMode("fb")};
 $("modeLine").onclick=function(){setMode("line")};
+document.addEventListener("click",function(e){var x=e.target.closest("[data-ovl]");if(x){e.stopPropagation();fixOverlap(+x.dataset.ovl);}},true);
 /* PDF / Drucken */
 function openPdf(){var sg=song();$("pdfTitle").value=sg.name||"";$("pdfSub").value=sg.sub||"";$("pdfNote").value=sg.note||"";$("pdfView").value=view();if(typeof syncSegs==="function")syncSegs();$("pdfCnt").checked=!!S.count;$("pdfDlg").classList.add("open");}
 function keyName(k){var L=["Ces-Dur / as-Moll","Ges-Dur / es-Moll","Des-Dur / b-Moll","As-Dur / f-Moll","Es-Dur / c-Moll","B-Dur / g-Moll","F-Dur / d-Moll","C-Dur / a-Moll","G-Dur / e-Moll","D-Dur / h-Moll","A-Dur / fis-Moll","E-Dur / cis-Moll","H-Dur / gis-Moll","Fis-Dur / dis-Moll","Cis-Dur / ais-Moll"];return L[k+7]||"";}
