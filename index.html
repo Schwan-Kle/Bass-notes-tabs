@@ -528,6 +528,8 @@ button{border-width:1.5px}
 #pad .keys button,#pad .modes button{background:#fff}
 #pad #restKeys button{background:#F4F6F5}
 #pad .legend,#pad .hint{color:#33403B}
+#pad button.ic.big i{font-size:24px;line-height:.95}
+#noteMods button.ic small,#navKeys button.ic small{font-size:9.5px}
 </style>
 </head>
 <body>
@@ -654,25 +656,25 @@ button{border-width:1.5px}
   <div id="padLine"><div id="lineInfo" aria-live="polite">Rechts auf die Zeile tippen und schieben – loslassen setzt die Note</div><div id="lineView"></div></div>
   <div class="keys k7 nk" id="letterKeys"></div>
   <div class="keys k8 small nk" id="noteMods">
-    <button data-acc="-1" title="Nächste Note erniedrigen">♭</button>
-    <button data-acc="0" title="Nächste Note ohne Vorzeichen (gegen die Tonart)">♮</button>
-    <button data-acc="1" title="Nächste Note erhöhen">♯</button>
-    <button id="octDn" title="Note am Cursor eine Oktave tiefer">Okt ↓</button>
-    <button id="octUp2" title="Note am Cursor eine Oktave höher">Okt ↑</button>
-    <button id="posBtn" title="Gleiche Note auf anderer Saite greifen">Lage ⇄</button>
-    <button id="deadBtn" title="Dead Note">x</button>
-    <button id="delBtn2" aria-label="Note löschen">⌫</button>
+    <button data-acc="-1" class="ic big" title="Nächste Note erniedrigen"><i>♭</i><small>erniedr.</small></button>
+    <button data-acc="0" class="ic big" title="Nächste Note ohne Vorzeichen (gegen die Tonart)"><i>♮</i><small>auflösen</small></button>
+    <button data-acc="1" class="ic big" title="Nächste Note erhöhen"><i>♯</i><small>erhöhen</small></button>
+    <button id="octDn" class="ic" title="Note am Cursor eine Oktave tiefer"><i>⇩</i><small>Oktave</small></button>
+    <button id="octUp2" class="ic" title="Note am Cursor eine Oktave höher"><i>⇧</i><small>Oktave</small></button>
+    <button id="posBtn" class="ic" title="Gleiche Note auf anderer Saite greifen"><i>⇄</i><small>Lage</small></button>
+    <button id="deadBtn" class="ic" title="Dead Note"><i>✕</i><small>Dead</small></button>
+    <button id="delBtn2" class="ic" aria-label="Note löschen"><i>⌫</i><small>Löschen</small></button>
   </div>
-  <div class="hint nk">Oktave wählt die App automatisch – mit Okt ↑/↓ ändern.</div>
+  <div class="hint nk">Oktave wählt die App automatisch – mit ⇩/⇧ Oktave ändern.</div>
   <div class="keys k8 small" id="navKeys">
-    <button data-nav="l" aria-label="Schritt zurück">←</button>
-    <button data-nav="r" aria-label="Schritt vor">→</button>
-    <button data-nav="u" aria-label="Saite höher">↑</button>
-    <button data-nav="d" aria-label="Saite tiefer">↓</button>
-    <button id="restBtn" title="Um die gewählte Notenlänge weiterspringen, ohne etwas zu ändern">⇥ Sprung</button>
-    <button id="legBtn" title="Gebunden: Hammer-on, Pull-off, Slide, Haltebogen">⌒</button>
-    <button id="accBtn" title="Akzent">&gt;</button>
-    <button id="autoBtn" title="Nach jeder Note automatisch weiterspringen">Auto→</button>
+    <button data-nav="l" class="ic" aria-label="Schritt zurück"><i>←</i><small>zurück</small></button>
+    <button data-nav="r" class="ic" aria-label="Schritt vor"><i>→</i><small>vor</small></button>
+    <button data-nav="u" class="ic" aria-label="Saite höher"><i>↑</i><small>Saite</small></button>
+    <button data-nav="d" class="ic" aria-label="Saite tiefer"><i>↓</i><small>Saite</small></button>
+    <button id="restBtn" class="ic" title="Um die gewählte Notenlänge weiterspringen, ohne etwas zu ändern"><i>⇥</i><small>Sprung</small></button>
+    <button id="legBtn" class="ic" title="Gebunden: Hammer-on, Pull-off, Slide, Haltebogen"><i>⌒</i><small>Bogen</small></button>
+    <button id="accBtn" class="ic" title="Akzent"><i>&gt;</i><small>Akzent</small></button>
+    <button id="autoBtn" class="ic" title="Nach jeder Note automatisch weiterspringen"><i>⏩</i><small>Auto</small></button>
   </div>
   <div class="keys k8 small" id="toolKeys">
     <button id="semDn" class="ic" title="Note am Cursor einen Halbton tiefer"><i>−½</i><small>Halbton</small></button>
@@ -1788,7 +1790,7 @@ function lineRender(ghost){
     o.push('<ellipse class="fl'+(sn?" n"+sn:"")+'" cx="'+gx+'" cy="'+gy+'" rx="9" ry="6.5" transform="rotate(-20 '+gx+' '+gy+')"/>');
     if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate('+(gx-21)+' '+gy+') scale(1.5) translate('+(-(gx-21))+' '+(-gy)+')">'+accSVG(pm.a,gx-21,gy)+'</g>');
     var lab=spName({m:pm.m,L:pm.L,a:pm.a})+spOct({m:pm.m,L:pm.L,a:pm.a});
-    if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – Okt ↑/↓</span>');}
+    if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – ⇩/⇧ Oktave</span>');}
   }else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – loslassen setzt die Note";}
   o.push('</svg>');el.innerHTML=o.join("");
 }
@@ -1805,7 +1807,7 @@ function lineRender(ghost){
   function end(e,cancel){
     if(!drag)return;var p=drag.pos;drag=null;lineRender();if(cancel)return;
     var pm=posMidi(p);armAccN=null;accButtons();
-    if(!bestPos(pm.m)){status("Dieser Ton liegt außerhalb des Griffbretts – mit Okt ↑/↓ verschieben.");return;}
+    if(!bestPos(pm.m)){status("Dieser Ton liegt außerhalb des Griffbretts – mit ⇩/⇧ Oktave verschieben.");return;}
     var bar=song().bars[cursor.bar];
     for(var q=0;q<nstr();q++)if(bar.n[q+"_"+cursor.step]){pushUndo();delete bar.n[q+"_"+cursor.step];}
     placeMidi(pm.m);
@@ -2966,7 +2968,7 @@ var HELP=[
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
-{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
+{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Sprung, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>⇥ Sprung</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
 {t:"e",h:"Diese Note / Greifen ab Bund",b:"<p><b>Diese Note</b> erscheint, wenn der Cursor auf einer Note steht: alle Stellen, an denen der Ton spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Greifen ab Bund</b> findest du unter <b>Takte…</b>: verteilt einen oder mehrere Takte so, dass sie möglichst in dieser Lage (etwa 5 Bünde breit) liegen.</p>",k:"lage saite umlegen fingersatz"},
