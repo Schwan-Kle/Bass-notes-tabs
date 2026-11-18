@@ -253,6 +253,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .chl{color:var(--accent);font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .chips button{min-height:34px;padding:0 10px;font-size:13px}
+.kchips{margin-top:6px}.kch{font-size:13px;font-weight:700;margin-right:4px}
 .chips .lbl{font-size:12px;color:var(--muted);margin-right:2px}
 #chIn{font-size:18px;font-weight:700;min-height:42px}
 .techl{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -1084,10 +1085,11 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
       <textarea id="txIn" rows="3" maxlength="2000" placeholder="z. B. Hinweise, Ablauf, Liedtext-Strophe … Zeile mit # am Anfang = Überschrift"></textarea>
       <label class="txe">📝 Text am Ende des Stücks<textarea id="txEnd" rows="2" maxlength="2000" placeholder="optional"></textarea></label>
     </div>
-    <div class="secbox"><b>⏱ Taktart &amp; Tempo ab diesem Takt</b>
+    <div class="secbox"><b>⏱ Taktart, Tonart &amp; Tempo ab diesem Takt</b>
       <div class="chips" id="tsChips"></div>
+      <div class="chips kchips" id="tkChips"></div>
       <div class="row"><label>Tempo ab hier <input type="number" id="tbIn" class="narrow" min="30" max="260" placeholder="–"> bpm</label><button id="tbDel">wie vorher</button></div>
-      <p>Gilt ab diesem Takt bis zur nächsten Änderung. „wie vorher“ übernimmt Taktart/Tempo von davor.</p>
+      <p>Gilt ab diesem Takt bis zur nächsten Änderung. „wie vorher“ übernimmt Taktart, Tonart bzw. Tempo von davor.</p>
     </div>
     <label class="ck"><input type="checkbox" id="rsChk"> Wiederholung beginnt hier (‖:)</label>
     <label class="ck"><input type="checkbox" id="reChk"> Wiederholung endet hier (:‖)</label>
@@ -1190,7 +1192,7 @@ function anySig(){return song().bars.some(function(x){return x.sig});}
 function showSig(b){var bar=song().bars[b];return !!(bar&&(bar.sig||b===0));}
 var PRN={on:false,starts:{}};
 function prMid(b){return PRN.on&&!PRN.starts[b];}
-function GUTb(b){if(prMid(b)){var bar=song().bars[b];return (bar&&bar.sig?1.1:0.15)+(bar&&bar.rs?0.6:0);}return GUT()+(showSig(b)?1.0:0);}
+function GUTb(b){if(prMid(b)){var bar=song().bars[b];var kc=keyChg(b)?1.0+0.34*(Math.abs(keyAt(b))+keyNat(b).length)+(keyNat(b).length&&keyAt(b)?0.15:0):0;return (bar&&bar.sig?1.1:0.15)+(bar&&bar.rs?0.6:0)+kc;}return GUT(b)+(showSig(b)?1.0:0);}
 function isPiano(){return song().inst==="piano"}
 function isKeys(){var i=song().inst;return i==="piano"||i==="voice"}
 function isGuitar(){return song().inst==="guitar"}
@@ -1387,7 +1389,7 @@ function barBody(b,NI,sus){
 function render(){song().bars.forEach(cleanRests);if(typeof loopUI==="function")loopUI();if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg,st,bars=song().bars,b;
   var sus=computeSus(),NI=noteInfo(),PL=partList(),ap=actPart(),all=PL&&showAllParts(),oth=[],gtx=all&&PL.some(function(p,i){return partInst(i)==="guitar"});
-  var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.ch,x.tb,x.rs,x.re,x.v,x.rt]})]):"";
+  var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.key,x.ch,x.tb,x.rs,x.re,x.v,x.rt]})]):"";
   if(all&&OTHC.k===sigK&&OTHC.id===song().id)oth=OTHC.v;
   else if(all)PL.forEach(function(p,i){if(i===ap)return;oth[i]=withPart(i,function(){song().bars.forEach(cleanRests);var su=computeSus(),ni=noteInfo(),arr=[];PART.noCh=i!==0||gtx;PART.other=true;
     for(var bq=0;bq<bars.length;bq++)arr.push(barBody(bq,ni,su).replace(/data-(b|s|t)="/g,'data-o$1="'));PART.noCh=false;PART.other=false;return arr;});});
@@ -1399,7 +1401,7 @@ function render(){song().bars.forEach(cleanRests);if(typeof loopUI==="function")
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
     var vw=view();
     if(bars[b].tx)h.push('<div class="txblk" data-txb="'+b+'" title="Text bearbeiten">'+txHTML(bars[b].tx)+'</div>');
-    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+(b===0?' b1':'')+'" data-bi="'+b+'">'+(inl&&!PRN.on&&b===loopA-1?'<div class="lph lpa" data-lph="a" title="Schleifen-Anfang: ziehen"></div>':'')+(inl&&!PRN.on&&b===loopB-1?'<div class="lph lpb" data-lph="b" title="Schleifen-Ende: ziehen"></div>':'')+'<div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>');
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+(b===0?' b1':'')+'" data-bi="'+b+'">'+(inl&&!PRN.on&&b===loopA-1?'<div class="lph lpa" data-lph="a" title="Schleifen-Anfang: ziehen"></div>':'')+(inl&&!PRN.on&&b===loopB-1?'<div class="lph lpb" data-lph="b" title="Schleifen-Ende: ziehen"></div>':'')+'<div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(keyChg(b)?'<span class="tsl">'+esc(keySig(keyAt(b))+keyLabel(keyAt(b)).split(" / ")[0])+'</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>');
     if(!PL){h.push(barBody(b,NI,sus)+'</div>');continue;}
     h.push('<div class="pgrp">');
     for(var pi=0;pi<PL.length;pi++){var col=PCOL[pi%PCOL.length];
@@ -1418,14 +1420,22 @@ var LSH=[0,0,1,1,2,3,3,4,4,5,5,6],ASH=[0,1,0,1,0,0,1,0,1,0,1,0];
 var NAT=[0,2,4,5,7,9,11],LET=["C","D","E","F","G","A","H"];
 var FLAT_ORD=[6,2,5,1,4,0,3],SHARP_ORD=[3,0,4,1,5,2,6];
 var FLAT_POS=[2,5,1,4,0,3,-1],SHARP_POS=[6,3,7,4,1,5,2];
-function keyN(){var k=+song().key||0;return Math.max(-7,Math.min(7,k))}
+var KEYB=null;
+function keyAt(b){var bars=song().bars;if(b===undefined||b===null||isNaN(b))return +song().key||0;for(var i=Math.min(b,bars.length-1);i>=0;i--)if(bars[i]&&bars[i].key!==undefined)return bars[i].key;return +song().key||0;}
+function keyN(){var k=KEYB!==null?keyAt(KEYB):(typeof cursor!=="undefined"&&cursor?keyAt(cursor.bar):+song().key||0);return Math.max(-7,Math.min(7,k))}
+function baseKey(){return Math.max(-7,Math.min(7,+song().key||0))}
+function keyChg(b){var bar=song().bars[b];return b>0&&!!bar&&bar.key!==undefined&&keyAt(b)!==keyAt(b-1);}
+/* Auflösungszeichen beim Tonartwechsel: Positionen (Bassschlüssel-Basis) */
+function keyNat(b){if(!keyChg(b))return [];var o=keyAt(b-1),n=keyAt(b),r=[],i;if(!o)return r;
+  var same=(o>0&&n>0)||(o<0&&n<0),from=same?Math.abs(n):0;
+  for(i=from;i<Math.abs(o);i++)r.push((o<0?FLAT_POS:SHARP_POS)[i]);return r;}
 function keyAcc(){
   var k=keyN(),a=[0,0,0,0,0,0,0],i;
   if(k<0)for(i=0;i<-k;i++)a[FLAT_ORD[i]]=-1;
   else for(i=0;i<k;i++)a[SHARP_ORD[i]]=1;
   return a;
 }
-function GUT(){var k=Math.abs(keyN()),g=k?1.25+0.34*k:0.8;try{if(song().bars.some(function(b){return b.rs}))g+=0.5;}catch(e){}return g}
+function GUT(b){var k=Math.abs(keyAt(b)),nt=keyNat(b).length,g=k||nt?1.25+0.34*(k+nt)+(nt?0.15:0):0.8;try{if(song().bars.some(function(b){return b.rs}))g+=0.5;}catch(e){}return g}
 function spell(m){
   var pc=((m%12)+12)%12,ka=keyAcc(),L=-1,a=0,i;
   for(i=0;i<7;i++)if(((NAT[i]+ka[i])%12+12)%12===pc){L=i;a=ka[i];break;}
@@ -1445,13 +1455,15 @@ function noteInfo(){
   var ns=nstr(),bars=song().bars,off=[0];
   for(var bq=0;bq<bars.length;bq++)off.push(off[bq]+sigAt(bq).steps);
   var total=off[bars.length],occ=new Uint8Array(total),pMin=0,pMax=8;
+  var k0=KEYB;
   for(var b=0;b<bars.length;b++)for(var key in bars[b].n){
-    var p=key.split("_"),s=+p[0],t=+p[1],n=bars[b].n[key],st=off[b+1]-off[b];
+    KEYB=b;var p=key.split("_"),s=+p[0],t=+p[1],n=bars[b].n[key],st=off[b+1]-off[b];
     if(t>=st||s>=ns||!inHand(s))continue;
     for(var i=0;i<n.len&&off[b]+t+i<total;i++)occ[off[b]+t+i]=1;
     var sp=spellM2(OPEN[ns][s]+(n.f==="x"?0:n.f));
     if(sp.pos<pMin)pMin=sp.pos;if(sp.pos>pMax)pMax=sp.pos;
   }
+  KEYB=k0;
   return {occ:occ,pMin:pMin,pMax:pMax,off:off};
 }
 function baseLen(l){return l>=16?16:l>=8?8:l>=4?4:l>=2?2:1}
@@ -1489,7 +1501,8 @@ function grandSVG(b){
   STAFF.clef="bass";out+=staffSVG(b,noteInfo());
   STAFF.clef=null;return '<div class="gstaff">'+out+'</div>';
 }
-function staffSVG(b,NI){
+function staffSVG(b,NI){var k0=KEYB;KEYB=b;try{return staffSVG0(b,NI);}finally{KEYB=k0;}}
+function staffSVG0(b,NI){
   var sg=sigAt(b),st=sg.steps,beat=sg.beat,ns=nstr(),bar=song().bars[b];
   var U=22,sp=8,G=GUTb(b)*U,W=(st+GUTb(b))*U,padT=3*sp+10,H=padT+(NI.pMax-NI.pMin)*sp/2+3*sp+10,hx=4.9;
   function Y(p){return padT+(NI.pMax-p)*sp/2}
@@ -1502,10 +1515,13 @@ function staffSVG(b,NI){
   var yF=Y(6);
   if(!prMid(b)&&effClef()==="treble")o.push(trebleSVG(2,Y(2),sp,isGuitar()));
   else  if(!prMid(b))o.push('<circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/>');
-  var kn=prMid(b)?0:keyN(),ki;
+  var kc=keyChg(b),kn=prMid(b)&&!kc?0:keyN(),ki,kx0=prMid(b)?7:24,kof=effClef()==="treble"?2:0,nat=kc?keyNat(b):[];
+  if(kc&&prMid(b))o.push('<line class="ln bl" x1="1.2" x2="1.2" y1="'+Y(8)+'" y2="'+Y(0)+'"/>');
+  nat.forEach(function(np,i){o.push(accSVG(0,kx0+i*7.4,Y(np+kof)));});
+  if(nat.length)kx0+=nat.length*7.4+3;
   for(ki=0;ki<Math.abs(kn);ki++){
-    var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+(effClef()==="treble"?2:0);
-    o.push(accSVG(kn<0?-1:1,24+ki*7.4,Y(kp)));
+    var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+kof;
+    o.push(accSVG(kn<0?-1:1,kx0+ki*7.4,Y(kp)));
   }
   if((prMid(b)?!!bar.sig:showSig(b))&&!EXSVG){var tsP=sigStrAt(b).split("/"),tsx=G-(bar.rs?24:11);
     o.push('<text class="tsn" x="'+r(tsx)+'" y="'+r(Y(6)+5.5)+'" text-anchor="middle">'+tsP[0]+'</text><text class="tsn" x="'+r(tsx)+'" y="'+r(Y(2)+5.5)+'" text-anchor="middle">'+tsP[1]+'</text>');}
@@ -2146,7 +2162,7 @@ function makePdf(){
     rowsH+='</div>';});
   var d=new Date(),ds=d.toLocaleDateString("de-DE");
   var h='<header class="pt"><h1>'+esc(sg.name||"Ohne Titel")+'</h1>'+(sg.sub?'<div class="psub">'+esc(sg.sub)+'</div>':'')+
-    '<div class="pmeta"><div class="pl"><b>Tempo</b> '+sg.bpm+' bpm<br><b>Tonart</b> '+esc(keyName(keyN()))+'</div><div class="pr"><b>Takt</b> '+esc(sg.sig)+'<br>'+(partList()&&PRN.allParts!==false?'<b>Besetzung</b> '+esc(partList().map(function(p){return p.name}).join(", ")):partList()?'<b>Stimme</b> '+esc(partList()[actPart()].name):isGuitar()||isPiano()||isVoice()?'<b>'+INAME[instOf()]+'</b>':'<b>Bass</b> '+nstr()+'-saitig')+'</div></div>'+
+    '<div class="pmeta"><div class="pl"><b>Tempo</b> '+sg.bpm+' bpm<br><b>Tonart</b> '+esc(keyName(baseKey()))+'</div><div class="pr"><b>Takt</b> '+esc(sg.sig)+'<br>'+(partList()&&PRN.allParts!==false?'<b>Besetzung</b> '+esc(partList().map(function(p){return p.name}).join(", ")):partList()?'<b>Stimme</b> '+esc(partList()[actPart()].name):isGuitar()||isPiano()||isVoice()?'<b>'+INAME[instOf()]+'</b>':'<b>Bass</b> '+nstr()+'-saitig')+'</div></div>'+
     (sg.form&&sg.form.length?'<div class="pnote"><b>Ablauf:</b> '+esc(sg.form.join(" → "))+'</div>':'')+(sg.note?'<div class="pnote">'+esc(sg.note)+'</div>':'')+'</header>';
   if(sg.endTx)rowsH+='<div class="ptx">'+txHTML(sg.endTx)+'</div>';
   h+='<div class="pbars">'+rowsH+'</div><footer class="pf">'+esc(sg.name||"")+' · erstellt am '+ds+'</footer>';
@@ -2728,7 +2744,7 @@ function loadSong(){
   cursor={bar:0,step:0,str:nstr()-1};
   loopA=1;loopB=s.bars.length;clampLoop();
   ensureSigOption(s.sig);
-  $("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(keyN());$("sig").value=s.sig;$("strings").value=String(nstr());
+  $("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(baseKey());$("sig").value=s.sig;$("strings").value=String(nstr());
   setBpm(s.bpm||80);fillSongs();render();flagButtons();
   var n0=noteAt(0,cursor.str,0);setLen(n0?n0.len:1,true);
   if(typeof refLoad==="function")refLoad();
@@ -2856,23 +2872,38 @@ $("dlgLoad").onclick=function(){
 };
 
 /* Laden: eigene Stücke, Backups, MusicXML */
+function normN(src){
+  var out={};if(!src||typeof src!=="object")return out;
+  for(var k in src){
+    var n=src[k];if(!/^\d+_\d+$/.test(k)||!n||typeof n!=="object")continue;
+    var c={};for(var a in n){var v=n[a];if(typeof v==="number"&&isFinite(v)||typeof v==="boolean"||typeof v==="string"&&v.length<=20)c[a]=v;}
+    c.f=n.f==="x"?"x":Math.max(0,Math.min(24,parseInt(n.f,10)||0));
+    c.len=Math.max(1,Math.min(256,parseInt(n.len,10)||1));
+    out[k]=c;
+  }
+  return out;
+}
 function normSong(o){
   if(!o||!Array.isArray(o.bars)||!o.bars.length)return null;
-  var bars=o.bars.map(function(b){
-    var nb=emptyBar();
-    if(b&&b.n)for(var k in b.n){
-      var n=b.n[k];
-      if(!/^\d+_\d+$/.test(k)||!n)continue;
-      var f=n.f==="x"?"x":Math.max(0,Math.min(24,parseInt(n.f,10)||0));
-      var c={f:f,len:Math.max(1,Math.min(256,parseInt(n.len,10)||1))};
-      if(n.h)c.h=1;if(n.a)c.a=1;["st","si","so","bd","vb","sl","pp","hm","ph"].forEach(function(x){if(n[x])c[x]=1;});nb.n[k]=c;
-    }
-    if(b&&b.tb){nb.tb={};for(var tk in b.tb)if(/^\d+$/.test(tk))nb.tb[tk]=1;}
-    if(b&&b.ch){nb.ch={};for(var ck in b.ch)if(/^\d+$/.test(ck))nb.ch[ck]=String(b.ch[ck]).slice(0,14);}
-    if(b){if(b.rs)nb.rs=1;if(b.re){nb.re=1;var rt=parseInt(b.rt,10);if(rt>2&&rt<=8)nb.rt=rt;}var v=parseInt(b.v,10);if(v>0&&v<=4)nb.v=v;}
+  var s;try{s=JSON.parse(JSON.stringify(o));}catch(e){return null;}
+  s.bars=s.bars.map(function(b){
+    var nb=b&&typeof b==="object"?b:emptyBar();
+    nb.n=normN(nb.n);
+    if(nb.p&&typeof nb.p==="object")for(var id in nb.p){var q=nb.p[id];if(!q||typeof q!=="object"){delete nb.p[id];continue;}q.n=normN(q.n);}
+    if(nb.sig){nb.sig=validSig(nb.sig);}
+    if(nb.bpm){var bp=parseInt(nb.bpm,10);if(bp>=30&&bp<=260)nb.bpm=bp;else delete nb.bpm;}
+    if(nb.key!==undefined){var kk=parseInt(nb.key,10);if(kk>=-7&&kk<=7)nb.key=kk;else delete nb.key;}
     return nb;
   });
-  return {id:typeof o.id==="string"?o.id.slice(0,20):uid(),name:String(o.name||"Geladenes Stück").slice(0,60),bpm:Math.max(30,Math.min(220,+o.bpm||80)),acc:o.acc==="#"?"#":"b",key:Math.max(-7,Math.min(7,parseInt(o.key,10)||0)),sig:validSig(o.sig),strings:o.strings===5?5:4,mod:Date.now(),bars:bars};
+  s.id=typeof s.id==="string"?s.id.slice(0,20):uid();
+  s.name=String(s.name||"Geladenes Stück").slice(0,60);
+  s.bpm=Math.max(30,Math.min(220,+s.bpm||80));
+  s.acc=s.acc==="#"?"#":"b";
+  s.key=Math.max(-7,Math.min(7,parseInt(s.key,10)||0));
+  s.sig=validSig(s.sig);
+  s.strings=s.strings===5?5:4;
+  s.mod=Date.now();
+  return s;
 }
 function addSongs(list){
   var added=0,replaced=0,lastIdx=-1;
@@ -2972,7 +3003,7 @@ function importMusicXML(xml,fname){
   else pickDialog("Welche Stimme übernehmen?","Die Datei enthält "+parts.length+" Stimmen. Wähle die Bass-Stimme:",parts.map(function(p,i){return names[p.getAttribute("id")]||"Stimme "+(i+1)}),go);
 }
 function convertPart(part,title){
-  var div=1,beats=4,btype=4,fifths=null,tempo=0,trans=null,sigStr=null,curSig=null,warn={},maxString=0;
+  var div=1,beats=4,btype=4,fifths=null,curKey=null,tempo=0,trans=null,sigStr=null,curSig=null,warn={},maxString=0;
   var evs=[],restEvs=[],measures=kids(part,"measure"),mInfo={},openEnding=0;
   measures.forEach(function(m,mi){
     var t=0,lastStart=0,voice1=null;
@@ -2983,7 +3014,7 @@ function convertPart(part,title){
         var d=+txtOf(c,"divisions");if(d>0)div=d;
         var tm=kid(c,"time");
         if(tm){var b=parseInt(txtOf(tm,"beats"),10),bt=parseInt(txtOf(tm,"beat-type"),10);if(b>0&&bt>0){var ns2=b+"/"+bt;if(!sigStr){sigStr=ns2;beats=b;btype=bt;}else if(ns2!==curSig&&validSig(ns2)===ns2){mInfo[mi]=mInfo[mi]||{};mInfo[mi].sig=ns2;}else if(validSig(ns2)!==ns2)warn.sig=1;curSig=ns2;beats=b;btype=bt;}}
-        var ky=kid(c,"key");if(ky&&fifths===null&&txtOf(ky,"fifths")!=="")fifths=parseInt(txtOf(ky,"fifths"),10)||0;
+        var ky=kid(c,"key");if(ky&&txtOf(ky,"fifths")!==""){var fv=Math.max(-7,Math.min(7,parseInt(txtOf(ky,"fifths"),10)||0));if(fifths===null)fifths=fv;else if(fv!==curKey){mInfo[mi]=mInfo[mi]||{};mInfo[mi].key=fv;}curKey=fv;}
         var tr=kid(c,"transpose");if(tr&&!trans)trans={ch:parseInt(txtOf(tr,"chromatic"),10)||0,oc:parseInt(txtOf(tr,"octave-change"),10)||0};
       }else if(nn==="direction"||nn==="sound"){
         var snd=nn==="sound"?c:c.getElementsByTagName("sound")[0];
@@ -3258,7 +3289,15 @@ function tsFill(b){
   var prev=barDlgB>0?sigStrAt(barDlgB-1):song().sig;
   $("tsChips").innerHTML='<button data-ts="" class="'+(!b.sig?'on':'')+'">wie vorher ('+esc(prev)+')</button>'+TSS.map(function(x){return '<button data-ts="'+x+'" class="'+(b.sig===x?'on':'')+'">'+x+'</button>'}).join("");
   $("tbIn").value=b.bpm||"";$("tbIn").placeholder=String(barDlgB>0?tempoAt(barDlgB-1):song().bpm);
+  var pk=barDlgB>0?keyAt(barDlgB-1):baseKey(),hk=barDlgB>0?'<button data-tk="" class="'+(!keyChg(barDlgB)?'on':'')+'">Tonart wie vorher ('+esc(keySig(pk)+keyLabel(pk).split(" / ")[0])+')</button>':'<span class="kch">Tonart des Stücks:</span>';
+  for(var v=-7;v<=7;v++){var on=barDlgB>0?keyChg(barDlgB)&&keyAt(barDlgB)===v:baseKey()===v;hk+='<button data-tk="'+v+'" class="'+(on?'on':'')+'"><b>'+(v===0?'–':Math.abs(v)+(v<0?'♭':'♯'))+'</b> '+esc(keyLabel(v).split(" / ")[0])+'</button>';}
+  $("tkChips").innerHTML=hk;
 }
+$("tkChips").addEventListener("click",function(e){var x=e.target.closest("[data-tk]");if(!x)return;var bs=song().bars,b=bs[barDlgB];pushUndo();
+  if(barDlgB===0){delete b.key;if(x.dataset.tk!==""){song().key=+x.dataset.tk;$("keySel").value=x.dataset.tk;}}
+  else{var pv=keyAt(barDlgB-1);if(x.dataset.tk===""||+x.dataset.tk===pv)delete b.key;else b.key=+x.dataset.tk;}
+  var nx=bs[barDlgB+1];if(nx&&nx.key!==undefined&&nx.key===keyAt(barDlgB))delete nx.key;
+  tsFill(b);render();save();status(keyChg(barDlgB)?"Ab Takt "+(barDlgB+1)+": "+keyLabel(keyAt(barDlgB)).split(" / ")[0]:barDlgB===0?"Tonart des Stücks: "+keyLabel(baseKey()):"Takt "+(barDlgB+1)+": Tonart wie vorher");});
 $("tsChips").addEventListener("click",function(e){var x=e.target.closest("[data-ts]");if(!x)return;var b=song().bars[barDlgB];pushUndo();
   var prev=barDlgB>0?sigStrAt(barDlgB-1):song().sig;
   if(!x.dataset.ts||x.dataset.ts===prev)delete b.sig;else b.sig=x.dataset.ts;
@@ -3594,7 +3633,7 @@ var HELP=[
 {t:"e",h:"Notenlängen",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt. In einem Triolen-Schlag gilt: 1/8 oder kürzer = eine Triolenachtel, 1/4 = zwei.</p>",k:"länge dauer punktiert"},
 {t:"e",h:"Tab-Eingabe (Bund-Zahlen)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
 {t:"e",h:"Rhythmus unter der Tabulatur",b:"<p>In der Ansicht <b>nur Tab</b> steht unter jeder Tab-Zeile automatisch der Rhythmus: <b>Hälse</b> unter jeder Zahl, <b>ein Balken</b> = Achtel, <b>zwei Balken</b> = Sechzehntel, Fähnchen bei einzelnen Achteln/Sechzehnteln, kurzer Hals mit Kreis = Halbe, Kreis = Ganze, Punkt = punktiert. Pausen erscheinen als kleine Pausenzeichen. In „Noten + Tab“ entfällt die Zeile, weil die Noten den Rhythmus schon zeigen.</p>",k:"rhythmus tab hälse balken nur tab"},
-{t:"e",h:"Taktart- und Tempowechsel",b:"<p>Cursor in den Takt setzen, ab dem sich etwas ändert, dann <b>📍 Abschn.</b> → <b>⏱ Taktart &amp; Tempo ab diesem Takt</b>. Taktart antippen (z. B. 6/4) und/oder ein neues Tempo eintragen. Das gilt ab diesem Takt bis zur nächsten Änderung.</p><ul><li>Die neue Taktart steht als Zahlen am Anfang der Notenzeile und als blaues Kästchen neben der Taktnummer, ein Tempowechsel als „120 bpm“.</li><li>Abspielen, Metronom, Zählzeiten und Cursor richten sich danach.</li><li><b>wie vorher</b> nimmt die Änderung wieder zurück.</li><li>Die Taktart oben („Takt 4/4“) ist die Grundtaktart des Stücks.</li></ul><p>Einspielen mit Mikrofon nimmt die Taktart des Start-Takts für die ganze Aufnahme.</p>",k:"taktart wechsel 6/4 5/4 tempo wechsel bpm"},
+{t:"e",h:"Taktart-, Tonart- und Tempowechsel",b:"<p>Cursor in den Takt setzen, ab dem sich etwas ändert, dann <b>📍 Abschn.</b> → <b>⏱ Taktart, Tonart &amp; Tempo ab diesem Takt</b>. Taktart antippen (z. B. 6/4) und/oder ein neues Tempo eintragen. Das gilt ab diesem Takt bis zur nächsten Änderung.</p><p><b>Tonartwechsel</b> genauso: im selben Fenster die neue Tonart antippen. Am Wechsel stehen ein Doppelstrich, nötige Auflösungszeichen ♮ und die neuen Vorzeichen, neben der Taktnummer der Name der Tonart. Noten-Eingabe, passende Töne und Akkord-Vorschläge richten sich nach der Tonart am Cursor. Im 1. Takt ändert die Auswahl die Tonart des ganzen Stücks.</p><ul><li>Die neue Taktart steht als Zahlen am Anfang der Notenzeile und als blaues Kästchen neben der Taktnummer, ein Tempowechsel als „120 bpm“.</li><li>Abspielen, Metronom, Zählzeiten und Cursor richten sich danach.</li><li><b>wie vorher</b> nimmt die Änderung wieder zurück.</li><li>Die Taktart oben („Takt 4/4“) ist die Grundtaktart des Stücks.</li></ul><p>Einspielen mit Mikrofon nimmt die Taktart des Start-Takts für die ganze Aufnahme.</p>",k:"taktart wechsel 6/4 5/4 tempo wechsel bpm tonart tonartwechsel modulation vorzeichen"},
 {t:"e",h:"Abschnitte markieren",b:"<p>Cursor in den ersten Takt eines Teils setzen, dann <b>📍 Abschn.</b> (untere Reihe). Oben einen Namen antippen (A, B, Intro, Strophe, Refrain …) oder eigenen eintippen. Der Name steht dann als violettes Kästchen über dem Takt.</p><p><b>🔁 Schleife auf diesen Abschnitt</b> übt genau diesen Teil – bis zum Takt vor der nächsten Marke. Im selben Fenster stellst du auch Wiederholungen und Klammern ein.</p>",k:"abschnitt marke teil strophe refrain intro schleife"},
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
@@ -3670,7 +3709,7 @@ var HGROUPS={
     ["Noten eingeben",["Notenlängen","Akkorde eingeben","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Mehrere Instrumente",["Spuren","Komponieren","Ablauf","Passende Töne","Schlagzeug","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
-    ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
+    ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart-, Tonart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern","Als PDF"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
@@ -4338,7 +4377,7 @@ function pdfLib(){
 }
 function scanMsg(t){$("scMsg").textContent=t}
 function scanOpen(){
-  $("scKey").innerHTML=$("keySel").innerHTML;$("scKey").value=String(keyN());
+  $("scKey").innerHTML=$("keySel").innerHTML;$("scKey").value=String(baseKey());
   $("scSig").innerHTML=$("sig").innerHTML;$("scSig").value=song().sig;
   $("scan").classList.add("open");
 }
@@ -5008,12 +5047,12 @@ function keyLabel(k){
 }
 function keySig(k){return k===0?"":Math.abs(k)+(k<0?"♭":"♯")+" "}
 function songInfoHTML(){
-  var k=keyN();
+  var k=baseKey();
   return '<div id="songInfo" class="songinfo"><button class="sub" title="Tonart, Taktart und Saiten ändern">Tonart: '+keySig(k)+esc(keyLabel(k))+'</button><button class="sub">Takt '+esc(song().sig)+'</button><button class="sub">'+(isKeys()?INAME[instOf()]:isDrums()?INAME.drums:nstr()+' Saiten')+'</button>'+(song().form&&song().form.length?'<button class="sub formchip" data-form="1" title="Ablauf bearbeiten">🧩 '+esc(song().form.join(" → "))+'</button>':'')+'</div>';
 }
 function openKeyDlg(isNew){
   $("kdT").textContent=isNew?"Neues Stück: Tonart und Takt":"Tonart und Takt";
-  var k=keyN(),h="";
+  var k=baseKey(),h="";
   for(var v=-7;v<=7;v++){
     var lab=keyLabel(v).split(" / ");
     h+='<button data-k="'+v+'" class="'+(v===k?'on':'')+'"><b>'+(v===0?'–':Math.abs(v)+(v<0?'♭':'♯'))+'</b><span>'+esc(lab[0])+'</span><small>'+esc(lab[1]||"")+'</small></button>';
