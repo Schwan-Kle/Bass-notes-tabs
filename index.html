@@ -452,6 +452,7 @@ button{border-width:1.5px}
 .cntrow span.on{color:#1A1A1A;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--a-play) 12%,#fff);border-radius:4px}
 .cntrow span.rs{color:#5E6B67;text-decoration:underline;font-style:italic}
 .cntrow .cl{font-size:11px}
+.cntrow.hasnn{align-items:end}.cntrow .nn{display:block;font-style:normal;font-size:10px;line-height:11px;font-weight:600;color:#3D4744;text-decoration:none;padding-top:2px}
 .staff.tabr{margin-top:-2px}
 .staff{shape-rendering:geometricPrecision}
 .staff .bm{fill:currentColor;stroke:currentColor;stroke-width:.5;stroke-linejoin:round}
@@ -1284,8 +1285,13 @@ function countRow(b,st,sg){
   var bar=song().bars[b],on={},k;
   for(k in bar.n)on[+k.split("_")[1]]=1;
   if(bar.r)for(k in bar.r)on[+k]=2;
-  var h='<div class="cntrow" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)"><span class="cl" title="Zählzeiten">🔢</span>';
-  for(var t=0;t<st;t++){var l=countLabel(t,sg,bar),main=/^\d/.test(l);h+='<span class="'+(main?"m ":"")+(on[t]===1?"on":on[t]===2?"rs":"")+'">'+l+'</span>';}
+  var nm={},any=false,ns=nstr(),k0=KEYB;
+  if(!isDrums()){KEYB=b;try{for(k in bar.n){var q=k.split("_"),s0=+q[0],t0=+q[1],n=bar.n[k];if(s0>=ns||typeof n.f!=="number")continue;
+    (nm[t0]=nm[t0]||[]).push({m:OPEN[ns][s0]+n.f,x:noteName(OPEN[ns][s0]+n.f).replace(/-?\d+$/,"")});any=true;}}finally{KEYB=k0;}}
+  var h='<div class="cntrow'+(any?' hasnn':'')+'" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)"><span class="cl" title="Zählzeiten">🔢</span>';
+  for(var t=0;t<st;t++){var l=countLabel(t,sg,bar),main=/^\d/.test(l),nn="";
+    if(any)nn='<i class="nn">'+(nm[t]?nm[t].sort(function(x,y){return y.m-x.m}).map(function(o){return o.x}).join("<br>"):"&nbsp;")+'</i>';
+    h+='<span class="'+(main?"m ":"")+(on[t]===1?"on":on[t]===2?"rs":"")+'">'+nn+l+'</span>';}
   return h+'</div>';
 }
 function tabRhythmSVG(b){
