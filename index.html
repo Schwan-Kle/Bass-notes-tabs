@@ -385,8 +385,8 @@ button{border-width:1.5px}
 #toolKeys button,#barKeys button{--ac:var(--a-edit)!important}
 #barKeys button.danger{--ac:var(--a-del)!important;background:color-mix(in srgb,var(--a-del) 8%,#fff)}
 #pad .keys button.sub{background:color-mix(in srgb,var(--hi) 22%,#fff);border-style:dashed;border-color:color-mix(in srgb,var(--hi) 85%,#000 5%);border-bottom-width:3px}
-#pad button.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:44px;line-height:1.05;padding:2px 1px}
-#pad button.ic i{font-style:normal;font-size:17px;font-weight:800}
+#pad button.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:40px;line-height:1.05;padding:2px 1px}
+#pad button.ic i{font-style:normal;font-size:14px;font-weight:800}
 #pad button.ic small{font-size:10px;font-weight:700;letter-spacing:-.01em}
 #pad button.sub.ic::after{position:absolute;right:3px;top:2px}
 #pad button.sub{position:relative}
@@ -437,7 +437,7 @@ button{border-width:1.5px}
 #restKeys button{--ac:#45524D!important;background:#F1F3F2}
 #restKeys button svg{display:block;color:#1A1A1A}
 #restKeys button small{font-size:9px}
-#restKeys button.ic{min-height:40px}
+#restKeys button.ic{min-height:34px}
 .staff .rhit{cursor:pointer}
 .rsbig{min-height:52px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;font-size:16px;padding:4px 12px;border-width:2px}
 .rsbig small{font-size:12px;color:var(--muted)}
@@ -468,6 +468,9 @@ button{border-width:1.5px}
 .secbox{border:1.5px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
 .secbox .chips button.on{background:var(--a-train);border-color:var(--a-train);color:#fff}
 #secLoop{color:var(--a-play);border-color:var(--a-play)}
+.staff .sld{stroke-width:1.5}
+.staff .spn{fill:#45524D;font-style:italic}
+.staff .spl{stroke:#45524D;stroke-width:1;stroke-dasharray:3 3;stroke-linecap:round}
 </style>
 </head>
 <body>
@@ -1111,7 +1114,7 @@ function staffSVG(b,NI){
     evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,sn:SNAME[ns][s]});
     if(n.len>evs[t].len)evs[t].len=n.len;
     if(n.h)evs[t].h=1;if(n.a)evs[t].a=1;
-    ["st","si","so","bd","vb","sl","pp","hm"].forEach(function(k){if(n[k])evs[t][k]=1;});
+    ["st","si","so","bd","vb","sl","pp","hm","pm"].forEach(function(k){if(n[k])evs[t][k]=1;});
   }
   times.sort(function(a,c){return a-c});
   var L=times.map(function(t){
@@ -1197,10 +1200,25 @@ function staffSVG(b,NI){
     var artY=Math.min(Y(8),e.up?e.end:Y(e.hi))-7;
     if(e.st){o.push('<circle class="fl" cx="'+r(x)+'" cy="'+r(artY)+'" r="1.7"/>');artY-=7;}
     if(e.a){o.push('<path class="ac" d="M'+r(x-4.5)+' '+r(artY-6)+' L'+r(x+4.5)+' '+r(artY-3)+' L'+r(x-4.5)+' '+r(artY)+'" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>');artY-=10;}
-    var mk=(e.sl?"T":"")+(e.pp?"P":"")+(e.si?"/":"")+(e.so?"\\":"")+(e.bd?"b":"")+(e.vb?"~":"")+(e.hm?"◇":"");
+    var mk=(e.sl?"T":"")+(e.pp?"P":"")+(e.bd?"b":"")+(e.vb?"~":"");
+    if(e.si){var ys0=Y(e.notes[0].pos);o.push('<line class="st sld" x1="'+r(x-17)+'" y1="'+r(ys0+7)+'" x2="'+r(x-7.5)+'" y2="'+r(ys0+1.5)+'"/>');}
+    if(e.so){var ys1=Y(e.notes[0].pos);o.push('<line class="st sld" x1="'+r(x+7.5)+'" y1="'+r(ys1+1.5)+'" x2="'+r(x+18)+'" y2="'+r(ys1+8)+'"/>');}
     if(mk)o.push('<text x="'+r(x)+'" y="'+r(artY+1)+'" font-size="10" font-weight="700" text-anchor="middle">'+mk+'</text>');
     any=true;
   }
+  /* Spannen: Harm. / P.M. */
+  [["hm","Harm."],["pm","P.M."]].forEach(function(sp2){
+    var k2=sp2[0],i3=0;
+    while(i3<L.length){
+      if(!L[i3][k2]){i3++;continue;}
+      var j3=i3;while(j3+1<L.length&&L[j3+1][k2])j3++;
+      var yS=k2==="hm"?14:24,xs3=X(L[i3].t)-6;
+      o.push('<text class="spn" x="'+r(xs3)+'" y="'+yS+'" font-size="9.5" font-weight="700">'+sp2[1]+'</text>');
+      if(j3>i3||L[j3].len>2){var xl=xs3+(k2==="hm"?27:24),xr3=Math.max(xl+6,X(L[j3].t)+Math.min(L[j3].len,4)*U*0.6);
+        o.push('<line class="spl" x1="'+r(xl)+'" x2="'+r(xr3)+'" y1="'+(yS-3)+'" y2="'+(yS-3)+'"/><line class="spl" x1="'+r(xr3)+'" x2="'+r(xr3)+'" y1="'+(yS-6)+'" y2="'+yS+'"/>');}
+      i3=j3+1;
+    }
+  });
   /* Pausen */
   var ym=Y(4),base=b*st,occ0=NI.occ,empty=true,t;
   var occ=occ0.slice(base,base+st),occN=occ0.slice(base,base+st),skipR={};
@@ -1503,7 +1521,7 @@ $("modeFb").onclick=function(){setMode("fb")};
 $("modeLine").onclick=function(){setMode("line")};
 /* Pausen: eigene Reihe + Pause antippen */
 function restIcon(l){
-  var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="26" height="26" aria-hidden="true">';
+  var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
   if(b===16)o+='<line x1="5" x2="25" y1="11" y2="11" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="11" width="12" height="5" fill="currentColor"/>';
   else if(b===8)o+='<line x1="5" x2="25" y1="17" y2="17" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="12" width="12" height="5" fill="currentColor"/>';
   else if(b===4)o+='<path d="M12 3 l6 7 l-6 6 l6 7 c-6 -2.5 -9 2.5 -3.5 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -1512,7 +1530,7 @@ function restIcon(l){
   if(d)o+='<circle cx="25" cy="15" r="2.2" fill="currentColor"/>';
   return o+'</svg>';
 }
-(function(){var h="";LENS.forEach(function(l){h+='<button data-rl="'+l[0]+'" class="ic rest" title="Pause '+l[1]+' setzen">'+restIcon(l[0])+'<small>'+l[1]+'</small></button>'});$("restKeys").innerHTML=h;})();
+(function(){var h="";LENS.forEach(function(l){h+='<button data-rl="'+l[0]+'" class="ic rest" title="Pause '+l[1]+' setzen" aria-label="Pause '+l[1]+'">'+restIcon(l[0])+'</button>'});$("restKeys").innerHTML=h;})();
 function placeRest(l){
   var st=sig().steps,bar=song().bars[cursor.bar],t0=cursor.step,len=l;
   if(isTrip(cursor.bar,t0))len=Math.min(l>=4?2:1,3-t0%4);
@@ -1743,7 +1761,7 @@ function playNote(n,s,t,dur){
   else{
     fl.frequency.setValueAtTime(bright?3800:1500,t);
     fl.frequency.exponentialRampToValueAtTime(bright?600:380,t+0.25);
-    end=Math.max(t+0.05,t+dur*(n.st?0.45:0.95));
+    end=Math.max(t+0.05,t+dur*(n.st?0.45:n.pm?0.4:0.95));if(n.pm)pk*=0.8;
   }
   [o1,o2].forEach(function(o){
     var fq=o.frequency;
@@ -2965,7 +2983,7 @@ function toggleTriplet(){
   render();save();
 }
 /* Techniken */
-var TECH=[["st","Staccato ·","kurz, abgesetzt"],["si","Slide hinein /","von unten hineinrutschen"],["so","Slide heraus \\","am Ende nach unten wegrutschen"],["bd","Bend b","Saite ziehen, Ton steigt"],["vb","Vibrato ~","Ton schwingen lassen"],["sl","Slap T","mit dem Daumen schlagen"],["pp","Pop P","Saite anreißen"],["hm","Flageolett ◇","Oberton, z. B. Bund 12, 7, 5"]];
+var TECH=[["st","Staccato ·","kurz, abgesetzt"],["si","Slide hinein /","von unten hineinrutschen"],["so","Slide heraus \\","am Ende nach unten wegrutschen"],["bd","Bend b","Saite ziehen, Ton steigt"],["vb","Vibrato ~","Ton schwingen lassen"],["sl","Slap T","mit dem Daumen schlagen"],["pp","Pop P","Saite anreißen"],["hm","Flageolett ◇","Oberton, z. B. Bund 12, 7, 5"],["pm","Palm Mute P.M.","mit dem Handballen abgedämpft"]];
 function openTech(){
   var n=noteAt(cursor.bar,cursor.str,cursor.step);
   if(!n||n.f==="x"){status("Setze den Cursor auf eine Note, dann „Technik“.");return;}
