@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,8 +11,10 @@
 <style>
 /* Layout: oben Transport + Einstellungen, Mitte scrollende Takte, unten feste Eingabetastatur */
 :root{
-  --bg:#F3F7F5; --surface:#FFFFFF; --shade:#E6F0ED; --text:#2B2B2B; --muted:#5E6B67;
-  --main:#004C3A; --accent:#00654B; --second:#66A293; --hi:#F6A924; --warn:#E65B15; --line:#B9CBC5;
+  --bg:#EEF3F1; --surface:#FFFFFF; --shade:#E6F0ED; --text:#1A1A1A; --muted:#45524D;
+  --main:#004C3A; --accent:#00654B; --second:#66A293; --hi:#F6A924; --warn:#C2410C; --line:#9DB3AC;
+  --a-in:#004C3A; --a-play:#1E3A8A; --a-nav:#37474F; --a-edit:#A1440A; --a-del:#B91C1C; --a-train:#6B21A8; --a-help:#0F5E6E;
+  --sG:#C2185B; --sD:#1565C0; --sA:#2E7D32; --sE:#8D4E00; --sH:#6A1B9A;
   --on-main:#FFFFFF;
   --font:Aptos,Calibri,Arial,sans-serif;
 }
@@ -373,6 +375,55 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 #hList .hgrp{margin-top:18px;padding-top:6px;border-top:2px solid var(--main)}#hList .hgrp:first-child{margin-top:0;border-top:0}
 .trkeys button.tright{background:#2E7D18;color:#fff;border-color:#2E7D18;box-shadow:0 0 0 3px #6AB023}
 .trkeys button.twrong{background:#B23F0A;color:#fff;border-color:#B23F0A;text-decoration:line-through}
+
+/* === Visuelle Ordnung: Bereichsfarben, Saitenfarben, Kontrast === */
+button{border-width:1.5px}
+#pad .keys button,#pad .modes button{--ac:var(--a-in);color:var(--ac);font-weight:700;border-color:color-mix(in srgb,var(--ac) 40%,#fff);border-bottom:3px solid color-mix(in srgb,var(--ac) 75%,#fff)}
+#pad .keys button.on,#pad .modes button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#navKeys button{--ac:var(--a-nav)!important}
+#toolKeys button,#barKeys button{--ac:var(--a-edit)!important}
+#barKeys button.danger{--ac:var(--a-del)!important;background:color-mix(in srgb,var(--a-del) 8%,#fff)}
+#pad .keys button.sub{background:color-mix(in srgb,var(--hi) 22%,#fff);border-style:dashed;border-color:color-mix(in srgb,var(--hi) 85%,#000 5%);border-bottom-width:3px}
+#pad button.ic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:44px;line-height:1.05;padding:2px 1px}
+#pad button.ic i{font-style:normal;font-size:17px;font-weight:800}
+#pad button.ic small{font-size:10px;font-weight:700;letter-spacing:-.01em}
+#pad button.sub.ic::after{position:absolute;right:3px;top:2px}
+#pad button.sub{position:relative}
+#padToggle{--ac:var(--a-nav)!important}
+#play,#bpmDown,#bpmUp{--ac:var(--a-play)}
+#play{background:var(--a-play);border-color:var(--a-play);color:#fff}
+#bpmDown,#bpmUp{color:var(--a-play);border-color:color-mix(in srgb,var(--a-play) 45%,#fff);font-weight:800;font-size:20px}
+.bpmv{color:var(--a-play)}
+#menuBtn,#moreBtn{border-color:color-mix(in srgb,var(--main) 45%,#fff)}
+.mpanel button{border-left:5px solid var(--ac,transparent)!important;border-radius:4px;font-weight:700}
+.mpanel .a-play{--ac:var(--a-play)}.mpanel .a-in{--ac:var(--a-in)}.mpanel .a-train{--ac:var(--a-train)}.mpanel .a-help{--ac:var(--a-help)}
+#status{color:var(--text);font-weight:600}
+/* Saitenfarben Tab */
+.c.sG span{color:var(--sG)}.c.sD span{color:var(--sD)}.c.sA span{color:var(--sA)}.c.sE span{color:var(--sE)}.c.sH span{color:var(--sH)}
+.c span{font-size:15px;font-weight:800}
+.c.acc span{color:inherit}.c.acc span::after{content:">";font-size:10px;color:var(--warn);vertical-align:super;margin-left:1px}
+.c.sG.acc span{color:var(--sG)}.c.sD.acc span{color:var(--sD)}.c.sA.acc span{color:var(--sA)}.c.sE.acc span{color:var(--sE)}.c.sH.acc span{color:var(--sH)}
+.c.dead span{color:var(--muted)!important}
+.c.cur span{color:#1A1A1A!important}
+.sl{font-weight:800;font-size:12px}
+.tab .sl:nth-child(1){}
+/* Saitenfarben Noten */
+.staff .nG{fill:var(--sG)}.staff .nD{fill:var(--sD)}.staff .nA{fill:var(--sA)}.staff .nE{fill:var(--sE)}.staff .nH{fill:var(--sH)}
+.staff .op.nG{fill:var(--surface);stroke:var(--sG)}.staff .op.nD{fill:var(--surface);stroke:var(--sD)}.staff .op.nA{fill:var(--surface);stroke:var(--sA)}.staff .op.nE{fill:var(--surface);stroke:var(--sE)}.staff .op.nH{fill:var(--surface);stroke:var(--sH)}
+.staff .ln{stroke:#6E7F79;opacity:1}
+/* Hilfe-Kapitel in Bereichsfarbe */
+#hList .hgrp{color:var(--ac,var(--main));border-top-color:var(--ac,var(--main))}
+#hList .hsh{color:var(--ac,var(--main))}
+.hidx button[data-hg]{border-left:4px solid var(--ac,var(--main));border-radius:0 6px 6px 0}
+.hidx button[data-hg].on{background:var(--ac,var(--main))}
+.hidx button.ht.on{color:var(--ac,var(--main));background:color-mix(in srgb,var(--ac,var(--main)) 12%,#fff)}
+/* Training violett */
+#train .dhead h2{color:var(--a-train)}
+#trStart{background:var(--a-train);border-color:var(--a-train)}
+.sl.sG{color:var(--sG)}.sl.sD{color:var(--sD)}.sl.sA{color:var(--sA)}.sl.sE{color:var(--sE)}.sl.sH{color:var(--sH)}
+#altNote button.as{font-weight:800;border-width:2px}
+#altNote .as.sG{--sc:var(--sG)}#altNote .as.sD{--sc:var(--sD)}#altNote .as.sA{--sc:var(--sA)}#altNote .as.sE{--sc:var(--sE)}#altNote .as.sH{--sc:var(--sH)}
+#altNote button.as{color:var(--sc);border-color:var(--sc)}#altNote button.as.on{background:var(--sc);color:#fff}
 </style>
 </head>
 <body>
@@ -392,13 +443,13 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 <div id="moreMenu" class="menuov" aria-hidden="true">
   <div class="mpanel" role="menu" aria-label="Werkzeuge">
     <div class="viewrow"><span>Ansicht</span><button data-view="both">Noten + Tab</button><button data-view="notes">Noten</button><button data-view="tab">Tab</button></div>
-    <button id="recBtn" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
-    <button id="tunerBtn" role="menuitem">🎯 Stimmgerät</button>
-    <button id="fbBtn" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
-    <button id="refBtn" role="menuitem">📷 Vorlage</button>
-    <button id="trainBtn" role="menuitem">🎓 Notenlese-Training <small>Noten lesen, spielen, Rhythmus</small></button>
-    <button id="setBtn" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
-    <button id="helpBtn" role="menuitem">❓ Hilfe &amp; Wissen</button>
+    <button id="recBtn" class="a-play" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
+    <button id="tunerBtn" class="a-play" role="menuitem">🎯 Stimmgerät</button>
+    <button id="fbBtn" class="a-play" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
+    <button id="refBtn" class="a-in" role="menuitem">📷 Vorlage</button>
+    <button id="trainBtn" class="a-train" role="menuitem">🎓 Notenlese-Training <small>Noten lesen, spielen, Rhythmus</small></button>
+    <button id="setBtn" class="a-play" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
+    <button id="helpBtn" class="a-help" role="menuitem">❓ Hilfe &amp; Wissen</button>
   </div>
 </div>
 <div id="setDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="setT">
@@ -483,9 +534,9 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 <main id="score"></main>
 <section id="pad" aria-label="Eingabe">
   <div class="modes">
-    <button id="modeTab">Tab</button>
-    <button id="modeNote">Noten</button>
-    <button id="modeFb">Griffbrett</button>
+    <button id="modeTab">🔢 Tab</button>
+    <button id="modeNote">♪ Noten</button>
+    <button id="modeFb">🎸 Griffbrett</button>
     <button id="padToggle" aria-label="Eingabe aus- oder einblenden">▾ weg</button>
   </div>
   <div class="alts" id="altNote"></div>
@@ -515,23 +566,23 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <button id="autoBtn" title="Nach jeder Note automatisch weiterspringen">Auto→</button>
   </div>
   <div class="keys k8 small" id="toolKeys">
-    <button id="semDn" title="Note am Cursor einen Halbton tiefer">−½</button>
-    <button id="semUp" title="Note am Cursor einen Halbton höher">+½</button>
-    <button id="hearBtn" title="Noten beim Eingeben und Antippen hören">🔊</button>
-    <button id="rhyBtn" title="Erst nur den Rhythmus tippen">Rhyth&shy;mus</button>
-    <button id="repBtn" title="Tonhöhen der vorhandenen Noten neu vergeben">♪ Töne</button>
-    <button id="trpBtn" title="Schlag am Cursor als Achteltriole">³ Triole</button>
-    <button id="techBtn" class="sub" title="Spieltechnik für die Note am Cursor">Technik</button>
-    <button id="chBtn" class="sub" title="Akkordsymbol an dieser Stelle">Akkord</button>
+    <button id="semDn" class="ic" title="Note am Cursor einen Halbton tiefer"><i>−½</i><small>Halbton</small></button>
+    <button id="semUp" class="ic" title="Note am Cursor einen Halbton höher"><i>+½</i><small>Halbton</small></button>
+    <button id="hearBtn" class="ic" title="Noten beim Eingeben und Antippen hören"><i>🔊</i><small>Hören</small></button>
+    <button id="rhyBtn" class="ic" title="Erst nur den Rhythmus tippen"><i>🥁</i><small>Rhythmus</small></button>
+    <button id="repBtn" class="ic" title="Tonhöhen der vorhandenen Noten neu vergeben"><i>♪</i><small>Töne</small></button>
+    <button id="trpBtn" class="ic" title="Schlag am Cursor als Achteltriole"><i>³</i><small>Triole</small></button>
+    <button id="techBtn" class="sub ic" title="Spieltechnik für die Note am Cursor"><i>✋</i><small>Technik</small></button>
+    <button id="chBtn" class="sub ic" title="Akkordsymbol an dieser Stelle"><i>C7</i><small>Akkord</small></button>
   </div>
-  <div class="keys k7 small">
-    <button id="barAdd">+ Takt</button>
-    <button id="barDup" title="Takt dahinter kopieren">Takt ⧉</button>
-    <button id="barClr" title="Noten im Takt löschen">Takt leeren</button>
-    <button id="barDel" title="Takt am Cursor entfernen" class="danger">− Takt</button>
-    <button id="barRep" class="sub" title="Wiederholungszeichen und Klammern für diesen Takt">‖: Wdh</button>
-    <button id="barSel" class="sub" title="Mehrere Takte kopieren, einfügen, löschen, transponieren, umgreifen">Takte</button>
-    <button id="undoBtn" title="Rückgängig">↶</button>
+  <div class="keys k7 small" id="barKeys">
+    <button id="barAdd" class="ic" title="Takt anhängen"><i>➕</i><small>Takt</small></button>
+    <button id="barDup" class="ic" title="Takt dahinter kopieren"><i>⧉</i><small>Kopie</small></button>
+    <button id="barClr" class="ic" title="Noten im Takt löschen"><i>🧹</i><small>Leeren</small></button>
+    <button id="barDel" title="Takt am Cursor entfernen" class="danger ic"><i>🗑</i><small>Takt weg</small></button>
+    <button id="barRep" class="sub ic" title="Wiederholungszeichen und Klammern für diesen Takt"><i>‖:</i><small>Wdh.</small></button>
+    <button id="barSel" class="sub ic" title="Mehrere Takte kopieren, einfügen, löschen, transponieren, umgreifen"><i>▦</i><small>Takte</small></button>
+    <button id="undoBtn" class="ic" title="Rückgängig"><i>↶</i><small>Zurück</small></button>
   </div>
   <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span></div>
 </section>
@@ -804,10 +855,10 @@ function render(){
     var vw=view();
     h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
     for(s=0;s<ns;s++){
-      h.push('<div class="sl">'+SNAME[ns][s]+'</div>');
+      h.push('<div class="sl s'+SNAME[ns][s]+'">'+SNAME[ns][s]+'</div>');
       for(t=0;t<st;t++){
         n=bars[b].n[s+"_"+t];
-        var cls="c";
+        var cls="c s"+SNAME[ns][s];
         if(t%sg.beat===0)cls+=" bt";
         if(sg.beat===4&&bars[b].tb&&bars[b].tb[Math.floor(t/4)])cls+=(t%4===3?" tx":" tp");
         if(b===cursor.bar&&s===cursor.str&&t===cursor.step)cls+=" cur";
@@ -894,7 +945,7 @@ function staffSVG(b,NI){
     if(t>=st||s>=ns)continue;
     var spd=spell(OPEN[ns][s]+(n.f==="x"?0:n.f)+12);
     if(!evs[t]){evs[t]={t:t,notes:[],len:0};times.push(t);}
-    evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph});
+    evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,sn:SNAME[ns][s]});
     if(n.len>evs[t].len)evs[t].len=n.len;
     if(n.h)evs[t].h=1;if(n.a)evs[t].a=1;
     ["st","si","so","bd","vb","sl","pp","hm"].forEach(function(k){if(n[k])evs[t][k]=1;});
@@ -961,8 +1012,8 @@ function staffSVG(b,NI){
           accState[nn.pos]=nn.acc;
           o.push(accSVG(nn.acc,x-11,y));
         }
-        if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
-        else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.4:5)+'" ry="'+(e.base>=8?3:3.6)+'" transform="rotate(-20 '+r(x)+' '+y+')"/>');
+        if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+(EXSVG?"":" n"+nn.sn)+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
+        else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+(EXSVG?"":" n"+nn.sn)+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.4:5)+'" ry="'+(e.base>=8?3:3.6)+'" transform="rotate(-20 '+r(x)+' '+y+')"/>');
       }
       if(e.dot)o.push('<circle class="fl" cx="'+r(x+8.5)+'" cy="'+(nn.pos%2===0?y-sp/4:y)+'" r="1.4"/>');
     });
@@ -1048,7 +1099,7 @@ function updateAlts(){
     var m=OPEN[ns][cursor.str]+n.f,bar=song().bars[cursor.bar];
     candidates(m).forEach(function(p){
       var busy=p.s!==cursor.str&&bar.n[p.s+"_"+cursor.step];
-      h+='<button data-as="'+p.s+'" data-af="'+p.f+'"'+(p.s===cursor.str?' class="on"':'')+(busy?' disabled title="Saite an dieser Stelle schon belegt"':'')+'>'+SNAME[ns][p.s]+'-Saite '+p.f+'</button>';
+      h+='<button data-as="'+p.s+'" data-af="'+p.f+'"'+' class="as s'+SNAME[ns][p.s]+(p.s===cursor.str?' on':'')+'"'+(busy?' disabled title="Saite an dieser Stelle schon belegt"':'')+'>'+SNAME[ns][p.s]+'-Saite '+p.f+'</button>';
     });
   }
   $("altNote").innerHTML=h;$("altNote").hidden=!(n&&typeof n.f==="number");
@@ -2435,11 +2486,14 @@ var HGROUPS={
     ["Tonleitern und Harmonie",["Intervalle","Dur-Tonleiter","Moll-Tonleitern","Pentatonik","Kirchentonarten","Tonarten und Quintenzirkel","Akkorde und Arpeggien"]],
     ["Rhythmus und Spiel",["Rhythmus zählen","Tempo","Die Rolle des Basses","Spieltechniken","Glossar"]]]
 };
+var HAREA={"Erste Schritte":"in","Noten eingeben":"in","Ändern und bearbeiten":"edit","Üben und Abspielen":"play","Speichern und Importieren":"nav","Grundlagen":"in","Rhythmus":"play","Tonhöhe":"in","Spielanweisungen":"edit","Form und Akkorde":"train","Töne und Griffbrett":"in","Tonleitern und Harmonie":"train","Rhythmus und Spiel":"play"};
+function hAc(name){var a=HAREA[name];return a?' style="--ac:var(--a-'+a+')"':'';}
 function helpGroup(x){var gs=HGROUPS[x.t]||[];for(var g=0;g<gs.length;g++)for(var k=0;k<gs[g][1].length;k++)if(x.h.indexOf(gs[g][1][k])===0)return g;return gs.length;}
 var helpCur=-1,helpSeq=[];
 function helpRow(x,withTab){
   if(!x.html)x.html=x.b;
-  return '<section class="hsec" id="hs-'+HELP.indexOf(x)+'" data-g="'+(withTab?'':helpGroup(x))+'"><h4 class="hsh">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+esc(x.h)+'</h4><div class="hbody">'+x.html+'</div></section>';
+  var gg=withTab?'':helpGroup(x),gn=(HGROUPS[x.t]||[])[gg];
+  return '<section class="hsec" id="hs-'+HELP.indexOf(x)+'" data-g="'+gg+'"'+(gn?hAc(gn[0]):'')+'><h4 class="hsh">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+esc(x.h)+'</h4><div class="hbody">'+x.html+'</div></section>';
   return '<button class="hrow" data-hi="'+HELP.indexOf(x)+'">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+'<span>'+esc(x.h)+'</span><b aria-hidden="true">›</b></button>';
 }
 function showArticle(i){
@@ -2468,11 +2522,11 @@ function renderHelp(){
   }
   var gs=HGROUPS[helpTab]||[],items=HELP.filter(function(x){return x.t===helpTab});
   var by={};items.forEach(function(x){var g=helpGroup(x);(by[g]=by[g]||[]).push(x);});
-  $("hIdx").innerHTML=gs.concat([["Weiteres",[]]]).map(function(g,k){return by[k]?'<button data-hg="'+k+'">'+esc(g[0])+'</button>'+by[k].map(function(x){var t=x.h.split(/[:(]/)[0].trim();return '<button class="ht" data-g="'+k+'" data-hs="'+HELP.indexOf(x)+'">'+esc(t)+'</button>'}).join(""):''}).join("");
+  $("hIdx").innerHTML=gs.concat([["Weiteres",[]]]).map(function(g,k){return by[k]?'<button data-hg="'+k+'"'+hAc(g[0])+'>'+esc(g[0])+'</button>'+by[k].map(function(x){var t=x.h.split(/[:(]/)[0].trim();return '<button class="ht" data-g="'+k+'" data-hs="'+HELP.indexOf(x)+'"'+hAc(g[0])+'>'+esc(t)+'</button>'}).join(""):''}).join("");
   helpSeq=[];
   gs.concat([["Weiteres",[]]]).forEach(function(g,k){
     if(!by[k])return;
-    h+='<h3 class="hgrp" id="hg-'+k+'">'+esc(g[0])+'</h3>';
+    h+='<h3 class="hgrp" id="hg-'+k+'"'+hAc(g[0])+'>'+esc(g[0])+'</h3>';
     h+=by[k].map(function(x){helpSeq.push(HELP.indexOf(x));return helpRow(x,false)}).join("");
   });
   $("hList").innerHTML=h;
