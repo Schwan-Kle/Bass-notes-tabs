@@ -261,6 +261,38 @@ body.pqon #fretKeys,body.pqon #letterKeys,body.pqon #noteMods,body.pqon #pad .hi
 body.pqon #lenKeys button{min-height:52px;font-size:16px}
 .pqbar .pqn{font-size:18px;color:var(--main)}
 .pqbar button{min-height:34px;font-size:13px}
+.trpanel{overflow-y:auto}
+#trFreeBox[hidden],#trRun[hidden],#trEnd[hidden],#trHome[hidden]{display:none!important}
+.trh{margin:4px 0 0;font-size:13px;color:var(--muted);font-weight:700}
+.trmodes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.trmodes button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:8px;min-height:60px}
+.trmodes small,.trlevels small{font-size:11px;color:var(--muted)}
+.trmodes button.on small,.trlevels button.on small{color:var(--on-main)}
+.trlevels{display:flex;flex-direction:column;gap:4px}
+.trlevels button{display:flex;align-items:center;gap:10px;text-align:left;padding:6px 10px;min-height:46px}
+.trlevels button>span:nth-child(2){flex:1;display:flex;flex-direction:column}
+.tlno{width:26px;height:26px;border-radius:50%;background:var(--shade);color:var(--main);display:flex;align-items:center;justify-content:center;font-weight:700}
+.tlbest{font-size:12px;color:var(--muted)}.tlbest.ok{color:#3E8E1A;font-weight:700}
+.trlevels button.on .tlbest{color:var(--on-main)}
+.trstart{margin-top:6px}.trstart #trStart{flex:1;min-height:48px;font-size:16px}
+.trtop{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.trstaff{display:flex;justify-content:center;gap:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
+.trbar{flex:1 1 150px;max-width:320px}
+#trName .trbar{max-width:200px}
+.trfb{text-align:center;font-size:15px;min-height:44px;padding:6px;border-radius:6px}
+.trfb.ok{background:color-mix(in srgb,#6AB023 18%,transparent);color:#2E6B12}
+.trfb.bad{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.trkeys{display:grid;gap:6px;margin-top:6px}
+.trkeys.k7{grid-template-columns:repeat(7,1fr)}.trkeys.k3{grid-template-columns:repeat(3,1fr)}
+.trkeys button{min-height:58px;font-size:22px;font-weight:700}
+.trkeys.k3 button{min-height:40px;font-size:18px}
+.trheard{text-align:center;font-size:16px}.trheard b{font-size:30px;color:var(--main)}
+.trres{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.trchip{font-size:12px;border-radius:12px;padding:3px 8px;border:1px solid var(--line)}
+.trchip.ok{background:color-mix(in srgb,#6AB023 18%,transparent)}.trchip.bad{background:color-mix(in srgb,var(--warn) 15%,transparent)}.trchip.mid{background:color-mix(in srgb,var(--hi) 20%,transparent)}
+.trtap{width:100%;min-height:150px;font-size:22px;font-weight:700;margin-top:8px;border-radius:12px;background:var(--shade);touch-action:manipulation;user-select:none}
+.trtap.hit{background:var(--hi);color:#2B2B2B}
+.trsum{text-align:center}.trbig{font-size:56px;font-weight:700;color:var(--main)}
 #scView{flex:1;overflow:auto;border:1px solid var(--line);border-radius:6px;background:#fff;min-height:120px}
 #scCanvas{display:block;width:100%;height:auto}
 .scmsg{margin:0;font-size:13px;color:var(--muted)}
@@ -309,6 +341,7 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <button id="tunerBtn" role="menuitem">🎯 Stimmgerät</button>
     <button id="fbBtn" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
     <button id="refBtn" role="menuitem">📷 Vorlage</button>
+    <button id="trainBtn" role="menuitem">🎓 Notenlese-Training <small>Noten lesen, spielen, Rhythmus</small></button>
     <button id="scanBtn" role="menuitem">📄 Noten scannen <small>Experiment: Foto oder PDF → Noten</small></button>
     <button id="setBtn" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
     <button id="helpBtn" role="menuitem">❓ Hilfe &amp; Wissen</button>
@@ -503,6 +536,55 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <div class="scacts">
       <button id="scSeq" class="primary">Tonfolge übernehmen, Rhythmus tippen <small>empfohlen: du tippst nur die Längen</small></button>
       <div class="chips"><button id="scNew">Als neues Stück (Rhythmus geschätzt)</button><button id="scApply">Tonhöhen auf Noten ab Cursor</button></div>
+    </div>
+  </div>
+</div>
+<div id="train" class="helpov" role="dialog" aria-modal="true" aria-labelledby="trT">
+  <div class="hpanel trpanel">
+    <div class="dhead"><h2 id="trT">Notenlese-Training</h2><button id="trClose" aria-label="Training schließen">✕</button></div>
+    <div id="trHome">
+      <h3 class="trh">Übung</h3>
+      <div id="trModes" class="trmodes"></div>
+      <p id="trMicNote" class="scmsg" hidden>Hinweis: Diese Übung braucht das Mikrofon und geht nur in der installierten App.</p>
+      <h3 class="trh">Stufe</h3>
+      <div id="trLevels" class="trlevels"></div>
+      <div id="trFreeBox" class="chips" hidden>
+        <label>von <select id="trLo"></select></label><label>bis <select id="trHi"></select></label>
+        <label>Vorzeichen <select id="trAcc"><option value="none">keine</option><option value="sharp">♯</option><option value="flat">♭</option><option value="mixed">gemischt</option></select></label>
+      </div>
+      <div class="chips trstart">
+        <label>Anzahl <select id="trCount"><option>10</option><option selected>20</option><option>30</option></select></label>
+        <label>Tempo <input type="number" id="trBpm" class="narrow" min="40" max="160" value="70"> bpm</label>
+        <button id="trStart" class="primary">Los geht's</button>
+      </div>
+    </div>
+    <div id="trRun" hidden>
+      <div class="trtop"><span id="trProg"></span><button id="trQuit">Beenden</button></div>
+      <div id="trStaff" class="trstaff"></div>
+      <div id="trFb" class="trfb"></div>
+      <div id="trName" hidden>
+        <div id="trNameAcc" class="trkeys k3"><button data-a="-1">♭</button><button data-a="0">♮</button><button data-a="1">♯</button></div>
+        <div id="trNameL" class="trkeys k7"><button data-l="0">C</button><button data-l="1">D</button><button data-l="2">E</button><button data-l="3">F</button><button data-l="4">G</button><button data-l="5">A</button><button data-l="6">H</button></div>
+      </div>
+      <div id="trPlay" hidden>
+        <div class="trheard">gehört: <b id="trHeard">–</b></div>
+        <div class="level"><span id="trLvl"></span></div>
+        <div class="chips"><button id="trHint">▶ Anhören</button><button id="trSkip">Überspringen</button></div>
+      </div>
+      <div id="trSight" hidden>
+        <div class="chips"><button id="trSightGo" class="primary">🎙 Spielen &amp; prüfen</button><button id="trSightHear">▶ Anhören</button><button id="trSightNew">Weiter ›</button></div>
+        <div class="level"><span id="trLvl2"></span></div>
+        <div id="trSightRes" class="trres"></div>
+      </div>
+      <div id="trRhy" hidden>
+        <div class="chips"><button id="trRhyGo" class="primary">Los (mit Einzähler)</button><button id="trRhyHear">▶ Anhören</button><button id="trRhyNew">Weiter ›</button></div>
+        <button id="trTap" class="trtap">tippen</button>
+        <div id="trRhyRes" class="trres"></div>
+      </div>
+    </div>
+    <div id="trEnd" hidden>
+      <div id="trSum" class="trsum"></div>
+      <div class="chips"><button id="trAgain" class="primary">Nochmal</button><button id="trBack">Andere Übung</button></div>
     </div>
   </div>
 </div>
@@ -1150,7 +1232,7 @@ function afterBars(){clampLoop();render();save();var el=cellEl(cursor);if(el)el.
 var lastKeyT=0;
 document.addEventListener("keydown",function(e){
   var tg=e.target.tagName;
-  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open")||$("drawer").classList.contains("open")||document.querySelector(".modal.open")||$("help").classList.contains("open")||$("scan").classList.contains("open"))return;
+  if(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||$("dlg").classList.contains("open")||$("drawer").classList.contains("open")||document.querySelector(".modal.open")||$("help").classList.contains("open")||$("scan").classList.contains("open")||$("train").classList.contains("open"))return;
   var k=e.key;
   if(k>="0"&&k<="9"){
     var d=+k,now=Date.now();
@@ -1486,7 +1568,7 @@ $("dList").addEventListener("click",function(e){
 $("dList").addEventListener("keydown",function(e){
   if(e.key==="Enter"&&e.target.id&&e.target.id.indexOf("ren")===0){var b=e.target.parentNode.querySelector("button");if(b)b.click();}
 });
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();$("help").classList.remove("open");$("scan").classList.remove("open");closeMore();$("setDlg").classList.remove("open");}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();$("help").classList.remove("open");$("scan").classList.remove("open");if($("train").classList.contains("open"))$("trClose").click();closeMore();$("setDlg").classList.remove("open");}});
 
 function fileName(n){return String(n||"stueck").replace(/[^\wäöüÄÖÜß -]/g,"_").trim()||"stueck"}
 var dlAPI;
@@ -2221,6 +2303,7 @@ var HELP=[
 {t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
+{t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Vier Übungen:</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen (bei Vorzeichen-Stufen vorher ♭/♯ wählen).</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe"},
 {t:"e",h:"Noten scannen (Experiment)",b:"<p>Unter <b>⋯ → 📄 Noten scannen</b>: Foto, Bild oder PDF gedruckter Noten im Bassschlüssel wählen. Die App sucht Notenlinien, Notenköpfe und Taktstriche, richtet schiefe Fotos gerade und zeigt das Ergebnis: <span style='color:var(--warn)'>orange Kreise</span> mit Tonnamen = erkannte Noten, <span style='color:#1E5ADC'>blaue Linien</span> = Taktstriche, grüne Fläche = übersprungener Schlüssel/Vorzeichen-Bereich.</p><ul><li><b>Korrigieren</b>: Markierung antippen öffnet die Bearbeitung: ▲/▼ eine Stufe, ♭ ♮ ♯, Länge (auto = geschätzt), Entfernen. Leere Stelle antippen setzt eine Note, eine Pause oder einen Taktstrich – je nach Auswahl darüber.</li><li><b>Tonfolge übernehmen, Rhythmus tippen</b> (empfohlen): Die App merkt sich die erkannten Töne. Oben zeigt ein Balken den nächsten Ton; du tippst nur seine Länge, die App setzt den Ton und springt weiter. Pausen mit dem Pause-Knopf, „Ton überspringen“ für Fehlerkennungen, ↶ geht einen Ton zurück.</li><li><b>Tonart</b> unter „Einstellungen“ wählen – Vorzeichen im Stück erkennt der Scanner nicht (danach mit −½/+½ korrigieren).</li><li><b>Als neues Stück</b>: Rhythmus wird aus den Abständen geschätzt.</li><li><b>Tonhöhen auf Noten ab Cursor</b>: wenn der Rhythmus schon eingetippt ist.</li></ul><p>Grenzen: keine Handschrift, keine Tab-Zahlen, keine Vorzeichen im Stück, Rhythmus nur geschätzt. Für PDFs wird einmalig eine Bibliothek aus dem Internet geladen.</p>",k:"scan scannen foto pdf erkennung omr"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
 /* ===== Musikzeichen ===== */
@@ -2865,6 +2948,276 @@ function pqPlace(l){
   PQ.i++;render();save();pqShow();
   advance(len);
 }
+
+/* ---------- Notenlese-Training ---------- */
+var TR={mode:"name",level:1,run:null};
+var TLV=[
+ {n:"Leere Saiten",d:"E, A, D, G",lo:28,hi:43,chrom:false,open:true,r:[16,8,4]},
+ {n:"Erste Lage",d:"Stammtöne bis Bund 3",lo:28,hi:47,chrom:false,r:[16,8,4,2]},
+ {n:"Bis Bund 5",d:"Stammtöne E1–C3",lo:28,hi:48,chrom:false,r:[8,4,2],rest:true},
+ {n:"Mit Vorzeichen",d:"♯ und ♭ bis Bund 5",lo:28,hi:48,chrom:true,r:[8,4,2,6],rest:true},
+ {n:"Bis Bund 12",d:"Stammtöne E1–G3",lo:28,hi:55,chrom:false,r:[4,2,1,6,3],rest:true},
+ {n:"Ganzes Griffbrett",d:"alle Töne E1–G3",lo:28,hi:55,chrom:true,r:[4,2,1,6,3],rest:true,sync:true}
+];
+var TMODES=[["name","Note → Name","Note lesen, Tonnamen tippen"],["play","Note → auf dem Bass","Note lesen und spielen, das Mikrofon prüft"],["sight","Vom Blatt spielen","Kurze Linie im Tempo mitspielen"],["rhythm","Rhythmus lesen","Rhythmus ablesen und im Takt tippen"]];
+function trStats(){if(!S.trs)S.trs={};return S.trs}
+function isNat(m){return [0,2,4,5,7,9,11].indexOf(((m%12)+12)%12)>=0}
+function trLevel(){
+  if(TR.level===0){var f=S.trFree||{lo:28,hi:48,acc:"none"};return {n:"Frei",lo:Math.min(f.lo,f.hi),hi:Math.max(f.lo,f.hi),chrom:f.acc!=="none",accPref:f.acc,r:[8,4,2,6,3,1],rest:true};}
+  return TLV[TR.level-1];
+}
+function trPool(){
+  var L=trLevel(),p=[];
+  for(var m=L.lo;m<=L.hi;m++){if(L.open&&[28,33,38,43].indexOf(m)<0)continue;if(!L.chrom&&!isNat(m))continue;p.push(m);}
+  return p.length?p:[28];
+}
+function spellM(m,pref){
+  var pc=((m%12)+12)%12,flat=pref==="b"?true:pref==="#"?false:Math.random()<0.5;
+  var L=(flat?LF:LSH)[pc],a=(flat?AF:ASH)[pc];
+  return {m:m,L:L,a:a,acc:flat?"b":"#"};
+}
+function spName(sp){var n=LET[sp.L];if(sp.a<0)n=sp.L===6?"B":n+"♭";else if(sp.a>0)n+="♯";return n;}
+function spOct(sp){return Math.round((sp.m-sp.a-NAT[sp.L])/12)-1}
+function trPick(){
+  var pool=trPool(),st=trStats(),w=pool.map(function(m){var s=st[m]||{n:0,ok:0};var err=s.n?(s.n-s.ok)/s.n:0.5;return 1+4*err+(s.n<3?1:0);});
+  if(TR.run&&TR.run.prev!==undefined&&pool.length>1){var k=pool.indexOf(TR.run.prev);if(k>=0)w[k]*=0.15;}
+  var tot=w.reduce(function(a,b){return a+b},0),r=Math.random()*tot;
+  for(var i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i];}
+  return pool[pool.length-1];
+}
+function trRec(m,ok){var st=trStats();st[m]=st[m]||{n:0,ok:0};st[m].n++;if(ok)st[m].ok++;if(st[m].n>40){st[m].n=Math.round(st[m].n/2);st[m].ok=Math.round(st[m].ok/2);}save();}
+function posOf(m){var c=[];for(var s=3;s>=0;s--){var f=m-OPEN[4][s];if(f>=0&&f<=24)c.push({s:s,f:f});}c.sort(function(a,b){return a.f-b.f});return c[0]||{s:3,f:0};}
+function trStaff(bars,sig,acc,key){
+  var keep=S.cur,tmp={id:"tr",name:"tr",bpm:80,sig:sig,strings:4,key:key||0,acc:acc||"b",bars:bars},h="";
+  S.songs.push(tmp);S.cur=S.songs.length-1;EXSVG=true;
+  try{var NI=noteInfo();for(var i=0;i<bars.length;i++)h+='<div class="trbar">'+staffSVG(i,NI)+'</div>';}catch(e){h="";}
+  EXSVG=false;S.songs.pop();S.cur=keep;return h;
+}
+function noteBar(sp){var p=posOf(sp.m),b={n:{}};b.n[p.s+"_0"]={f:p.f,len:4};return b;}
+/* Rhythmus und Linien erzeugen */
+function genRhythm(L){
+  var steps=16,out=[],pos=0,allow=L.r||[4];
+  function has(d){return allow.indexOf(d)>=0}
+  while(pos<steps){
+    var opts=[];
+    if(pos===0&&has(16)&&Math.random()<0.15)opts.push([16]);
+    if(pos%8===0&&has(8))opts.push([8]);
+    if(pos%4===0){opts.push([4]);if(has(2))opts.push([2,2]);if(has(1))opts.push([1,1,1,1],[2,1,1],[1,1,2]);if(has(3))opts.push([3,1]);if(has(6)&&pos%8===0)opts.push([6,2]);if(L.sync&&pos%8===0)opts.push([2,4,2]);}
+    var pick=opts[Math.floor(Math.random()*opts.length)]||[4];
+    if(pick.reduce(function(a,b){return a+b},0)+pos>steps)pick=[steps-pos];
+    pick.forEach(function(d){out.push({pos:pos,len:d,rest:false});pos+=d;});
+  }
+  if(L.rest)out.forEach(function(e,i){if(i>0&&e.len<=4&&Math.random()<0.2)e.rest=true;});
+  return out;
+}
+function genLine(nBars){
+  var L=trLevel(),pool=trPool(),bars=[],notes=[],cur=pool[Math.floor(pool.length/2)];
+  for(var b=0;b<nBars;b++){
+    var r=genRhythm(L),bar={n:{}};
+    r.forEach(function(e){
+      if(e.rest)return;
+      var i=pool.indexOf(cur);if(i<0)i=Math.floor(pool.length/2);
+      var stp=[-2,-1,-1,1,1,2,0,-3,3][Math.floor(Math.random()*9)];
+      i=Math.max(0,Math.min(pool.length-1,i+stp));if(Math.random()<0.25)i=pool.indexOf(trPick());
+      cur=pool[i];var p=posOf(cur);bar.n[p.s+"_"+e.pos]={f:p.f,len:e.len};
+      notes.push({bar:b,pos:e.pos,len:e.len,m:cur});
+    });
+    bars.push(bar);
+  }
+  return {bars:bars,notes:notes};
+}
+/* Oberfläche */
+function trOpen(){trHome();$("train").classList.add("open");}
+$("trainBtn").onclick=trOpen;
+$("trClose").onclick=function(){trStop();$("train").classList.remove("open")};
+function trHome(){
+  trStop();TR.run=null;
+  $("trHome").hidden=false;$("trRun").hidden=true;$("trEnd").hidden=true;
+  $("trModes").innerHTML=TMODES.map(function(m){return '<button data-tm="'+m[0]+'" class="'+(TR.mode===m[0]?'on':'')+'"><b>'+m[1]+'</b><small>'+m[2]+'</small></button>'}).join("");
+  var best=S.trBest||{};
+  var h=TLV.map(function(l,i){var k=TR.mode+(i+1),bv=best[k];return '<button data-tl="'+(i+1)+'" class="'+(TR.level===i+1?'on':'')+'"><span class="tlno">'+(i+1)+'</span><span><b>'+l.n+'</b><small>'+(TR.mode==="rhythm"?rhyDesc(i+1):l.d)+'</small></span>'+(bv!==undefined?'<span class="tlbest'+(bv>=90?' ok':'')+'">'+(bv>=90?'✓ ':'')+bv+' %</span>':'')+'</button>'}).join("");
+  h+='<button data-tl="0" class="'+(TR.level===0?'on':'')+'"><span class="tlno">⚙</span><span><b>Frei</b><small>Tonbereich und Vorzeichen selbst wählen</small></span></button>';
+  $("trLevels").innerHTML=h;
+  $("trFreeBox").hidden=TR.level!==0;
+  var f=S.trFree||{lo:28,hi:48,acc:"none"},opt="";
+  for(var m=23;m<=60;m++)if(isNat(m))opt+='<option value="'+m+'">'+noteName(m)+'</option>';
+  $("trLo").innerHTML=opt;$("trHi").innerHTML=opt;$("trLo").value=f.lo;$("trHi").value=f.hi;$("trAcc").value=f.acc;
+  var mic=window.top===window.self;
+  $("trMicNote").hidden=mic||(TR.mode!=="play"&&TR.mode!=="sight");
+}
+function rhyDesc(l){return ["Ganze, Halbe, Viertel","+ Achtel","+ Pausen","+ punktierte Viertel","+ Sechzehntel, punktierte Achtel","+ Synkopen"][l-1]}
+$("trModes").addEventListener("click",function(e){var b=e.target.closest("[data-tm]");if(!b)return;TR.mode=b.dataset.tm;trHome();});
+$("trLevels").addEventListener("click",function(e){var b=e.target.closest("[data-tl]");if(!b)return;TR.level=+b.dataset.tl;trHome();});
+["trLo","trHi","trAcc"].forEach(function(id){$(id).onchange=function(){S.trFree={lo:+$("trLo").value,hi:+$("trHi").value,acc:$("trAcc").value};save();}});
+$("trStart").onclick=function(){
+  var n=+$("trCount").value;
+  TR.run={i:0,n:n,ok:0,bad:0,miss:{},prev:undefined};
+  $("trHome").hidden=true;$("trRun").hidden=false;$("trEnd").hidden=true;
+  ["trName","trPlay","trSight","trRhy"].forEach(function(id){$(id).hidden=true});
+  if(TR.mode==="name"){$("trName").hidden=false;trNameNext();}
+  else if(TR.mode==="play"){$("trPlay").hidden=false;trPlayStart();}
+  else if(TR.mode==="sight"){$("trSight").hidden=false;trSightNext();}
+  else{$("trRhy").hidden=false;trRhyNext();}
+};
+$("trQuit").onclick=function(){trFinish();};
+$("trAgain").onclick=function(){$("trStart").click()};
+$("trBack").onclick=trHome;
+function trProg(){var r=TR.run;$("trProg").textContent=(TR.mode==="sight"||TR.mode==="rhythm"?"Übung ":"Note ")+Math.min(r.i+1,r.n)+"/"+r.n+" · ✓ "+r.ok+" · ✗ "+r.bad;}
+function trFb(t,cls){var f=$("trFb");f.innerHTML=t;f.className="trfb "+(cls||"");}
+function trStop(){if(TR.tm){clearInterval(TR.tm);TR.tm=null;}if(TR.to){clearTimeout(TR.to);TR.to=null;}if(MIC.an&&!REC.on)micStop();}
+function trFinish(){
+  trStop();var r=TR.run;if(!r)return trHome();
+  var tot=r.ok+r.bad,pc=tot?Math.round(r.ok/tot*100):0;
+  if(tot>=Math.min(5,r.n)&&TR.level>0){S.trBest=S.trBest||{};var k=TR.mode+TR.level;if(S.trBest[k]===undefined||pc>S.trBest[k])S.trBest[k]=pc;save();}
+  $("trRun").hidden=true;$("trEnd").hidden=false;
+  var miss=Object.keys(r.miss).sort(function(a,b){return r.miss[b]-r.miss[a]}).slice(0,5);
+  $("trSum").innerHTML='<div class="trbig">'+pc+' %</div><p>'+r.ok+' von '+tot+' richtig'+(TR.level?' · Stufe '+TR.level+' „'+trLevel().n+'“':'')+'</p>'+(miss.length?'<p>Daran noch üben: <b>'+miss.join(", ")+'</b> – diese kommen beim nächsten Mal öfter dran.</p>':'<p>Keine Fehler – stark! '+(TR.level&&TR.level<6&&pc>=90?'Probier die nächste Stufe.':'')+'</p>');
+}
+function trNextOrEnd(fn){TR.run.i++;if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,700);return;}TR.to=setTimeout(fn,700);}
+/* Modus: Note -> Name */
+function trNameNext(){
+  var L=trLevel(),m=trPick(),sp=spellM(m,L.accPref==="sharp"?"#":L.accPref==="flat"?"b":L.chrom?null:"b");
+  TR.run.prev=m;TR.run.cur=sp;TR.run.acc=null;TR.run.done=false;
+  $("trStaff").innerHTML=trStaff([noteBar(sp)],"1/4",sp.acc,0);
+  $("trNameAcc").hidden=!L.chrom;
+  Array.prototype.forEach.call(document.querySelectorAll("#trNameAcc button"),function(b){b.classList.remove("on")});
+  trFb("Wie heißt diese Note?","");trProg();
+}
+$("trNameAcc").addEventListener("click",function(e){var b=e.target.closest("button");if(!b||!TR.run)return;var a=+b.dataset.a;TR.run.acc=TR.run.acc===a?null:a;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",TR.run.acc!==null&&+x.dataset.a===TR.run.acc)});});
+$("trNameL").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b||!TR.run||TR.run.done)return;
+  var sp=TR.run.cur,L=+b.dataset.l,a=TR.run.acc||0,ok=(L===sp.L&&a===sp.a);
+  TR.run.done=true;if(ok)TR.run.ok++;else{TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;}
+  trRec(sp.m,ok);
+  if(S.hear!==false&&audioReady())playNote({f:sp.m-28},3,ctx.currentTime+0.02,0.5);
+  var p=posOf(sp.m);
+  trFb(ok?"✓ Richtig: <b>"+spName(sp)+spOct(sp)+"</b> · "+SNAME[4][p.s]+"-Saite Bund "+p.f:"✗ Das ist <b>"+spName(sp)+spOct(sp)+"</b> · "+SNAME[4][p.s]+"-Saite Bund "+p.f,ok?"ok":"bad");
+  trProg();trNextOrEnd(trNameNext);
+});
+/* Modus: Note -> auf dem Bass spielen */
+function trPlayStart(){
+  trFb("Mikrofon wird gestartet …","");
+  micStart().then(function(){trPlayNext();TR.tm=setInterval(trPlayTick,60);},function(e){trFb(micError(e),"bad");});
+}
+function trPlayNext(){
+  var L=trLevel(),m=trPick(),sp=spellM(m,L.accPref==="sharp"?"#":L.accPref==="flat"?"b":L.chrom?null:"b");
+  TR.run.prev=m;TR.run.cur=sp;TR.run.done=false;TR.run.hist=[];TR.run.t0=Date.now();
+  $("trStaff").innerHTML=trStaff([noteBar(sp)],"1/4",sp.acc,0);
+  trFb("Spiele diese Note auf dem Bass.","");$("trHeard").textContent="–";trProg();
+}
+function trPlayTick(){
+  if(!MIC.an||!TR.run||TR.run.done)return;
+  var r=detectPitch(),h=TR.run.hist;
+  $("trLvl").style.width=Math.min(100,r.rms*400)+"%";
+  if(!r.f||r.c<0.82||r.rms<0.006){h.length=0;return;}
+  var m=Math.round(f2m(r.f));h.push(m);if(h.length>4)h.shift();
+  $("trHeard").textContent=noteName(m);
+  if(h.length<4||h.some(function(x){return x!==h[0]}))return;
+  var sp=TR.run.cur,ok=m===sp.m,octOnly=!ok&&((m-sp.m)%12===0);
+  if(!ok&&Date.now()-TR.run.t0<600)return;
+  TR.run.done=true;if(ok)TR.run.ok++;else{TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;}
+  trRec(sp.m,ok);
+  var p=posOf(sp.m);
+  trFb(ok?"✓ Richtig: <b>"+spName(sp)+spOct(sp)+"</b>":octOnly?"≈ Richtiger Ton, aber falsche Oktave. Gesucht: <b>"+spName(sp)+spOct(sp)+"</b> (z. B. "+SNAME[4][p.s]+"-Saite Bund "+p.f+")":"✗ Gehört: "+noteName(m)+" · gesucht: <b>"+spName(sp)+spOct(sp)+"</b> ("+SNAME[4][p.s]+"-Saite Bund "+p.f+")",ok?"ok":"bad");
+  trProg();TR.run.i++;
+  if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,1200);return;}
+  TR.to=setTimeout(function(){trPlayNext();},ok?900:2200);
+}
+$("trSkip").onclick=function(){if(!TR.run||TR.run.done)return;var sp=TR.run.cur;TR.run.done=true;TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;trRec(sp.m,false);var p=posOf(sp.m);trFb("Übersprungen: <b>"+spName(sp)+spOct(sp)+"</b> = "+SNAME[4][p.s]+"-Saite Bund "+p.f,"bad");trProg();TR.run.i++;if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,1200);return;}TR.to=setTimeout(trPlayNext,1600);};
+$("trHint").onclick=function(){if(!TR.run||!TR.run.cur||!audioReady())return;playNote({f:TR.run.cur.m-28},3,ctx.currentTime+0.02,0.7);};
+/* gemeinsamer Abspieler für Linien und Rhythmen */
+function trSchedule(notes,bpm,opts){
+  if(!audioReady())return null;
+  var sd=60/bpm/4,t0=ctx.currentTime+0.15,ci=opts.countIn?16:0;
+  for(var c=0;c<ci;c+=4)click(t0+c*sd,c===0?"hi":"mid");
+  var start=t0+ci*sd;
+  if(opts.click)for(var b=0;b<(opts.bars||1)*16;b+=4)click(start+b*sd,b%16===0?"hi":"mid");
+  if(opts.sound)notes.forEach(function(n){playNote({f:(n.m||38)-28,len:n.len},3,start+((n.bar||0)*16+n.pos)*sd,n.len*sd);});
+  return {start:start,sd:sd,end:start+(opts.bars||1)*16*sd};
+}
+/* Modus: Vom Blatt */
+function trSightNext(){
+  var g=genLine(2);TR.run.line=g;TR.run.done=false;
+  $("trStaff").innerHTML=trStaff(g.bars,"4/4","b",0);
+  trFb("Erst lesen, dann „Spielen & prüfen“: 1 Takt Einzähler, das Metronom läuft mit.","");
+  $("trSightRes").innerHTML="";trProg();
+}
+$("trSightHear").onclick=function(){if(TR.run&&TR.run.line)trSchedule(TR.run.line.notes,S.trBpm||70,{sound:true,click:true,bars:2});};
+$("trSightNew").onclick=function(){if(TR.run)trSightNext();};
+$("trBpm").onchange=function(){S.trBpm=Math.max(40,Math.min(160,+this.value||70));save();};
+$("trSightGo").onclick=function(){
+  if(!TR.run||!TR.run.line||TR.busy)return;
+  var line=TR.run.line,bpm=S.trBpm||70;
+  micStart().then(function(){
+    TR.busy=true;var frames=[],sch=trSchedule(line.notes,bpm,{countIn:true,click:true,bars:2});
+    trFb("Einzählen … dann spielen!","");
+    TR.tm=setInterval(function(){var r=detectPitch(),win=MIC.buf.length/ctx.sampleRate/2;frames.push({t:ctx.currentTime-win-S.recLat/1000,rms:r.rms,f:r.f,c:r.c});$("trLvl2").style.width=Math.min(100,r.rms*400)+"%";
+      if(ctx.currentTime>sch.start&&ctx.currentTime<sch.end)trFb("Spielen … Takt "+(Math.floor((ctx.currentTime-sch.start)/(sch.sd*16))+1),"");
+      if(ctx.currentTime>sch.end+0.3){clearInterval(TR.tm);TR.tm=null;TR.busy=false;trSightEval(line,frames,sch);}},20);
+  },function(e){trFb(micError(e),"bad");});
+};
+function trSightEval(line,frames,sch){
+  var ci=frames.filter(function(x){return x.t<sch.start}).map(function(x){return x.rms}).sort(function(a,b){return a-b});
+  var thr=Math.max(0.006,(ci.length?ci[Math.floor(ci.length/2)]:0.002)*3),det=segment(frames.filter(function(x){return x.t>=sch.start-0.1}),thr);
+  var tol=Math.max(0.12,sch.sd*1.6),ok=0,res=[];
+  line.notes.forEach(function(n){
+    var tt=sch.start+(n.bar*16+n.pos)*sch.sd,hit=null,bd=1e9;
+    det.forEach(function(d){var dd=Math.abs(d.on-tt);if(dd<tol&&dd<bd&&!d.used){bd=dd;hit=d;}});
+    var sp=spellM(n.m,"b"),nm=spName(sp)+spOct(sp),cls,txt;
+    if(!hit){cls="bad";txt="fehlt";}
+    else{hit.used=1;var dm=Math.round(hit.m);if(dm===n.m){cls="ok";txt="✓";ok++;}else if((dm-n.m)%12===0){cls="mid";txt="Oktave";}else{cls="bad";txt=noteName(dm);}}
+    if(cls!=="ok")TR.run.miss[nm]=(TR.run.miss[nm]||0)+1;
+    trRec(n.m,cls==="ok");
+    res.push('<span class="trchip '+cls+'">'+nm+' '+txt+'</span>');
+  });
+  var pc=line.notes.length?ok/line.notes.length:0;
+  if(pc>=0.8)TR.run.ok++;else TR.run.bad++;
+  $("trSightRes").innerHTML=res.join("");
+  trFb((pc>=0.8?"✓ ":"✗ ")+ok+" von "+line.notes.length+" Tönen richtig und rechtzeitig.",pc>=0.8?"ok":"bad");
+  trProg();TR.run.i++;
+  if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,2500);return;}
+}
+/* Modus: Rhythmus */
+function trRhyNext(){
+  var L=TR.level===0?trLevel():TLV[Math.max(0,TR.level-1)],r=genRhythm(L),bar={n:{}},notes=[];
+  r.forEach(function(e){if(e.rest)return;bar.n["2_"+e.pos]={f:5,len:e.len};notes.push({bar:0,pos:e.pos,len:e.len,m:38});});
+  TR.run.rhy={notes:notes};TR.run.done=false;TR.run.taps=null;
+  $("trStaff").innerHTML=trStaff([bar],"4/4","b",0);
+  trFb("Erst lesen, dann „Los“: 1 Takt Einzähler, dann bei jeder Note auf die große Fläche tippen.","");
+  $("trRhyRes").innerHTML="";trProg();
+}
+$("trRhyHear").onclick=function(){if(TR.run&&TR.run.rhy)trSchedule(TR.run.rhy.notes,S.trBpm||70,{sound:true,click:true,bars:1});};
+$("trRhyGo").onclick=function(){
+  if(!TR.run||!TR.run.rhy||TR.busy)return;
+  var bpm=S.trBpm||70,sch=trSchedule(TR.run.rhy.notes,bpm,{countIn:true,click:true,bars:1});if(!sch)return;
+  TR.busy=true;TR.run.taps=[];TR.run.sch=sch;
+  trFb("Einzählen … dann tippen!","");
+  TR.to=setTimeout(function(){TR.busy=false;trRhyEval();},(sch.end-ctx.currentTime+0.4)*1000);
+};
+$("trTap").addEventListener("pointerdown",function(e){
+  e.preventDefault();if(!TR.run||!TR.run.taps||!TR.busy)return;
+  TR.run.taps.push(ctx.currentTime);this.classList.add("hit");var me=this;setTimeout(function(){me.classList.remove("hit")},90);
+  playNote({f:"x"},3,ctx.currentTime,0.05);
+});
+function trRhyEval(){
+  var sch=TR.run.sch,taps=TR.run.taps.filter(function(t){return t>sch.start-sch.sd*2}),used={},ok=0,res=[],tol=Math.max(0.09,sch.sd*0.9),offs=[];
+  TR.run.rhy.notes.forEach(function(n,i){
+    var tt=sch.start+n.pos*sch.sd,bi=-1,bd=1e9;
+    taps.forEach(function(t,k){if(used[k])return;var d=Math.abs(t-tt);if(d<bd){bd=d;bi=k;}});
+    if(bi>=0&&bd<=tol){used[bi]=1;ok++;var off=Math.round((taps[bi]-tt)*1000);offs.push(off);res.push('<span class="trchip ok">'+(i+1)+(Math.abs(off)>40?(off>0?' spät':' früh'):' ✓')+'</span>');}
+    else res.push('<span class="trchip bad">'+(i+1)+' fehlt</span>');
+  });
+  var extra=taps.length-Object.keys(used).length;
+  if(extra>0)res.push('<span class="trchip bad">'+extra+'× zu viel</span>');
+  var good=ok===TR.run.rhy.notes.length&&extra===0;
+  if(good)TR.run.ok++;else{TR.run.bad++;TR.run.miss["Rhythmus "+(TR.run.i+1)]=1;}
+  var avg=offs.length?Math.round(offs.reduce(function(a,b){return a+b},0)/offs.length):0;
+  $("trRhyRes").innerHTML=res.join("");
+  trFb((good?"✓ Sauber getroffen":"✗ "+ok+" von "+TR.run.rhy.notes.length+" Noten getroffen")+(offs.length?" · im Schnitt "+Math.abs(avg)+" ms "+(avg>0?"spät":"früh"):""),good?"ok":"bad");
+  trProg();TR.run.i++;
+  if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,2500);return;}
+}
+$("trRhyNew").onclick=function(){if(TR.run&&!TR.busy)trRhyNext();};
 
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
