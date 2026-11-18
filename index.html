@@ -294,9 +294,16 @@ body.pqon #lenKeys button{min-height:52px;font-size:16px}
 .trstaff{display:flex;justify-content:center;gap:0;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px}
 .trbar{flex:1 1 150px;max-width:320px}
 #trName .trbar{max-width:200px}
-.trfb{text-align:center;font-size:15px;min-height:44px;padding:6px;border-radius:6px}
-.trfb.ok{background:color-mix(in srgb,#6AB023 18%,transparent);color:#2E6B12}
-.trfb.bad{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+.trfb{text-align:center;font-size:15px;min-height:44px;padding:6px;border-radius:10px}
+.trfb.ok,.trfb.bad{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;font-size:17px;line-height:1.35;padding:12px 14px;color:#fff;border:3px solid transparent}
+.trfb.ok{background:#2E7D18;border-color:#6AB023}
+.trfb.bad{background:#B23F0A;border-color:#E65B15}
+.trfb .trico{font-size:44px;line-height:1;font-weight:900}
+.trfb .trmsg{flex:1;min-width:60%;text-align:left}
+.trfb .trmsg b{font-size:28px;display:inline-block;padding:0 2px}
+.trfb .trnext{flex-basis:100%;min-height:48px;font-size:18px;font-weight:800;background:#fff;color:#B23F0A;border:0}
+.trfb.pop{animation:trpop .25s ease-out}
+@keyframes trpop{from{transform:scale(.9);opacity:.3}to{transform:none;opacity:1}}
 .trkeys{display:grid;gap:6px;margin-top:6px}
 .trkeys.k7{grid-template-columns:repeat(7,1fr)}.trkeys.k3{grid-template-columns:repeat(3,1fr)}
 .trkeys button{min-height:58px;font-size:22px;font-weight:700}
@@ -364,6 +371,8 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 .hsh{margin:8px 0 0;font-size:16px;color:var(--main)}.hsh small{font-weight:400;color:var(--accent);font-size:12px}
 .hsec .hbody{padding:2px 0 4px}
 #hList .hgrp{margin-top:18px;padding-top:6px;border-top:2px solid var(--main)}#hList .hgrp:first-child{margin-top:0;border-top:0}
+.trkeys button.tright{background:#2E7D18;color:#fff;border-color:#2E7D18;box-shadow:0 0 0 3px #6AB023}
+.trkeys button.twrong{background:#B23F0A;color:#fff;border-color:#B23F0A;text-decoration:line-through}
 </style>
 </head>
 <body>
@@ -3196,7 +3205,10 @@ $("trQuit").onclick=function(){trFinish();};
 $("trAgain").onclick=function(){$("trStart").click()};
 $("trBack").onclick=trHome;
 function trProg(){var r=TR.run;$("trProg").textContent=(TR.mode==="sight"||TR.mode==="rhythm"?"Übung ":"Note ")+Math.min(r.i+1,r.n)+"/"+r.n+" · ✓ "+r.ok+" · ✗ "+r.bad;}
-function trFb(t,cls){var f=$("trFb");f.innerHTML=t;f.className="trfb "+(cls||"");}
+function trFb(t,cls){var f=$("trFb");
+  if(cls==="ok"||cls==="bad"){var m=t.match(/^(✓|✗|≈)\s*/),ic=m?m[1]:(cls==="ok"?"✓":"✗");if(m)t=t.slice(m[0].length);
+    t='<span class="trico" aria-hidden="true">'+ic+'</span><span class="trmsg">'+t+'</span>';}
+  f.innerHTML=t;f.className="trfb "+(cls||"");if(cls){void f.offsetWidth;f.classList.add("pop");}}
 function trStop(){if(TR.tm){clearInterval(TR.tm);TR.tm=null;}if(TR.to){clearTimeout(TR.to);TR.to=null;}if(MIC.an&&!REC.on)micStop();}
 function trFinish(){
   trStop();var r=TR.run;if(!r)return trHome();
@@ -3206,14 +3218,21 @@ function trFinish(){
   var miss=Object.keys(r.miss).sort(function(a,b){return r.miss[b]-r.miss[a]}).slice(0,5);
   $("trSum").innerHTML='<div class="trbig">'+pc+' %</div><p>'+r.ok+' von '+tot+' richtig'+(TR.level?' · Stufe '+TR.level+' „'+trLevel().n+'“':'')+'</p>'+(miss.length?'<p>Daran noch üben: <b>'+miss.join(", ")+'</b> – diese kommen beim nächsten Mal öfter dran.</p>':'<p>Keine Fehler – stark! '+(TR.level&&TR.level<6&&pc>=90?'Probier die nächste Stufe.':'')+'</p>');
 }
-function trNextOrEnd(fn){TR.run.i++;if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,700);return;}TR.to=setTimeout(fn,700);}
+function trWait(ok,fn,auto){
+  var last=TR.run.i>=TR.run.n,go=last?trFinish:fn,f=$("trFb");
+  if(ok){TR.to=setTimeout(go,1500);return;}
+  var b=document.createElement("button");b.className="trnext primary";b.textContent=last?"Auswertung ›":"Weiter ›";
+  b.onclick=function(){clearTimeout(TR.to);b.disabled=true;go();};f.appendChild(b);
+  if(auto)TR.to=setTimeout(go,auto);
+}
+function trNextOrEnd(fn,ok){TR.run.i++;trWait(ok,fn);}
 /* Modus: Note -> Name */
 function trNameNext(){
   var L=trLevel(),m=trPick(),sp=spellM(m,L.accPref==="sharp"?"#":L.accPref==="flat"?"b":L.chrom?null:"b");
   TR.run.prev=m;TR.run.cur=sp;TR.run.acc=null;TR.run.done=false;
   $("trStaff").innerHTML=trStaff([noteBar(sp)],"1/4",sp.acc,0);
   $("trNameAcc").hidden=!L.chrom;
-  Array.prototype.forEach.call(document.querySelectorAll("#trNameAcc button"),function(b){b.classList.remove("on")});
+  Array.prototype.forEach.call(document.querySelectorAll("#trNameAcc button,#trNameL button"),function(b){b.classList.remove("on","tright","twrong")});
   trFb("Wie heißt diese Note?","");trProg();
 }
 $("trNameAcc").addEventListener("click",function(e){var b=e.target.closest("button");if(!b||!TR.run)return;var a=+b.dataset.a;TR.run.acc=TR.run.acc===a?null:a;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("on",TR.run.acc!==null&&+x.dataset.a===TR.run.acc)});});
@@ -3222,10 +3241,12 @@ $("trNameL").addEventListener("click",function(e){
   var sp=TR.run.cur,L=+b.dataset.l,a=TR.run.acc||0,ok=(L===sp.L&&a===sp.a);
   TR.run.done=true;if(ok)TR.run.ok++;else{TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;}
   trRec(sp.m,ok);
+  Array.prototype.forEach.call(document.querySelectorAll("#trNameL button"),function(x){var l=+x.dataset.l;x.classList.toggle("tright",l===sp.L);x.classList.toggle("twrong",!ok&&x===b&&l!==sp.L);});
+  Array.prototype.forEach.call(document.querySelectorAll("#trNameAcc button"),function(x){var aa=+x.dataset.a;x.classList.toggle("tright",sp.a!==0&&aa===sp.a);});
   if(S.hear!==false&&audioReady())playNote({f:sp.m-28},3,ctx.currentTime+0.02,0.5);
   var p=posOf(sp.m);
   trFb(ok?"✓ Richtig: <b>"+spName(sp)+spOct(sp)+"</b> · "+SNAME[4][p.s]+"-Saite Bund "+p.f:"✗ Das ist <b>"+spName(sp)+spOct(sp)+"</b> · "+SNAME[4][p.s]+"-Saite Bund "+p.f,ok?"ok":"bad");
-  trProg();trNextOrEnd(trNameNext);
+  trProg();trNextOrEnd(trNameNext,ok);
 });
 /* Modus: Note -> auf dem Bass spielen */
 function trPlayStart(){
@@ -3252,11 +3273,9 @@ function trPlayTick(){
   trRec(sp.m,ok);
   var p=posOf(sp.m);
   trFb(ok?"✓ Richtig: <b>"+spName(sp)+spOct(sp)+"</b>":octOnly?"≈ Richtiger Ton, aber falsche Oktave. Gesucht: <b>"+spName(sp)+spOct(sp)+"</b> (z. B. "+SNAME[4][p.s]+"-Saite Bund "+p.f+")":"✗ Gehört: "+noteName(m)+" · gesucht: <b>"+spName(sp)+spOct(sp)+"</b> ("+SNAME[4][p.s]+"-Saite Bund "+p.f+")",ok?"ok":"bad");
-  trProg();TR.run.i++;
-  if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,1200);return;}
-  TR.to=setTimeout(function(){trPlayNext();},ok?900:2200);
+  trProg();TR.run.i++;trWait(ok,trPlayNext,5000);
 }
-$("trSkip").onclick=function(){if(!TR.run||TR.run.done)return;var sp=TR.run.cur;TR.run.done=true;TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;trRec(sp.m,false);var p=posOf(sp.m);trFb("Übersprungen: <b>"+spName(sp)+spOct(sp)+"</b> = "+SNAME[4][p.s]+"-Saite Bund "+p.f,"bad");trProg();TR.run.i++;if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,1200);return;}TR.to=setTimeout(trPlayNext,1600);};
+$("trSkip").onclick=function(){if(!TR.run||TR.run.done)return;var sp=TR.run.cur;TR.run.done=true;TR.run.bad++;TR.run.miss[spName(sp)]=(TR.run.miss[spName(sp)]||0)+1;trRec(sp.m,false);var p=posOf(sp.m);trFb("Übersprungen: <b>"+spName(sp)+spOct(sp)+"</b> = "+SNAME[4][p.s]+"-Saite Bund "+p.f,"bad");trProg();TR.run.i++;trWait(false,trPlayNext,5000);};
 $("trHint").onclick=function(){if(!TR.run||!TR.run.cur||!audioReady())return;playNote({f:TR.run.cur.m-28},3,ctx.currentTime+0.02,0.7);};
 /* gemeinsamer Abspieler für Linien und Rhythmen */
 function trSchedule(notes,bpm,opts){
