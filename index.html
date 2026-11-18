@@ -575,6 +575,8 @@ body.piano #fretKeys,body.piano #modeFb,body.piano #altNote,body.piano #posBtn,b
   #pad .keys button{min-height:40px}
 }
 @media (min-width:1500px) and (min-aspect-ratio:5/4){body{grid-template-columns:minmax(0,1fr) 520px}}
+.c.se span{color:#00838F}.sl.se{color:#00838F}#altNote .as.se{--sc:#00838F}.staff .ne{fill:#00838F}.staff .op.ne{fill:var(--surface);stroke:#00838F}.staff ellipse.ne{stroke:#00838F}
+body.guitar #octUp,body.guitar .bassonly{display:none!important}
 </style>
 </head>
 <body>
@@ -646,7 +648,7 @@ body.piano #fretKeys,body.piano #modeFb,body.piano #altNote,body.piano #posBtn,b
       <div class="row">
         <h2>Dieses Stück</h2>
         <label>Taktart <select id="sig"><option>4/4</option><option>3/4</option><option>2/4</option><option>6/8</option></select></label>
-        <label>Instrument <select id="instSel"><option value="bass">Bass</option><option value="piano">Klavier</option></select></label>
+        <label>Instrument <select id="instSel"><option value="bass">Bass</option><option value="guitar">Gitarre</option><option value="piano">Klavier</option></select></label>
         <label class="bassonly">Saiten <select id="strings"><option value="4">4 (E A D G)</option><option value="5">5 (H E A D G)</option></select></label>
         <label>Tonart <select id="keySel">
           <option value="-7">7 ♭ (Ces-Dur / as-Moll)</option><option value="-6">6 ♭ (Ges-Dur / es-Moll)</option>
@@ -991,8 +993,8 @@ function validSig(str){
   var p=String(str||"").split("/"),b=parseInt(p[0],10),t=parseInt(p[1],10);
   return (b>0&&b<=16&&(t===2||t===4||t===8||t===16))?b+"/"+t:"4/4";
 }
-var OPEN={4:[43,38,33,28],5:[43,38,33,28,23],88:[]};
-var SNAME={4:["G","D","A","E"],5:["G","D","A","E","H"],88:[]};
+var OPEN={4:[43,38,33,28],5:[43,38,33,28,23],6:[64,59,55,50,45,40],88:[]};
+var SNAME={4:["G","D","A","E"],5:["G","D","A","E","H"],6:["e","H","G","D","A","E"],88:[]};
 for(var pk0=108;pk0>=21;pk0--){OPEN[88].push(pk0);SNAME[88].push("");}
 var STAFF={clef:null};
 var NOTES=["C","C#","D","Eb","E","F","F#","G","Ab","A","B","H"];
@@ -1028,11 +1030,13 @@ var PRN={on:false,starts:{}};
 function prMid(b){return PRN.on&&!PRN.starts[b];}
 function GUTb(b){if(prMid(b)){var bar=song().bars[b];return (bar&&bar.sig?1.1:0.15)+(bar&&bar.rs?0.6:0);}return GUT()+(showSig(b)?1.0:0);}
 function isPiano(){return song().inst==="piano"}
-function nstr(){return isPiano()?88:(song().strings===5?5:4)}
+function isGuitar(){return song().inst==="guitar"}
+function nstr(){return isPiano()?88:isGuitar()?6:(song().strings===5?5:4)}
+function effClef(){return STAFF.clef||(isGuitar()?"treble":"bass")}
 function pIdx(m){return 108-m}
 function inHand(s){if(!isPiano()||!STAFF.clef)return true;var m=OPEN[88][s];return STAFF.clef==="treble"?m>=60:m<60;}
-function posM(m){if(!isPiano())return spell(m+12).pos;var sp0=spell(m);return STAFF.clef==="treble"?sp0.pos-12:sp0.pos;}
-function spellM2(m){var x=isPiano()?spell(m):spell(m+12);if(isPiano()&&STAFF.clef==="treble")x={pos:x.pos-12,acc:x.acc,L:x.L,oct:x.oct};return x;}
+function posM(m){var sp0=isPiano()?spell(m):spell(m+12);return effClef()==="treble"?sp0.pos-12:sp0.pos;}
+function spellM2(m){var x=isPiano()?spell(m):spell(m+12);if(effClef()==="treble")x={pos:x.pos-12,acc:x.acc,L:x.L,oct:x.oct};return x;}
 function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
 function pushUndo(){undo.push(JSON.stringify(song().bars));if(undo.length>60)undo.shift()}
 function noteAt(b,s,t){var bar=song().bars[b];return bar?bar.n[s+"_"+t]:null}
@@ -1235,12 +1239,12 @@ function tieArc(x1,y1,x2,y2,below){
   function r(v){return Math.round(v*10)/10}
   return '<path class="fl tie" d="M'+r(x1)+' '+r(y1)+' C'+r(x1+dx*0.25)+' '+r(my+d*h)+' '+r(x2-dx*0.25)+' '+r(my+d*h)+' '+r(x2)+' '+r(y2)+' C'+r(x2-dx*0.25)+' '+r(my+d*(h-1.6))+' '+r(x1+dx*0.25)+' '+r(my+d*(h-1.6))+' '+r(x1)+' '+r(y1)+'Z"/>';
 }
-function trebleSVG(x,yG,sp){
+function trebleSVG(x,yG,sp,oct8){
   function r(v){return Math.round(v*10)/10}
   var k=sp/8,X=function(v){return r(x+v*k)},Yy=function(v){return r(yG+v*k)};
   return '<path class="st" fill="none" stroke-width="'+r(1.7*k)+'" stroke-linecap="round" d="M'+X(7.5)+' '+Yy(19)+' C'+X(4)+' '+Yy(22)+' '+X(1.5)+' '+Yy(18.5)+' '+X(3.5)+' '+Yy(16.5)+' C'+X(5.5)+' '+Yy(14.5)+' '+X(8.5)+' '+Yy(16.5)+' '+X(7.2)+' '+Yy(19.5)+
     ' M'+X(7.2)+' '+Yy(19.5)+' L'+X(9.2)+' '+Yy(-27)+' C'+X(9.8)+' '+Yy(-31)+' '+X(13.5)+' '+Yy(-30)+' '+X(12.5)+' '+Yy(-24)+' C'+X(11.5)+' '+Yy(-17)+' '+X(1)+' '+Yy(-12)+' '+X(1)+' '+Yy(-3)+
-    ' C'+X(1)+' '+Yy(5)+' '+X(8)+' '+Yy(8.5)+' '+X(13)+' '+Yy(5)+' C'+X(17)+' '+Yy(2)+' '+X(15.5)+' '+Yy(-6)+' '+X(9.5)+' '+Yy(-6)+' C'+X(5.5)+' '+Yy(-6)+' '+X(4.5)+' '+Yy(-1)+' '+X(8)+' '+Yy(1.5)+'"/>';
+    ' C'+X(1)+' '+Yy(5)+' '+X(8)+' '+Yy(8.5)+' '+X(13)+' '+Yy(5)+' C'+X(17)+' '+Yy(2)+' '+X(15.5)+' '+Yy(-6)+' '+X(9.5)+' '+Yy(-6)+' C'+X(5.5)+' '+Yy(-6)+' '+X(4.5)+' '+Yy(-1)+' '+X(8)+' '+Yy(1.5)+'"/>'+(oct8?'<text x="'+X(5)+'" y="'+Yy(29)+'" font-size="'+r(8*k)+'" font-weight="800" text-anchor="middle">8</text>':'');
 }
 function grandSVG(b){
   var out="";
@@ -1259,11 +1263,11 @@ function staffSVG(b,NI){
   o.push('<line class="ln bl" x1="'+r(W-0.5)+'" x2="'+r(W-0.5)+'" y1="'+Y(8)+'" y2="'+Y(0)+'"/>');
   if(PRN.on&&PRN.starts[b])o.push('<line class="ln bl" x1="0.6" x2="0.6" y1="'+Y(8)+'" y2="'+Y(0)+'"/>');
   var yF=Y(6);
-  if(!prMid(b)&&STAFF.clef==="treble")o.push(trebleSVG(2,Y(2),sp));
+  if(!prMid(b)&&effClef()==="treble")o.push(trebleSVG(2,Y(2),sp,isGuitar()));
   else  if(!prMid(b))o.push('<circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/>');
   var kn=prMid(b)?0:keyN(),ki;
   for(ki=0;ki<Math.abs(kn);ki++){
-    var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+(STAFF.clef==="treble"?2:0);
+    var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+(effClef()==="treble"?2:0);
     o.push(accSVG(kn<0?-1:1,24+ki*7.4,Y(kp)));
   }
   if((prMid(b)?!!bar.sig:showSig(b))&&!EXSVG){var tsP=sigStrAt(b).split("/"),tsx=G-(bar.rs?24:11);
@@ -1780,22 +1784,27 @@ function instUI(){
   $("pianoKeys").hidden=!(P&&S.mode==="tab");
   $("modeTab").innerHTML=P?"🎹 Tasten":"🔢 Tab";
   if(P){if(S.mode==="fb")setMode("tab");pkRender();}
-  if($("instSel"))$("instSel").value=P?"piano":"bass";
+  if($("instSel"))$("instSel").value=instOf();
+  document.body.classList.toggle("guitar",isGuitar());
   if(typeof syncSegs==="function")syncSegs();
 }
+function instOf(){return isPiano()?"piano":isGuitar()?"guitar":"bass"}
 function convertInst(to){
-  var sg=song(),from=isPiano()?"piano":"bass";if(from===to)return;
-  pushUndo();var lost=0,nsF=nstr();
-  sg.bars.forEach(function(bar){var nn={};for(var k in bar.n){var q=k.split("_"),s0=+q[0],t=+q[1],n=bar.n[k];if(s0>=nsF)continue;
-    var m=OPEN[nsF][s0]+(n.f==="x"?0:n.f);
-    if(to==="piano"){var c={};for(var x in n)c[x]=n[x];c.f=n.f==="x"?"x":0;nn[(108-m)+"_"+t]=c;}
-    else{var ns4=sg.strings===5?5:4,best=null,bf=99;for(var z=0;z<ns4;z++){var f=m-OPEN[ns4][z];if(f>=0&&f<=24&&!nn[z+"_"+t]&&f<bf){bf=f;best=z;}}
-      if(best===null){lost++;continue;}var c2={};for(var y in n)c2[y]=n[y];c2.f=n.f==="x"?"x":bf;nn[best+"_"+t]=c2;}}
-    bar.n=nn;});
-  if(to==="piano")sg.inst="piano";else delete sg.inst;
+  var sg=song(),from=instOf();if(from===to)return;
+  pushUndo();var lost=0,nsF=nstr(),items=[];
+  sg.bars.forEach(function(bar,bi){for(var k in bar.n){var q=k.split("_"),s0=+q[0],t=+q[1],n=bar.n[k];if(s0>=nsF)continue;
+    items.push({b:bi,t:t,m:OPEN[nsF][s0]+(n.f==="x"?0:n.f),n:n});}bar.n={};});
+  if(to==="bass")delete sg.inst;else sg.inst=to;
+  var nsT=nstr();
+  items.sort(function(a,c){return a.m-c.m});
+  items.forEach(function(it){var bar=sg.bars[it.b],best=null,bf=99,c={};for(var x in it.n)c[x]=it.n[x];
+    if(to==="piano"){if(it.m<21||it.m>108){lost++;return;}c.f=it.n.f==="x"?"x":0;bar.n[pIdx(it.m)+"_"+it.t]=c;return;}
+    for(var z=0;z<nsT;z++){var f=it.m-OPEN[nsT][z];if(f>=0&&f<=24&&!bar.n[z+"_"+it.t]&&f<bf){bf=f;best=z;}}
+    if(best===null){lost++;return;}c.f=it.n.f==="x"?"x":bf;bar.n[best+"_"+it.t]=c;});
   cursor.str=to==="piano"?pIdx(60):nstr()-1;
   instUI();render();save();
-  status(to==="piano"?"Stück ist jetzt fürs Klavier (Violin- und Bassschlüssel).":"Stück ist jetzt für Bass"+(lost?" – "+lost+" Note(n) passten nicht auf den Bass und wurden weggelassen (↶ Zurück holt sie).":"."));
+  var NM={bass:"Bass",piano:"Klavier",guitar:"Gitarre"};
+  status("Stück ist jetzt für "+NM[to]+(lost?" – "+lost+" Note(n) passten nicht und wurden weggelassen (↶ Zurück holt sie).":"."));
 }
 
 /* Ziehen: Notenwert/Pause auf die Zeile ziehen (Zeilen-Modus) */
@@ -1955,9 +1964,9 @@ $("rsPull").onclick=function(){if(!RS||!RS.after)return;var bar=song().bars[RS.b
 
 /* Eingabe direkt auf der Notenzeile */
 var LN={U:12.5,top:11};
-function lineRange(){if(isPiano())return {lo:-4,hi:24};return {lo:nstr()===5?-6:-3,hi:12};}
+function lineRange(){if(isPiano())return {lo:-4,hi:24};if(isGuitar())return {lo:-8,hi:14};return {lo:nstr()===5?-6:-3,hi:12};}
 function posMidi(pos){
-  var d=18+pos,oct=Math.floor(d/7),L=((d%7)+7)%7;
+  var d=(isGuitar()?30:18)+pos,oct=Math.floor(d/7),L=((d%7)+7)%7;
   var a=armAccN!==null?armAccN:keyAcc()[L];
   return {m:12*(oct+1)+NAT[L]+a-(isPiano()?0:12),L:L,a:a};
 }
@@ -1972,8 +1981,8 @@ function lineRender(ghost){
   for(p=0;p<=(PI?20:8);p+=2)if(onSt(p))o.push('<line class="ln" x1="0" x2="'+W+'" y1="'+Y(p)+'" y2="'+Y(p)+'" style="stroke-width:1.6"/>');
   if(PI)o.push(trebleSVG(4,Y(14),U*1.05));
   var yF=Y(6),sc=1.9;
-  o.push('<g transform="translate(4 '+yF+') scale('+sc+') translate(0 '+(-yF)+')"><circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/></g>');
-  var kn=keyN();for(var ki=0;ki<Math.abs(kn);ki++){[0].concat(isPiano()?[14]:[]).forEach(function(off){var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+off;o.push('<g transform="translate('+(44+ki*9)+' '+Y(kp)+') scale(1.6) translate('+(-(44+ki*9))+' '+(-Y(kp))+')">'+accSVG(kn<0?-1:1,44+ki*9,Y(kp))+'</g>');});}
+  if(isGuitar())o.push(trebleSVG(4,Y(2),U*1.05,true));else  o.push('<g transform="translate(4 '+yF+') scale('+sc+') translate(0 '+(-yF)+')"><circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/></g>');
+  var kn=keyN();for(var ki=0;ki<Math.abs(kn);ki++){[isGuitar()?2:0].concat(isPiano()?[14]:[]).forEach(function(off){var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+off;o.push('<g transform="translate('+(44+ki*9)+' '+Y(kp)+') scale(1.6) translate('+(-(44+ki*9))+' '+(-Y(kp))+')">'+accSVG(kn<0?-1:1,44+ki*9,Y(kp))+'</g>');});}
   var kx=Math.abs(kn)?44+Math.abs(kn)*9+6:46,gx=kx+34,zx=W*0.55;
   o.push('<rect x="'+zx+'" y="2" width="'+(W-zx-2)+'" height="'+(H-4)+'" rx="8" fill="#004C3A" opacity=".06"/>');
   o.push('<text x="'+((zx+W)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="11" fill="#45524D" font-weight="700">☝ hier tippen &amp; schieben</text>');
@@ -2125,7 +2134,7 @@ function click(t,kind){
   g.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
   o.connect(g);g.connect(master);o.start(t);o.stop(t+0.05);
 }
-function toneM(m,t,dur){if(isPiano()&&m>=21&&m<=108)return playPiano({},pIdx(m),t,dur);return playNote({f:m-28},3,t,dur);}
+function toneM(m,t,dur){if(isPiano()&&m>=21&&m<=108)return playPiano({},pIdx(m),t,dur);if(isGuitar()&&m>=40&&m<=88){var gs=0;for(var z=0;z<6;z++)if(m>=OPEN[6][z]){gs=z;break;}return playGuitar({f:m-OPEN[6][gs]},gs,t,dur);}return playNote({f:m-28},3,t,dur);}
 function playPiano(n,s,t,dur){
   var v=S.bassVol/100;if(v<=0||n.f==="x")return;
   var m=OPEN[88][s],f=440*Math.pow(2,(m-69)/12),g=ctx.createGain(),fl=ctx.createBiquadFilter();
@@ -2138,8 +2147,19 @@ function playPiano(n,s,t,dur){
     o.connect(og);og.connect(fl);o.start(t);o.stop(t+(n.st?0.3:rel)+0.05);});
   fl.connect(g);g.connect(master||ctx.destination);
 }
+function playGuitar(n,s,t,dur){
+  var v=S.bassVol/100;if(v<=0)return;
+  var dead=n.f==="x"||n.ph,m=OPEN[6][s]+(dead?0:n.f),f=440*Math.pow(2,(m-69)/12);
+  var g=ctx.createGain(),fl=ctx.createBiquadFilter();fl.type="lowpass";fl.Q.value=1.2;
+  fl.frequency.setValueAtTime(dead?900:Math.min(8000,f*9),t);fl.frequency.exponentialRampToValueAtTime(Math.max(250,f*1.5),t+(dead?0.05:0.5));
+  var pk=0.3*v*(n.a?1.4:1),rel=dead?0.06:Math.max(0.3,Math.min(2.2,dur*1.1+0.4));
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(pk,t+0.004);g.gain.exponentialRampToValueAtTime(pk*0.35,t+0.15);g.gain.exponentialRampToValueAtTime(0.0008,t+(n.st||n.pm?0.18:rel));
+  [[1,"sawtooth",0.6],[2,"triangle",0.25],[1.004,"square",0.08]].forEach(function(h){var o=ctx.createOscillator(),og=ctx.createGain();o.type=h[1];o.frequency.setValueAtTime(f*h[0],t);og.gain.value=h[2];o.connect(og);og.connect(fl);o.start(t);o.stop(t+rel+0.05);});
+  fl.connect(g);g.connect(master||ctx.destination);
+}
 function playNote(n,s,t,dur){
   if(isPiano())return playPiano(n,s,t,dur);
+  if(isGuitar())return playGuitar(n,s,t,dur);
   var v=S.bassVol/100;if(v<=0)return;
   var dead=n.f==="x"||n.ph,fr=dead?0:n.f;
   var base=OPEN[nstr()][s]+(S.octUp?12:0),m=base+fr;
@@ -3187,7 +3207,7 @@ var HELP=[
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
-{t:"e",h:"Klavier",b:"<p>Ein Stück kann statt für Bass auch fürs <b>Klavier</b> sein: <b>⚙ Einstellungen → Instrument → Klavier</b>. Vorhandene Noten werden übernommen (zurück zum Bass gehen Töne, die nicht auf den Bass passen, verloren – ↶ Zurück holt sie).</p><ul><li><b>Notenbild:</b> Klaviersystem mit Violinschlüssel (rechte Hand, ab C4) und Bassschlüssel (linke Hand, unter C4), verbunden durch eine Klammer.</li><li><b>🎹 Tasten:</b> Klaviatur über zwei Oktaven, mit ◀ tiefer / höher ▶ verschieben. Antippen setzt die Note mit der gewählten Länge. <b>Akkorde:</b> ⏩ Auto ausschalten, dann mehrere Tasten an derselben Stelle antippen.</li><li><b>♪ Namen</b> und <b>🎼 Zeile</b> funktionieren wie beim Bass, die Zeile zeigt beide Schlüssel.</li><li>Tab, Griffbrett, Saiten-Techniken, Stimmgerät und Einspielen gibt es nur beim Bass.</li></ul>",k:"klavier piano violinschlüssel tasten instrument akkord"},
+{t:"e",h:"Klavier und Gitarre",b:"<p><b>Gitarre:</b> ⚙ Einstellungen → 🎵 Stück → Instrument → Gitarre. Tab mit 6 Saiten (e H G D A E), Noten im Violinschlüssel mit kleiner 8 darunter (Gitarre klingt eine Oktave tiefer als notiert), Eingabe wie beim Bass über Bünde, Namen oder Zeile.</p><p>Ein Stück kann statt für Bass auch fürs <b>Klavier</b> sein: <b>⚙ Einstellungen → Instrument → Klavier</b>. Vorhandene Noten werden übernommen (zurück zum Bass gehen Töne, die nicht auf den Bass passen, verloren – ↶ Zurück holt sie).</p><ul><li><b>Notenbild:</b> Klaviersystem mit Violinschlüssel (rechte Hand, ab C4) und Bassschlüssel (linke Hand, unter C4), verbunden durch eine Klammer.</li><li><b>🎹 Tasten:</b> Klaviatur über zwei Oktaven, mit ◀ tiefer / höher ▶ verschieben. Antippen setzt die Note mit der gewählten Länge. <b>Akkorde:</b> ⏩ Auto ausschalten, dann mehrere Tasten an derselben Stelle antippen.</li><li><b>♪ Namen</b> und <b>🎼 Zeile</b> funktionieren wie beim Bass, die Zeile zeigt beide Schlüssel.</li><li>Tab, Griffbrett, Saiten-Techniken, Stimmgerät und Einspielen gibt es nur beim Bass.</li></ul>",k:"klavier piano gitarre violinschlüssel tasten instrument akkord"},
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p><b>Noch schneller:</b> Einen Notenwert (oder eine Pause) aus den Reihen darüber <b>auf die Zeile ziehen</b> und auf der richtigen Linie loslassen – Länge und Tonhöhe in einem Zug. Antippen der Knöpfe funktioniert weiter wie gewohnt.</p><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Sprung, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>⇥ Sprung</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
