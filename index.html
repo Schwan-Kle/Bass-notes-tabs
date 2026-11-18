@@ -631,7 +631,10 @@ body.voice .lyrow span:not(.on):not(.lyl){border-bottom:1px dotted #C9D5D1}
   #printArea .pblk+.pblk{border-top:none;padding-top:1.5mm}
   #printArea .plab{display:block!important;font-size:7pt;color:#222;height:9pt;line-height:9pt}
   #printArea .rowmid .plab{visibility:hidden}
-  #printArea .pblk.muted{opacity:1}}
+  #printArea .pblk.muted{opacity:1}
+  #printArea .rowstart .pgrp{position:relative}
+  #printArea.multi .prow{padding-left:3.2mm}
+  #printArea .rowstart .pgrp:has(.pblk+.pblk)::before{content:"";position:absolute;left:-3mm;top:9mm;bottom:2mm;width:1.4mm;border-left:2.4pt solid #000;border-top:1.2pt solid #000;border-bottom:1.2pt solid #000;border-radius:0 0 0 0}}
 </style>
 </head>
 <body>
@@ -1299,10 +1302,10 @@ function barBody(b,NI,sus){
 }
 function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg,st,bars=song().bars,b;
-  var sus=computeSus(),NI=noteInfo(),PL=partList(),ap=actPart(),all=PL&&showAllParts(),oth=[];
+  var sus=computeSus(),NI=noteInfo(),PL=partList(),ap=actPart(),all=PL&&showAllParts(),oth=[],gtx=all&&PL.some(function(p,i){return partInst(i)==="guitar"});
   var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.ch,x.tb,x.rs,x.re,x.v,x.rt]})]):"";
   if(all&&OTHC.k===sigK&&OTHC.id===song().id)oth=OTHC.v;
-  else if(all)PL.forEach(function(p,i){if(i===ap)return;oth[i]=withPart(i,function(){song().bars.forEach(cleanRests);var su=computeSus(),ni=noteInfo(),arr=[];PART.noCh=i!==0;PART.other=true;
+  else if(all)PL.forEach(function(p,i){if(i===ap)return;oth[i]=withPart(i,function(){song().bars.forEach(cleanRests);var su=computeSus(),ni=noteInfo(),arr=[];PART.noCh=i!==0||gtx;PART.other=true;
     for(var bq=0;bq<bars.length;bq++)arr.push(barBody(bq,ni,su).replace(/data-(b|s|t)="/g,'data-o$1="'));PART.noCh=false;PART.other=false;return arr;});});
   if(all){OTHC.k=sigK;OTHC.v=oth;OTHC.id=song().id;}
   function plab(i){var p=PL[i],it=partInst(i);return '<div class="plab">'+IICON[it]+' '+esc(p.name)+(p.mute?' 🔇':'')+'</div>';}
@@ -1314,11 +1317,12 @@ function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lin
     if(bars[b].tx)h.push('<div class="txblk" data-txb="'+b+'" title="Text bearbeiten">'+txHTML(bars[b].tx)+'</div>');
     h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+(b===0?' b1':'')+'"><div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>');
     if(!PL){h.push(barBody(b,NI,sus)+'</div>');continue;}
+    h.push('<div class="pgrp">');
     for(var pi=0;pi<PL.length;pi++){var col=PCOL[pi%PCOL.length];
-      if(pi===ap){PART.noCh=all&&ap!==0;h.push('<div class="pblk act'+(PL[pi].mute?' muted':'')+'" style="--pc:'+col+'">'+plab(pi)+barBody(b,NI,sus)+'</div>');PART.noCh=false;}
+      if(pi===ap){PART.noCh=all&&(ap!==0||gtx);h.push('<div class="pblk act'+(PL[pi].mute?' muted':'')+'" style="--pc:'+col+'">'+plab(pi)+barBody(b,NI,sus)+'</div>');PART.noCh=false;}
       else if(all)h.push('<div class="pblk opart'+(PL[pi].mute?' muted':'')+'" data-part="'+pi+'" style="--pc:'+col+'" title="Antippen: zu dieser Spur wechseln">'+plab(pi)+oth[pi][b]+'</div>');
     }
-    h.push('</div>');
+    h.push('</div></div>');
   }
   if(song().endTx)h.push('<div class="txblk" data-txb="'+(bars.length-1)+'" data-end="1" title="Text bearbeiten">'+txHTML(song().endTx)+'</div>');
   $("score").innerHTML=songInfoHTML()+partChips()+h.join("");
@@ -1423,13 +1427,15 @@ function staffSVG(b,NI){
     o.push('<text class="tsn" x="'+r(tsx)+'" y="'+r(Y(6)+5.5)+'" text-anchor="middle">'+tsP[0]+'</text><text class="tsn" x="'+r(tsx)+'" y="'+r(Y(2)+5.5)+'" text-anchor="middle">'+tsP[1]+'</text>');}
   if(!EXSVG&&!PART.other&&view()==="notes"&&b===cursor.bar&&cursor.step<st)o.push('<rect class="stcur" x="'+r(X(cursor.step)-U/2)+'" y="0" width="'+r(U)+'" height="'+r(H)+'"/>');
   /* Ereignisse sammeln */
-  var evs={},times=[],any=false;
+  var evs={},times=[],any=false,slash=false;
+  if(isGuitar()){var nk=Object.keys(bar.n);slash=nk.length>0&&nk.every(function(k){return bar.n[k].sd;});}
   for(var key in bar.n){
     var q=key.split("_"),s=+q[0],t=+q[1],n=bar.n[key];
     if(t>=st||s>=ns||!inHand(s))continue;
     var spd=spellM2(OPEN[ns][s]+(n.f==="x"?0:n.f));
     if(!evs[t]){evs[t]={t:t,notes:[],len:0};times.push(t);}
-    evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,sn:isKeys()?"":SNAME[ns][s]});
+    if(slash){if(!evs[t].notes.length)evs[t].notes.push({pos:4,acc:0,slash:true,sn:""});}
+    else evs[t].notes.push({pos:spd.pos,acc:spd.acc,dead:n.f==="x",hm:!!n.hm,ph:!!n.ph,sn:isKeys()?"":SNAME[ns][s]});
     if(n.len>evs[t].len)evs[t].len=n.len;
     if(n.h)evs[t].h=1;if(n.a)evs[t].a=1;
     ["st","si","so","bd","vb","sl","pp","hm","pm"].forEach(function(k){if(n[k])evs[t][k]=1;});
@@ -1449,8 +1455,8 @@ function staffSVG(b,NI){
     var j=i;
     if(L[i].base<4){while(j+1<L.length&&L[j+1].base<4&&Math.floor(L[j+1].t/beat)===Math.floor(L[i].t/beat))j++;}
     if(j>i){
-      var sum=0,k;for(k=i;k<=j;k++)sum+=(L[k].lo+L[k].hi)/2;
-      var up=sum/(j-i+1)<4,sx=up?hx:-hx;
+      var dB=0,dA=0,k;for(k=i;k<=j;k++){dB=Math.max(dB,4-L[k].lo);dA=Math.max(dA,L[k].hi-4);}
+      var up=slash||dB>dA,sx=up?hx:-hx;
       var x0=X(L[i].t)+sx,x1=X(L[j].t)+sx;
       var ya=up?Y(L[i].hi)-3.3*sp:Y(L[i].lo)+3.3*sp,yb=up?Y(L[j].hi)-3.3*sp:Y(L[j].lo)+3.3*sp;
       var bsE=Math.floor(L[i].t/beat)*beat,ext=L[i].t>bsE&&!(bar.tb&&beat===4&&bar.tb[bsE/4]);
@@ -1494,7 +1500,7 @@ function staffSVG(b,NI){
   function accOf(pos){return accState.hasOwnProperty(pos)?accState[pos]:KA[((pos+18)%7+7)%7]}
   for(i=0;i<L.length;i++){
     var e=L[i],x=X(e.t);
-    if(!e.beamed){e.up=(e.lo+e.hi)/2<4;e.end=e.up?Y(e.hi)-3*sp:Y(e.lo)+3*sp;}
+    if(!e.beamed){e.up=slash||(e.lo+e.hi)/2<4;e.end=e.up?Y(e.hi)-3*sp:Y(e.lo)+3*sp;}
     var xs=x+(e.up?hx:-hx);
     if(e.base<16){
       o.push('<line class="st stem" x1="'+r(xs)+'" x2="'+r(xs)+'" y1="'+Y(e.up?e.lo:e.hi)+'" y2="'+r(e.beamed&&e.mid?e.end+(e.up?1:-1)*((e.base===1?8.1:3.1)-1.4):e.end)+'"/>');
@@ -1513,21 +1519,27 @@ function staffSVG(b,NI){
         }
       }
     }
-    e.notes.forEach(function(nn){
-      var y=Y(nn.pos),lp;
-      for(lp=-2;lp>=nn.pos;lp-=2)o.push('<line class="st" stroke-width="1" x1="'+r(x-7.5)+'" x2="'+r(x+7.5)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
-      for(lp=10;lp<=nn.pos;lp+=2)o.push('<line class="st" stroke-width="1" x1="'+r(x-7.5)+'" x2="'+r(x+7.5)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
+    var shf=[],anyShf=false,ns2=e.notes.length,z;
+    if(ns2>1){if(e.up){for(z=1;z<ns2;z++)if(e.notes[z].pos-e.notes[z-1].pos===1&&!shf[z-1]){shf[z]=1;anyShf=true;}}
+      else{for(z=ns2-2;z>=0;z--)if(e.notes[z+1].pos-e.notes[z].pos===1&&!shf[z+1]){shf[z]=1;anyShf=true;}}}
+    var xC=x,lw0=anyShf?(e.up?x-7.5:x-7.5-2*hx):x-7.5,lw1=anyShf?(e.up?x+7.5+2*hx:x+7.5):x+7.5;
+    e.notes.forEach(function(nn,zi){
+      var y=Y(nn.pos),lp,x=xC+(shf[zi]?(e.up?2*hx:-2*hx):0);
+      if(nn.slash){var sw=e.base>=8;o.push('<path class="'+(sw?"op":"fl")+'" stroke-width="1.4" d="M'+r(x-6)+' '+r(y+4.2)+' L'+r(x-1.6)+' '+r(y+4.2)+' L'+r(x+6)+' '+r(y-4.2)+' L'+r(x+1.6)+' '+r(y-4.2)+' Z"/>');
+        if(e.dot)o.push('<circle class="fl" cx="'+r(x+9.5)+'" cy="'+(y-sp/4)+'" r="1.4"/>');return;}
+      for(lp=-2;lp>=nn.pos;lp-=2)o.push('<line class="st" stroke-width="1" x1="'+r(lw0)+'" x2="'+r(lw1)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
+      for(lp=10;lp<=nn.pos;lp+=2)o.push('<line class="st" stroke-width="1" x1="'+r(lw0)+'" x2="'+r(lw1)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
       if(nn.dead){
         o.push('<path class="st" stroke-width="1.6" d="M'+r(x-3.6)+' '+(y-3.6)+' l7.2 7.2 M'+r(x-3.6)+' '+(y+3.6)+' l7.2 -7.2"/>');
       }else{
         if(accOf(nn.pos)!==nn.acc){
           accState[nn.pos]=nn.acc;
-          o.push(accSVG(nn.acc,x-11,y));
+          o.push(accSVG(nn.acc,xC-11-(anyShf&&!e.up?2*hx:0),y));
         }
         if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+(EXSVG?"":" n"+nn.sn)+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
         else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+(EXSVG?"":" n"+nn.sn)+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.6:5.3)+'" ry="'+(e.base>=8?3.1:3.75)+'" transform="rotate(-22 '+r(x)+' '+y+')"/>');
       }
-      if(e.dot)o.push('<circle class="fl" cx="'+r(x+8.5)+'" cy="'+(nn.pos%2===0?y-sp/4:y)+'" r="1.4"/>');
+      if(e.dot)o.push('<circle class="fl" cx="'+r(xC+8.5+(anyShf&&e.up?2*hx:0))+'" cy="'+(nn.pos%2===0?y-sp/4:y)+'" r="1.4"/>');
     });
     if(e.h){
       var below=e.up,yb2=below?Y(e.lo)+6:Y(e.hi)-6,xa2,ya2;
@@ -2030,7 +2042,7 @@ function makePdf(){
     (sg.note?'<div class="pnote">'+esc(sg.note)+'</div>':'')+'</header>';
   if(sg.endTx)rowsH+='<div class="ptx">'+txHTML(sg.endTx)+'</div>';
   h+='<div class="pbars">'+rowsH+'</div><footer class="pf">'+esc(sg.name||"")+' · erstellt am '+ds+'</footer>';
-  var pa=$("printArea");pa.innerHTML=h;pa.classList.toggle("bw",!$("pdfCol").checked);
+  var pa=$("printArea");pa.innerHTML=h;pa.classList.toggle("bw",!$("pdfCol").checked);pa.classList.toggle("multi",!!partList()&&PRN.allParts!==false);
   $("pdfDlg").classList.remove("open");
   var old=document.title;document.title=(sg.name||"Bass").replace(/[\\/:*?"<>|]/g,"_");
   setTimeout(function(){try{window.print();}catch(e){status("Drucken ist hier nicht möglich – bitte in der installierten App oder im Browser öffnen.");}
