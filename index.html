@@ -344,6 +344,19 @@ body.pqon #lenKeys button{min-height:52px;font-size:16px}
 #scan .chips label{font-size:13px;display:flex;align-items:center;gap:4px}
 button.sub{background:color-mix(in srgb,var(--hi) 16%,var(--surface));border-style:dashed;border-color:color-mix(in srgb,var(--hi) 70%,var(--line))}
 button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
+#toolRow{display:contents}
+#padGrip{display:none}
+@media (max-width:999px),(max-aspect-ratio:5/4){
+  #pad .legend,#pad .hint.nk{display:none}
+  #toolRow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);padding-right:24px}
+  #toolRow::-webkit-scrollbar{display:none}
+  #toolRow>.keys{display:flex;gap:4px;flex:none}
+  #toolRow button{flex:none;width:58px}
+  #toolRow #barKeys{border-left:2px solid var(--line);padding-left:6px}
+  #padGrip{display:flex;justify-content:center;align-items:center;height:16px;margin:-4px -8px 0;cursor:ns-resize;touch-action:none;position:sticky;top:-4px;background:inherit;z-index:3}
+  #padGrip span{width:44px;height:5px;border-radius:3px;background:#9DB3AC}
+  #pad.closed #padGrip{display:none}
+}
 .legend{display:flex;gap:10px;font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap}
 .legend i{display:inline-block;width:18px;height:12px;border:1px solid var(--line);border-radius:3px;vertical-align:middle;margin-right:3px}
 .legend i.l-sub{background:color-mix(in srgb,var(--hi) 16%,var(--surface));border-style:dashed;border-color:color-mix(in srgb,var(--hi) 70%,var(--line))}
@@ -803,6 +816,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
 <section id="fb" class="fb" hidden aria-label="Griffbrett"><div id="fbView"></div></section>
 <main id="score"></main>
 <section id="pad" aria-label="Eingabe">
+  <div id="padGrip" title="Ziehen: Eingabe kleiner/größer · Doppeltippen: Standard" aria-hidden="true"><span></span></div>
   <div class="modes">
     <button id="modeTab">🔢 Tab</button>
     <button id="modeNote">♪ Namen</button>
@@ -840,7 +854,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     <button id="autoBtn" class="ic" title="Nach jeder Note automatisch weiterspringen"><i>⏩</i><small>Auto</small></button>
     <button id="chordBtn" class="ic" title="Akkord: mehrere Töne gleichzeitig – Cursor bleibt stehen, vorhandenen Ton antippen = weg"><i>♫</i><small>Akkord</small></button>
   </div>
-  <div class="keys k8 small" id="toolKeys">
+  <div id="toolRow"><div class="keys k8 small" id="toolKeys">
     <button id="semDn" class="ic" title="Note am Cursor einen Halbton tiefer"><i>−½</i><small>Halbton</small></button>
     <button id="semUp" class="ic" title="Note am Cursor einen Halbton höher"><i>+½</i><small>Halbton</small></button>
     <button id="hearBtn" class="ic" title="Noten beim Eingeben und Antippen hören"><i>🔊</i><small>Hören</small></button>
@@ -859,7 +873,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     <button id="barRep" class="sub ic" title="Wiederholungszeichen und Klammern für diesen Takt"><i>📍</i><small>Abschn.</small></button>
     <button id="barSel" class="sub ic" title="Mehrere Takte kopieren, einfügen, löschen, transponieren, umgreifen"><i>▦</i><small>Takte</small></button>
     <button id="undoBtn" class="ic" title="Rückgängig"><i>↶</i><small>Zurück</small></button>
-  </div>
+  </div></div>
   <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span><span id="hlegend" class="hleg"></span></div>
 </section>
 <div id="drawer" class="drawer" aria-hidden="true">
@@ -2313,7 +2327,7 @@ function posMidi(pos){
 }
 function lineRender(ghost){
   var el=$("lineView");if(!el)return;
-  var R=lineRange(),U=LN.U,W=360,H=LN.top*2+(R.hi-R.lo)*U/2*2/2*1;
+  var R=lineRange(),U=LN.U,W=440,H=LN.top*2+(R.hi-R.lo)*U/2*2/2*1;
   H=LN.top*2+(R.hi-R.lo)*U/2;
   function Y(p){return LN.top+(R.hi-p)*U/2}
   var o=['<svg class="staff linepick" viewBox="0 0 '+W+' '+H+'" data-lo="'+R.lo+'" data-hi="'+R.hi+'">'];
@@ -3970,6 +3984,13 @@ $("techL").addEventListener("click",function(e){
   render();save();hearNote(n,cursor.str);
 });
 $("techOk").onclick=function(){$("techDlg").classList.remove("open")};
+(function(){var g=$("padGrip"),pad=$("pad"),dr=null;if(!g)return;
+  function apply(){pad.style.maxHeight=S.padH?S.padH+"px":"";}
+  apply();
+  g.addEventListener("pointerdown",function(e){dr={y:e.clientY,h:pad.getBoundingClientRect().height};g.setPointerCapture(e.pointerId);e.preventDefault();});
+  g.addEventListener("pointermove",function(e){if(!dr)return;var h=Math.round(dr.h+(dr.y-e.clientY));h=Math.max(140,Math.min(Math.round(innerHeight*0.8),h));S.padH=h;apply();});
+  g.addEventListener("pointerup",function(){if(!dr)return;dr=null;save();});
+  g.addEventListener("dblclick",function(){delete S.padH;apply();save();});})();
 function dynFill(){var bar=song().bars[cursor.bar],cur=bar.dy&&bar.dy[cursor.step];
   $("dynChips").innerHTML=Object.keys(DYL).map(function(k){return '<button data-dy="'+k+'" class="'+(cur===k?'on':'')+'" style="font:italic 700 15px Georgia,serif">'+DYL[k]+'</button>'}).join("");}
 $("dynChips").addEventListener("click",function(e){var x=e.target.closest("[data-dy]");if(!x)return;var bar=song().bars[cursor.bar],k=x.dataset.dy;bar.dy=bar.dy||{};
