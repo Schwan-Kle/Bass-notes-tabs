@@ -1251,7 +1251,7 @@ function staffSVG(b,NI){
       for(k=i;k<=j;k++){L[k].up=up;L[k].end=BY(X(L[k].t)+sx);L[k].beamed=1;}
       var xa=x0,xb=x1,bs0=Math.floor(L[i].t/beat)*beat,TH=3.1;
       if(L[i].t>bs0&&!(bar.tb&&beat===4&&bar.tb[bs0/4]))xa=X(bs0)+sx;
-      var beamP=function(u,v,off){u-=0.65;v+=0.65;var a1=BY(u)+(up?off:-off),b1=BY(v)+(up?off:-off),t2=up?TH:-TH;
+      var beamP=function(u,v,off){u-=0.37;v+=0.37;var a1=BY(u)+(up?off:-off),b1=BY(v)+(up?off:-off),t2=up?TH:-TH;
         return '<path class="bm" d="M'+r(u)+' '+r(a1)+'L'+r(v)+' '+r(b1)+'L'+r(v)+' '+r(b1+t2)+'L'+r(u)+' '+r(a1+t2)+'Z"/>';};
       o.push(beamP(xa,xb,0));
       for(k=i;k<=j;k++){L[k].bF=(k===i&&xa===x0);L[k].bL=(k===j);L[k].mid=!L[k].bF&&!L[k].bL;}
