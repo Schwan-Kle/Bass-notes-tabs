@@ -553,6 +553,28 @@ body.dragging{user-select:none;-webkit-user-select:none}
 body.piano #fretKeys,body.piano #modeFb,body.piano #altNote,body.piano #posBtn,body.piano .bassonly,body.piano #recBtn,body.piano #tunerBtn,body.piano #fbBtn,body.piano #techBtn,body.piano .viewrow{display:none!important}
 .gstaff{border-left:2.5px solid #1A1A1A;border-radius:6px 0 0 6px;padding-left:2px}
 .gstaff svg+svg{margin-top:-14px}
+/* Einstellungen in Reitern */
+.settabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:2px 0 10px;position:sticky;top:0;background:var(--surface);z-index:2;padding:4px 0}
+.settabs button{min-height:46px;font-weight:800;font-size:14px;border-width:2px;background:#fff}
+.settabs button[data-sp="song"]{--ac:var(--a-in)}.settabs button[data-sp="play"]{--ac:var(--a-play)}.settabs button[data-sp="practice"]{--ac:var(--a-train)}
+.settabs button{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 45%,#fff)}
+.settabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.setbox .opts .row[data-panel]{display:none}
+.setbox .opts .row[data-panel].show{display:flex}
+.setbox .opts .row h2{font-size:15px;margin-top:6px}
+.setbox .opts label{min-height:34px}
+/* Tablet quer und PC: Eingabe rechts daneben */
+@media (min-width:1000px) and (min-aspect-ratio:5/4){
+  body{display:grid;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:auto auto auto auto 1fr}
+  body>header{grid-column:1/-1;grid-row:1}
+  #status{grid-column:1;grid-row:2}
+  #pqBar{grid-column:1;grid-row:3}
+  #ref,#fb{grid-column:1;grid-row:4}
+  #score{grid-column:1;grid-row:5;min-height:0}
+  #pad{grid-column:2;grid-row:2/6;max-height:none;height:auto;border-top:none;border-left:3px solid var(--a-in);box-shadow:-6px 0 14px rgba(0,40,30,.10);overflow-y:auto;min-height:0}
+  #pad .keys button{min-height:40px}
+}
+@media (min-width:1500px) and (min-aspect-ratio:5/4){body{grid-template-columns:minmax(0,1fr) 520px}}
 </style>
 </head>
 <body>
@@ -1718,6 +1740,21 @@ $("modeTab").onclick=function(){setMode("tab")};
 $("modeNote").onclick=function(){setMode("note")};
 $("modeFb").onclick=function(){setMode("fb")};
 $("modeLine").onclick=function(){setMode("line")};
+/* Einstellungen: Reiter */
+(function(){
+  var box=document.querySelector("#setDlg .opts");if(!box)return;
+  var map={"Dieses Stück":"song","Tempo":"play","Metronom":"play","Schleife":"practice","Tempo-Trainer":"practice"};
+  var rows=box.querySelectorAll(".row");
+  Array.prototype.forEach.call(rows,function(r){var h=r.querySelector("h2");if(!h)return;var k=map[h.textContent.trim()];if(k)r.setAttribute("data-panel",k);if(k==="song")box.insertBefore(r,box.firstChild);});
+  var bar=document.createElement("div");bar.className="settabs";bar.setAttribute("role","tablist");
+  bar.innerHTML='<button data-sp="song" role="tab">🎵 Stück</button><button data-sp="play" role="tab">▶ Abspielen</button><button data-sp="practice" role="tab">🔁 Üben</button>';
+  box.insertBefore(bar,box.firstChild);
+  function show(k){S.setTab=k;Array.prototype.forEach.call(bar.children,function(b){b.classList.toggle("on",b.dataset.sp===k)});
+    Array.prototype.forEach.call(box.querySelectorAll(".row[data-panel]"),function(r){r.classList.toggle("show",r.dataset.panel===k)});}
+  bar.addEventListener("click",function(e){var b=e.target.closest("[data-sp]");if(b)show(b.dataset.sp);});
+  show(S.setTab||"song");
+})();
+
 /* Klavier: Tastatur */
 var PK={lo:48};
 function pkRender(){
