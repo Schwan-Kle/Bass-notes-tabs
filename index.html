@@ -445,6 +445,12 @@ button{border-width:1.5px}
 #rsExt,#rsPull,#rsPush{color:var(--a-edit);border-color:var(--a-edit)}
 #rsHere{color:var(--a-in);border-color:var(--a-in)}
 #pad.m-fb #restKeys{display:grid}
+.cntrow{display:grid;align-items:center;margin:0 0 2px;font-variant-numeric:tabular-nums;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.cntrow span{text-align:center;font-size:11px;color:#9AA8A3;line-height:20px;overflow:hidden}
+.cntrow span.m{color:#5E6B67;font-weight:700}
+.cntrow span.on{color:#1A1A1A;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--a-play) 12%,#fff);border-radius:4px}
+.cntrow span.rs{color:#5E6B67;text-decoration:underline;font-style:italic}
+.cntrow .cl{font-size:11px}
 </style>
 </head>
 <body>
@@ -464,6 +470,7 @@ button{border-width:1.5px}
 <div id="moreMenu" class="menuov" aria-hidden="true">
   <div class="mpanel" role="menu" aria-label="Werkzeuge">
     <div class="viewrow"><span>Ansicht</span><button data-view="both">Noten + Tab</button><button data-view="notes">Noten</button><button data-view="tab">Tab</button></div>
+    <div class="viewrow"><span>Zusatz</span><button id="cntBtn" title="Zählzeiten 1 e + e unter den Noten anzeigen">🔢 Zählzeiten</button></div>
     <button id="recBtn" class="a-play" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
     <button id="tunerBtn" class="a-play" role="menuitem">🎯 Stimmgerät</button>
     <button id="fbBtn" class="a-play" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
@@ -877,6 +884,19 @@ function cleanRests(bar){
   for(var j=0;j<keys.length-1;j++){var a2=keys[j];if(a2+nr[a2]>keys[j+1])nr[a2]=keys[j+1]-a2;}
   if(keys.length)bar.r=nr;else delete bar.r;
 }
+function countLabel(t,sg,bar){
+  if(sg.beat===4){if(bar.tb&&bar.tb[Math.floor(t/4)])return [String(Math.floor(t/4)+1),"tri","ol",""][t%4];return [String(Math.floor(t/4)+1),"e","+","e"][t%4];}
+  if(sg.beat===6||sg.beat===2)return t%2===0?String(t/2+1):"+";
+  return String(t+1);
+}
+function countRow(b,st,sg){
+  var bar=song().bars[b],on={},k;
+  for(k in bar.n)on[+k.split("_")[1]]=1;
+  if(bar.r)for(k in bar.r)on[+k]=2;
+  var h='<div class="cntrow" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)"><span class="cl" title="Zählzeiten">🔢</span>';
+  for(var t=0;t<st;t++){var l=countLabel(t,sg,bar),main=/^\d/.test(l);h+='<span class="'+(main?"m ":"")+(on[t]===1?"on":on[t]===2?"rs":"")+'">'+l+'</span>';}
+  return h+'</div>';
+}
 function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg=sig(),st=sg.steps,ns=nstr(),bars=song().bars,sus={};
   for(var b=0;b<bars.length;b++){
@@ -895,7 +915,7 @@ function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lin
   for(b=0;b<bars.length;b++){
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
     var vw=view();
-    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+(S.count?countRow(b,st,sg):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
     for(s=0;s<ns;s++){
       h.push('<div class="sl s'+SNAME[ns][s]+'">'+SNAME[ns][s]+'</div>');
       for(t=0;t<st;t++){
@@ -1812,9 +1832,12 @@ function loadSong(){
 }
 $("keySel").onchange=function(){song().key=+this.value;render();save()};
 $("accMode").onchange=function(){song().acc=this.value;render();save()};
+function cntState(){$("cntBtn").classList.toggle("on",!!S.count);}
 function setView(v){S.view=v;$("viewSel").value=view();Array.prototype.forEach.call(document.querySelectorAll("[data-view]"),function(b){b.classList.toggle("on",b.dataset.view===view())});render();save();}
 $("viewSel").onchange=function(){setView(this.value)};
 document.addEventListener("click",function(e){var b=e.target.closest("[data-view]");if(b)setView(b.dataset.view);});
+$("cntBtn").onclick=function(){S.count=!S.count;cntState();render();save();status(S.count?"Zählzeiten an: fett = hier beginnt eine Note, grau unterstrichen = Pause":"Zählzeiten aus");};
+cntState();
 $("sig").onchange=function(){if(P)stop();song().sig=this.value;cursor.step=0;render();save()};
 $("strings").onchange=function(){if(P)stop();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
 
@@ -2603,6 +2626,7 @@ var HELP=[
 {t:"e",h:"So funktioniert die Eingabe",b:"<p>Jedes Kästchen in der Tabulatur ist ein <b>Sechzehntel</b> auf einer Saite. Tippe ein Kästchen an – das gelbe Feld ist der <b>Cursor</b> (Takt, Saite, Zeitpunkt). Dann zuerst die <b>Notenlänge</b> wählen und danach den <b>Bund</b> (Tab-Eingabe) oder den <b>Ton</b> (Noten-Eingabe).</p><p>Mit <b>Auto→</b> springt der Cursor nach jeder Note um ihre Länge weiter, so kannst du eine Linie einfach durchtippen. Die Statuszeile unter dem Kopf zeigt immer Takt, Schlag, Saite, Bund und Tonname am Cursor.</p>",k:"cursor auto statuszeile anfang"},
 {t:"e",h:"Notenlängen",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt. In einem Triolen-Schlag gilt: 1/8 oder kürzer = eine Triolenachtel, 1/4 = zwei.</p>",k:"länge dauer punktiert"},
 {t:"e",h:"Tab-Eingabe (Bund-Zahlen)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
+{t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
@@ -2662,7 +2686,7 @@ var HGROUPS={
  e:[["Erste Schritte",["Schnellstart","So funktioniert","Kopfleiste","Knopf-Farben","Ansicht","Tonart, Taktart"]],
     ["Noten eingeben",["Notenlängen","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
-    ["Üben und Abspielen",["Metronom, Schleife","Einspielen","Notenlese-Training"]],
+    ["Üben und Abspielen",["Metronom, Schleife","Zählzeiten","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
