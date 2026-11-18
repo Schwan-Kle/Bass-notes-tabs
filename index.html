@@ -429,6 +429,11 @@ button{border-width:1.5px}
 #lineView svg{display:block;width:100%;height:auto}
 .linepick .tG{fill:var(--sG)}.linepick .tD{fill:var(--sD)}.linepick .tA{fill:var(--sA)}.linepick .tE{fill:var(--sE)}.linepick .tH{fill:var(--sH)}
 .modes{grid-template-columns:repeat(5,1fr)!important}.modes button{font-size:13px;padding:0 2px}
+#lineInfo{min-height:40px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--muted);border-radius:8px;margin-bottom:3px;padding:2px 8px;text-align:center}
+#lineInfo.on{font-size:17px;font-weight:700;color:#fff;background:var(--a-in)}
+#lineInfo.on b{font-size:28px}
+#lineInfo.sG{background:var(--sG)}#lineInfo.sD{background:var(--sD)}#lineInfo.sA{background:var(--sA)}#lineInfo.sE{background:var(--sE)}#lineInfo.sH{background:var(--sH)}
+#lineInfo .bad{color:#fff;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -549,7 +554,7 @@ button{border-width:1.5px}
   <div class="keys k7 small" id="lenKeys"></div>
   <div class="keys k9" id="fretKeys"></div>
   <div id="padFb"><div id="padFbView"></div><div class="hint">Wischen = weitere Bünde · Antippen = Note setzen</div></div>
-  <div id="padLine"><div id="lineView"></div><div class="hint">Finger auf die Linie/den Zwischenraum legen, hoch/runter schieben, loslassen = Note setzen</div></div>
+  <div id="padLine"><div id="lineInfo" aria-live="polite">Rechts auf die Zeile tippen und schieben – loslassen setzt die Note</div><div id="lineView"></div></div>
   <div class="keys k7 nk" id="letterKeys"></div>
   <div class="keys k8 small nk" id="noteMods">
     <button data-acc="-1" title="Nächste Note erniedrigen">♭</button>
@@ -1335,19 +1340,21 @@ function lineRender(ghost){
   var yF=Y(6),sc=1.9;
   o.push('<g transform="translate(4 '+yF+') scale('+sc+') translate(0 '+(-yF)+')"><circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/></g>');
   var kn=keyN();for(var ki=0;ki<Math.abs(kn);ki++){var kp=(kn<0?FLAT_POS:SHARP_POS)[ki];o.push('<g transform="translate('+(44+ki*9)+' '+Y(kp)+') scale(1.6) translate('+(-(44+ki*9))+' '+(-Y(kp))+')">'+accSVG(kn<0?-1:1,44+ki*9,Y(kp))+'</g>');}
+  var kx=Math.abs(kn)?44+Math.abs(kn)*9+6:46,gx=kx+34,zx=W*0.55;
+  o.push('<rect x="'+zx+'" y="2" width="'+(W-zx-2)+'" height="'+(H-4)+'" rx="8" fill="#004C3A" opacity=".06"/>');
+  o.push('<text x="'+((zx+W)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="11" fill="#45524D" font-weight="700">☝ hier tippen &amp; schieben</text>');
+  var info=$("lineInfo");
   if(ghost){
     var gy=Y(ghost.pos),pm=posMidi(ghost.pos),pp=bestPos(pm.m);
-    o.push('<rect x="0" y="'+(gy-U/2+1)+'" width="'+W+'" height="'+(U-2)+'" fill="#F6A924" opacity=".28"/>');
-    if(ghost.pos<0)for(var lp=-2;lp>=ghost.pos;lp-=2)o.push('<line class="st" stroke-width="1.6" x1="188" x2="222" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
-    if(ghost.pos>8)for(lp=10;lp<=ghost.pos;lp+=2)o.push('<line class="st" stroke-width="1.6" x1="188" x2="222" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
+    o.push('<rect x="0" y="'+(gy-U/2+1)+'" width="'+W+'" height="'+(U-2)+'" fill="#F6A924" opacity=".3"/>');
+    if(ghost.pos<0)for(var lp=-2;lp>=ghost.pos;lp-=2)o.push('<line class="st" stroke-width="1.6" x1="'+(gx-17)+'" x2="'+(gx+17)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
+    if(ghost.pos>8)for(lp=10;lp<=ghost.pos;lp+=2)o.push('<line class="st" stroke-width="1.6" x1="'+(gx-17)+'" x2="'+(gx+17)+'" y1="'+Y(lp)+'" y2="'+Y(lp)+'"/>');
     var sn=pp?SNAME[nstr()][pp.s]:"";
-    o.push('<ellipse class="fl'+(sn?" n"+sn:"")+'" cx="205" cy="'+gy+'" rx="9" ry="6.5" transform="rotate(-20 205 '+gy+')"/>');
-    if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate(184 '+gy+') scale(1.5) translate(-184 '+(-gy)+')">'+accSVG(pm.a,184,gy)+'</g>');
+    o.push('<ellipse class="fl'+(sn?" n"+sn:"")+'" cx="'+gx+'" cy="'+gy+'" rx="9" ry="6.5" transform="rotate(-20 '+gx+' '+gy+')"/>');
+    if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate('+(gx-21)+' '+gy+') scale(1.5) translate('+(-(gx-21))+' '+(-gy)+')">'+accSVG(pm.a,gx-21,gy)+'</g>');
     var lab=spName({m:pm.m,L:pm.L,a:pm.a})+spOct({m:pm.m,L:pm.L,a:pm.a});
-    o.push('<text x="'+(W-6)+'" y="'+(gy+8)+'" text-anchor="end" font-size="24" font-weight="800" class="'+(sn?"t"+sn:"")+'">'+lab+'</text>');
-    if(pp)o.push('<text x="'+(W-6)+'" y="'+(gy+22)+'" text-anchor="end" font-size="11" font-weight="700" fill="#45524D">'+sn+'-Saite '+pp.f+'</text>');
-    else o.push('<text x="'+(W-6)+'" y="'+(gy+22)+'" text-anchor="end" font-size="11" fill="#B91C1C">nicht greifbar</text>');
-  }
+    if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – Okt ↑/↓</span>');}
+  }else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – loslassen setzt die Note";}
   o.push('</svg>');el.innerHTML=o.join("");
 }
 (function(){
@@ -2482,7 +2489,7 @@ var HELP=[
 {t:"e",h:"So funktioniert die Eingabe",b:"<p>Jedes Kästchen in der Tabulatur ist ein <b>Sechzehntel</b> auf einer Saite. Tippe ein Kästchen an – das gelbe Feld ist der <b>Cursor</b> (Takt, Saite, Zeitpunkt). Dann zuerst die <b>Notenlänge</b> wählen und danach den <b>Bund</b> (Tab-Eingabe) oder den <b>Ton</b> (Noten-Eingabe).</p><p>Mit <b>Auto→</b> springt der Cursor nach jeder Note um ihre Länge weiter, so kannst du eine Linie einfach durchtippen. Die Statuszeile unter dem Kopf zeigt immer Takt, Schlag, Saite, Bund und Tonname am Cursor.</p>",k:"cursor auto statuszeile anfang"},
 {t:"e",h:"Notenlängen",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt. In einem Triolen-Schlag gilt: 1/8 oder kürzer = eine Triolenachtel, 1/4 = zwei.</p>",k:"länge dauer punktiert"},
 {t:"e",h:"Tab-Eingabe (Bund-Zahlen)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
-{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Gelber Balken und großer Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
+{t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Pause, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>Pause</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
 {t:"e",h:"Diese Note / Greifen ab Bund",b:"<p><b>Diese Note</b> erscheint, wenn der Cursor auf einer Note steht: alle Stellen, an denen der Ton spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Greifen ab Bund</b> findest du unter <b>Takte…</b>: verteilt einen oder mehrere Takte so, dass sie möglichst in dieser Lage (etwa 5 Bünde breit) liegen.</p>",k:"lage saite umlegen fingersatz"},
