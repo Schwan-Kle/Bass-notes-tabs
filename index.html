@@ -73,7 +73,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 #status{font-size:12px;color:var(--muted);padding:3px 10px;background:var(--shade);font-variant-numeric:tabular-nums;min-height:22px;line-height:1.35}
 #score{flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
 .bar{flex:1 1 330px;max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 6px 8px}
-.bar.inloop{border-color:var(--second);border-width:2px;padding:3px 5px 7px}
+.bar.inloop{border-color:#E07B00;border-width:2px;padding:3px 5px 7px;background:color-mix(in srgb,#F6A924 6%,var(--surface))}
 .bar .no{font-size:12px;color:var(--muted);font-weight:700}
 .grid{display:grid;position:relative}
 .sl{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;height:26px}
@@ -627,6 +627,22 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
 .formseq button.fs{border:2px solid var(--a-train);color:var(--a-train);font-weight:800}.formseq button.bad{border-color:var(--a-del);color:var(--a-del)}
 .farr{align-self:center;color:var(--a-train);font-weight:900}
 .songinfo .formchip{border-color:var(--a-train);color:var(--a-train);font-weight:800}
+svg.ico{width:1.05em;height:1.05em;vertical-align:-0.15em;display:inline-block}
+@media (max-width:430px){header #bpmDown,header #bpmUp{min-width:30px!important;width:30px!important;padding:0!important}header #loopQ,header #moreBtn,header #menuBtn{min-width:36px!important;width:36px!important;padding:0!important}header #play{min-width:42px!important;width:42px!important}header .bpmv{min-width:40px!important;padding:0 2px!important}}
+/* Schleife mit Klammern */
+.bar{position:relative}
+#loopQ{min-width:44px;font-size:19px;padding:0;color:var(--a-play)}
+#loopQ.on{background:#E07B00;border-color:#E07B00;color:#fff}
+.lph{position:absolute;top:-3px;bottom:-3px;width:26px;z-index:4;touch-action:none;cursor:ew-resize}
+.lpa{left:-13px}.lpb{right:-13px}
+.lph::before{content:"";position:absolute;top:0;bottom:0;width:8px;border:4px solid #E07B00}
+.lpa::before{left:9px;border-right:none;border-radius:5px 0 0 5px}
+.lpb::before{right:9px;border-left:none;border-radius:0 5px 5px 0}
+.lph::after{content:"";position:absolute;top:50%;left:50%;width:24px;height:34px;margin:-17px 0 0 -12px;border-radius:12px;background:#E07B00;box-shadow:0 1px 4px rgba(0,0,0,.35);
+  background-image:linear-gradient(#fff,#fff),linear-gradient(#fff,#fff),linear-gradient(#fff,#fff);background-size:12px 2px;background-repeat:no-repeat;background-position:center 11px,center 16px,center 21px}
+.lph.drag::after{transform:scale(1.15)}
+body.lpdrag,body.lpdrag *{user-select:none!important;-webkit-user-select:none!important}
+@media print{.lph{display:none!important}}
 /* Spuren */
 .partbar{flex:1 1 100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:-10px;z-index:6;background:var(--bg);padding:6px 0 4px;margin:-4px 0 0}
 @media (max-width:699px){.partbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.partbar>*{flex-shrink:0}.pch button[data-pi]{padding:0 8px}}
@@ -674,6 +690,7 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
       <button id="bpmOut" class="bpmv" title="Tempo und Einstellungen"></button>
       <button id="bpmUp" aria-label="Tempo plus 5">+</button>
     </div>
+    <button id="loopQ" aria-label="Schleife an/aus" title="Schleife: Klammern an den Takten ziehen">🔁</button>
     <button id="play" class="primary" aria-label="Start oder Stopp">▶</button>
     <button id="moreBtn" aria-label="Werkzeuge und Einstellungen" aria-expanded="false">⋯</button>
   </div>
@@ -733,7 +750,7 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
       <div class="row" id="partRow">
         <h2>Spuren</h2>
         <div id="partSet" class="partset"></div>
-        <div class="padds"><span>＋ Spur:</span><button data-addp="bass">🎸 Bass</button><button data-addp="guitar">🎸 Gitarre</button><button data-addp="piano">🎹 Klavier</button><button data-addp="voice">🎤 Gesang</button><button data-addp="drums">🥁 Schlagzeug</button></div>
+        <div class="padds"><span>＋ Spur:</span><button data-addp="bass"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="4.6" cy="7.4" r="2.3" fill="currentColor"/><path d="M3.2 6.6C3.4 3.4 7 2.4 9.6 3.2c3 .9 3.7 4.4 2.6 7.6-1.3 3.9-5 6.3-9 7.4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><circle cx="15.6" cy="5.4" r="1.45" fill="currentColor"/><circle cx="15.6" cy="10.2" r="1.45" fill="currentColor"/></svg> Bass</button><button data-addp="guitar">🎸 Gitarre</button><button data-addp="piano">🎹 Klavier</button><button data-addp="voice">🎤 Gesang</button><button data-addp="drums">🥁 Schlagzeug</button></div>
       </div>
       <div class="row">
         <h2>Dieses Stück</h2>
@@ -1189,7 +1206,7 @@ function markKeys(){
 /* ---------- Spuren (mehrere Instrumente) ---------- */
 var PART={noCh:false},OTHC={k:null,v:null};
 var PCOL=["#1565C0","#00838F","#7B1FA2","#E65100","#2E7D32","#AD1457"];
-var INAME={bass:"Bass",guitar:"Gitarre",piano:"Klavier",voice:"Gesang",drums:"Schlagzeug"},IICON={bass:"🎸",guitar:"🎸",piano:"🎹",voice:"🎤",drums:"🥁"};
+var INAME={bass:"Bass",guitar:"Gitarre",piano:"Klavier",voice:"Gesang",drums:"Schlagzeug"},IICON={bass:'<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="4.6" cy="7.4" r="2.3" fill="currentColor"/><path d="M3.2 6.6C3.4 3.4 7 2.4 9.6 3.2c3 .9 3.7 4.4 2.6 7.6-1.3 3.9-5 6.3-9 7.4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/><circle cx="15.6" cy="5.4" r="1.45" fill="currentColor"/><circle cx="15.6" cy="10.2" r="1.45" fill="currentColor"/></svg>',guitar:"🎸",piano:"🎹",voice:"🎤",drums:"🥁"};
 OPEN[7]=[49,51,46,42,38,45,36];SNAME[7]=["Cr","Rd","HO","HH","SD","Tm","BD"];var DRN=["Becken","Ride","Hi-Hat offen","Hi-Hat","Snare","Tom","Bassdrum"];
 function partList(){var sg=song();return sg.parts&&sg.parts.length>1?sg.parts:null}
 function actPart(){return song().pa||0}
@@ -1351,7 +1368,7 @@ function barBody(b,NI,sus){
   h.push('</div>'+((vw==="tab"||(PRN.on&&vw!=="notes"))&&!isDrums()?tabRhythmSVG(b):'')+(typeof lyricRow==="function"?lyricRow(b):''));
   return h.join("");
 }
-function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
+function render(){song().bars.forEach(cleanRests);if(typeof loopUI==="function")loopUI();if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg,st,bars=song().bars,b;
   var sus=computeSus(),NI=noteInfo(),PL=partList(),ap=actPart(),all=PL&&showAllParts(),oth=[],gtx=all&&PL.some(function(p,i){return partInst(i)==="guitar"});
   var sigK=all?JSON.stringify([song().parts,ap,S.view,S.count,song().key,song().acc,song().sig,PRN.on,PRN.starts,PRN.allParts,bars.map(function(x){return [x.p,x.sig,x.ch,x.tb,x.rs,x.re,x.v,x.rt]})]):"";
@@ -1366,7 +1383,7 @@ function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lin
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
     var vw=view();
     if(bars[b].tx)h.push('<div class="txblk" data-txb="'+b+'" title="Text bearbeiten">'+txHTML(bars[b].tx)+'</div>');
-    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+(b===0?' b1':'')+'"><div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>');
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+(b===0?' b1':'')+'" data-bi="'+b+'">'+(inl&&!PRN.on&&b===loopA-1?'<div class="lph lpa" data-lph="a" title="Schleifen-Anfang: ziehen"></div>':'')+(inl&&!PRN.on&&b===loopB-1?'<div class="lph lpb" data-lph="b" title="Schleifen-Ende: ziehen"></div>':'')+'<div class="no"><span class="bn">'+(b+1)+'</span>'+(!PRN.on&&barOverlap(b)?'<button class="ovl" data-ovl="'+b+'" title="Noten überlappen sich – folgende Noten nachrücken">⚠ Überlappung – reparieren</button>':'')+(bars[b].sig?'<span class="tsl">'+esc(bars[b].sig)+'</span>':'')+(bars[b].bpm?'<span class="tsl">'+bars[b].bpm+' bpm</span>':'')+(bars[b].sec?'<span class="sec">'+esc(bars[b].sec)+'</span>':'')+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>');
     if(!PL){h.push(barBody(b,NI,sus)+'</div>');continue;}
     h.push('<div class="pgrp">');
     for(var pi=0;pi<PL.length;pi++){var col=PCOL[pi%PCOL.length];
@@ -2651,10 +2668,30 @@ function clampLoop(){
   loopA=Math.max(1,Math.min(loopA||1,nb));loopB=Math.max(loopA,Math.min(loopB||nb,nb));
   $("loopA").value=loopA;$("loopB").value=loopB;$("loopA").max=nb;$("loopB").max=nb;
 }
-$("loopOn").onchange=function(){loopOn=this.checked;render()};
+$("loopOn").onchange=function(){loopOn=this.checked;loopUI();render()};
+function loopUI(){var b=$("loopQ");if(b){b.classList.toggle("on",loopOn);b.setAttribute("aria-pressed",loopOn);}}
+function loopChanged(){clampLoop();$("loopOn").checked=loopOn;loopUI();render();if(P&&!P.rec){stop();play();}}
+$("loopQ").onclick=function(){
+  if(loopOn){loopOn=false;loopChanged();status("Schleife aus.");return;}
+  loopOn=true;loopA=loopB=cursor.bar+1;loopChanged();
+  status("🔁 Schleife Takt "+loopA+". Die Klammern an den Takt-Rändern ziehen, um mehr Takte einzuschließen.");
+};
+var LPD=null;
+$("score").addEventListener("pointerdown",function(e){var hd=e.target.closest(".lph");if(!hd)return;e.preventDefault();e.stopPropagation();
+  LPD={w:hd.dataset.lph,id:e.pointerId,last:null};hd.classList.add("drag");document.body.classList.add("lpdrag");},true);
+window.addEventListener("pointermove",function(e){if(!LPD||e.pointerId!==LPD.id)return;e.preventDefault();
+  var sc=$("score"),r=sc.getBoundingClientRect();if(e.clientY<r.top+40)sc.scrollTop-=14;else if(e.clientY>r.bottom-40)sc.scrollTop+=14;
+  var el=document.elementFromPoint(e.clientX,e.clientY),br=el&&el.closest(".bar[data-bi]");if(!br||!br.closest("#score"))return;
+  var i=+br.dataset.bi+1;if(i===LPD.last)return;LPD.last=i;
+  if(LPD.w==="a"){loopA=Math.min(i,loopB);}else{loopB=Math.max(i,loopA);}
+  clampLoop();render();var hd=$("score").querySelector('.lph[data-lph="'+LPD.w+'"]');if(hd)hd.classList.add("drag");
+  status("🔁 Schleife Takt "+loopA+(loopB>loopA?"–"+loopB:""));},{passive:false});
+function lpEnd(e){if(!LPD)return;LPD=null;document.body.classList.remove("lpdrag");loopChanged();status("🔁 Schleife Takt "+loopA+(loopB>loopA?"–"+loopB:"")+" – ▶ spielt sie in Dauerschleife.");}
+window.addEventListener("pointerup",lpEnd);window.addEventListener("pointercancel",lpEnd);
+$("score").addEventListener("click",function(e){if(e.target.closest(".lph")){e.stopPropagation();e.preventDefault();}},true);
 $("loopA").onchange=function(){loopA=+this.value;clampLoop();render()};
 $("loopB").onchange=function(){loopB=+this.value;if(loopB<loopA)loopA=Math.max(1,loopB);clampLoop();render()};
-$("loopCur").onclick=function(){loopA=loopB=cursor.bar+1;loopOn=true;$("loopOn").checked=true;clampLoop();render()};
+$("loopCur").onclick=function(){loopA=loopB=cursor.bar+1;loopOn=true;$("loopOn").checked=true;clampLoop();loopUI();render()};
 $("loopAll").onclick=function(){loopA=1;loopB=song().bars.length;clampLoop();render()};
 
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -3563,6 +3600,7 @@ var HELP=[
 {t:"e",h:"Ansicht: Noten, Tab oder beides",b:"<p>Oben im Menü <b>⋯</b> (und in den Einstellungen) wählst du <b>Noten + Tab</b>, <b>nur Noten</b> oder <b>nur Tab</b>. In der Ansicht „nur Noten“ tippst du in die Notenzeile, um den Cursor zu setzen (gelber Streifen); Saite und Bund legt die App selbst fest und du kannst sie später in der Tab-Ansicht anpassen.</p>",k:"ansicht noten tab beides ausblenden"},
 {t:"e",h:"Knopf-Farben in der Eingabe",b:"<ul><li><b>Weiß</b>: wirkt sofort (z. B. Bund, Länge, −½, − Takt).</li><li><b>Dunkelgrün</b>: Schalter ist an (z. B. 🔊, Rhythmus, Auto→, gewählte Länge).</li><li><b style='color:#B07400'>Gelblich, gestrichelt, ▸</b>: öffnet erst eine Auswahl (Technik ▸, Akkord ▸, 📍 Abschn. ▸, Takte ▸).</li><li><b style='color:var(--warn)'>Orange Schrift</b>: entfernt etwas (− Takt).</li></ul>",k:"farbe knopf legende untermenü"},
 {t:"e",h:"Kopfleiste und Menü ⋯",b:"<ul><li><b>☰</b> Meine Stücke: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup. Auch der Stückname daneben öffnet die Liste.</li><li><b>− 80 +</b> Tempo in bpm; Antippen der Zahl öffnet die Einstellungen mit Tempo-Regler.</li><li><b>▶ / ■</b> Start und Stopp.</li><li><b>⋯</b> Menü mit 🎙 Einspielen, 🎯 Stimmgerät, 🎸 Griffbrett anzeigen, 📷 Vorlage, ⚙ Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück) und ❓ Hilfe.</li><li><b>▾ weg</b> rechts über der Eingabe blendet die Eingabe aus, <b>▴ Tastatur</b> wieder ein.</li></ul>",k:"menü werkzeuge kopf einstellungen tempo"},
+{t:"e",h:"Schleife mit Klammern (Üben)",b:"<p><b>🔁</b> oben neben ▶ schaltet die Schleife an – zuerst nur für den Takt am Cursor (orange umrandet).</p><ul><li>An den Takt-Rändern sitzen zwei orange <b>Klammern mit Griff</b>. Griff festhalten und auf einen anderen Takt ziehen: links = Anfang, rechts = Ende. Am Bildrand scrollt die Ansicht mit.</li><li>▶ spielt die Takte in Dauerschleife; läuft die Wiedergabe schon, startet sie mit der neuen Schleife neu.</li><li>🔁 nochmal = Schleife aus. Zahlen eintippen geht weiterhin unter ⚙ → 🔁 Üben.</li></ul>"},
 {t:"e",h:"Metronom, Schleife, Tempo-Trainer",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
