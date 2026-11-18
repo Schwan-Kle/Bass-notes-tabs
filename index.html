@@ -197,8 +197,13 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .htabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 #hSearch{background:var(--bg);border:1px solid var(--line);border-radius:6px;min-height:36px;padding:0 8px}
 #hList{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;padding-bottom:20px;position:relative}
-.hidx{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px;flex-shrink:0}
-.hidx button{white-space:nowrap;min-height:30px;font-size:12px;padding:0 10px;border-radius:15px;color:var(--main)}
+.hmain{display:flex;gap:8px;flex:1;min-height:0}
+.hidx{display:flex;flex-direction:column;gap:2px;width:106px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--line);padding:0 6px 20px 0}
+.hidx button{display:block;width:100%;text-align:left;min-height:34px;font-size:12px;line-height:1.25;padding:4px 6px;border:0;border-radius:6px;background:none;color:var(--main);font-weight:700}
+.hidx button.ht{font-weight:400;color:var(--text);padding-left:12px;min-height:28px;display:none}
+.hidx button.ht.show{display:block}
+.hidx button.on{background:var(--main);color:#fff}.hidx button.ht.on{background:var(--shade);color:var(--main);font-weight:700}
+@media(min-width:700px){.hidx{width:190px}.hidx button{font-size:13px}}
 .hidx .lbl{font-size:12px;color:var(--muted)}
 .hgrp{margin:10px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--accent)}
 .hgrp:first-child{margin-top:0}
@@ -355,6 +360,10 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 .hnav{display:flex;justify-content:space-between;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .hnav button{max-width:48%;min-height:44px;font-size:13px}
 #help.art .htabs,#help.art #hSearch,#help.art #hIdx{display:none}
+.hsec{border-bottom:1px solid var(--line);padding-bottom:6px}
+.hsh{margin:8px 0 0;font-size:16px;color:var(--main)}.hsh small{font-weight:400;color:var(--accent);font-size:12px}
+.hsec .hbody{padding:2px 0 4px}
+#hList .hgrp{margin-top:18px;padding-top:6px;border-top:2px solid var(--main)}#hList .hgrp:first-child{margin-top:0;border-top:0}
 </style>
 </head>
 <body>
@@ -543,8 +552,8 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
     <div class="dhead"><h2 id="hTitle">Hilfe &amp; Wissen</h2><button id="hClose" aria-label="Hilfe schließen">✕</button></div>
     <div class="htabs"><button id="htab-e">Eingabe</button><button id="htab-z">Musikzeichen</button><button id="htab-w">Wiki</button></div>
     <input type="search" id="hSearch" placeholder="Suchen, z. B. Terz, Pause, Takt löschen" aria-label="Hilfe durchsuchen">
-    <div id="hIdx" class="hidx"></div>
-    <div id="hList"></div>
+    <div class="hmain"><nav id="hIdx" class="hidx" aria-label="Kapitel"></nav>
+    <div id="hList"></div></div>
   </div>
 </div>
 <div id="scan" class="helpov" role="dialog" aria-modal="true" aria-labelledby="scT">
@@ -2420,6 +2429,8 @@ var HGROUPS={
 function helpGroup(x){var gs=HGROUPS[x.t]||[];for(var g=0;g<gs.length;g++)for(var k=0;k<gs[g][1].length;k++)if(x.h.indexOf(gs[g][1][k])===0)return g;return gs.length;}
 var helpCur=-1,helpSeq=[];
 function helpRow(x,withTab){
+  if(!x.html)x.html=x.b;
+  return '<section class="hsec" id="hs-'+HELP.indexOf(x)+'" data-g="'+(withTab?'':helpGroup(x))+'"><h4 class="hsh">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+esc(x.h)+'</h4><div class="hbody">'+x.html+'</div></section>';
   return '<button class="hrow" data-hi="'+HELP.indexOf(x)+'">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+'<span>'+esc(x.h)+'</span><b aria-hidden="true">›</b></button>';
 }
 function showArticle(i){
@@ -2443,21 +2454,33 @@ function renderHelp(){
     helpSeq=hits.map(function(x){return HELP.indexOf(x)});
     $("hIdx").innerHTML='<span class="lbl">'+hits.length+' Treffer</span>';
     h=hits.map(function(x){return helpRow(x,true)}).join("");
-    $("hList").innerHTML=h?'<div class="hrows">'+h+'</div>':'<p class="empty">Nichts gefunden. Probiere ein anderes Wort, z. B. „Terz“, „Pause“ oder „Bund“.</p>';
+    $("hList").innerHTML=h?h:'<p class="empty">Nichts gefunden. Probiere ein anderes Wort, z. B. „Terz“, „Pause“ oder „Bund“.</p>';
     return;
   }
   var gs=HGROUPS[helpTab]||[],items=HELP.filter(function(x){return x.t===helpTab});
   var by={};items.forEach(function(x){var g=helpGroup(x);(by[g]=by[g]||[]).push(x);});
-  $("hIdx").innerHTML=gs.map(function(g,k){return by[k]?'<button data-hg="'+k+'">'+esc(g[0])+'</button>':''}).join("");
+  $("hIdx").innerHTML=gs.concat([["Weiteres",[]]]).map(function(g,k){return by[k]?'<button data-hg="'+k+'">'+esc(g[0])+'</button>'+by[k].map(function(x){var t=x.h.split(/[:(]/)[0].trim();return '<button class="ht" data-g="'+k+'" data-hs="'+HELP.indexOf(x)+'">'+esc(t)+'</button>'}).join(""):''}).join("");
   helpSeq=[];
   gs.concat([["Weiteres",[]]]).forEach(function(g,k){
     if(!by[k])return;
-    h+='<h3 class="hgrp" id="hg-'+k+'">'+esc(g[0])+'</h3><div class="hrows">';
-    h+=by[k].map(function(x){helpSeq.push(HELP.indexOf(x));return helpRow(x,false)}).join("")+'</div>';
+    h+='<h3 class="hgrp" id="hg-'+k+'">'+esc(g[0])+'</h3>';
+    h+=by[k].map(function(x){helpSeq.push(HELP.indexOf(x));return helpRow(x,false)}).join("");
   });
   $("hList").innerHTML=h;
+  helpSpy();
 }
-$("hIdx").addEventListener("click",function(e){var b=e.target.closest("[data-hg]");if(!b)return;var el=$("hg-"+b.dataset.hg);if(el)$("hList").scrollTop=el.offsetTop-$("hList").offsetTop-4;});
+function helpSpy(){
+  var L=$("hList"),top=L.scrollTop+70,cur=null,g=null;
+  L.querySelectorAll(".hsec").forEach(function(sc){if(sc.offsetTop<=top||!cur)cur=sc;});
+  if(cur){var g0=cur.dataset.g;g=g0;}
+  if(L.scrollTop+L.clientHeight>=L.scrollHeight-4){var all=L.querySelectorAll(".hsec");cur=all[all.length-1]||cur;if(cur)g=cur.dataset.g;}
+  $("hIdx").querySelectorAll("button").forEach(function(b){
+    if(b.dataset.hg!==undefined)b.classList.toggle("on",b.dataset.hg===g);
+    else if(b.dataset.hs!==undefined){b.classList.toggle("show",b.dataset.g===g);var on=cur&&("hs-"+b.dataset.hs)===cur.id;b.classList.toggle("on",on);if(on&&b.scrollIntoView&&!helpSpy.lock){var I=$("hIdx");if(b.offsetTop<I.scrollTop||b.offsetTop>I.scrollTop+I.clientHeight-30)I.scrollTop=b.offsetTop-40;}}
+  });
+}
+$("hIdx").addEventListener("click",function(e){var b=e.target.closest("[data-hg],[data-hs]");if(!b)return;var el=b.dataset.hs!==undefined?$("hs-"+b.dataset.hs):$("hg-"+b.dataset.hg);if(el)$("hList").scrollTop=el.offsetTop-4;helpSpy();});
+$("hList").addEventListener("scroll",function(){if(!helpSpy.raf){helpSpy.raf=requestAnimationFrame(function(){helpSpy.raf=0;helpSpy();});}},{passive:true});
 $("helpBtn").onclick=function(){$("help").classList.add("open");renderHelp();};
 $("hClose").onclick=function(){$("help").classList.remove("open")};
 $("hSearch").oninput=renderHelp;
