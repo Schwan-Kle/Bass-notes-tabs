@@ -609,6 +609,7 @@ body.voice .lyrow span:not(.on):not(.lyl){border-bottom:1px dotted #C9D5D1}
 .pch button[data-pmute]{border-left:1.5px solid color-mix(in srgb,var(--pc) 40%,#fff);padding:0 8px;font-size:15px}
 .pch.on button[data-pi]{background:var(--pc);color:#fff}
 .pch.muted button[data-pi]{text-decoration:line-through;opacity:.7}
+.pch button.pdelc{border-left:1.5px solid color-mix(in srgb,var(--pc) 40%,#fff);color:var(--a-del);background:#fff;padding:0 9px;font-size:15px}
 .partbar .padd{min-height:38px;font-weight:800;color:var(--a-in);border:2px dashed var(--a-in);background:var(--surface)}
 .pblk{border-left:4px solid var(--pc);padding-left:4px;margin:2px 0 4px;border-radius:3px}
 .pblk+.pblk{border-top:1px dashed var(--line);padding-top:3px}
@@ -1165,7 +1166,7 @@ function movePart(i,d){var sg=song(),j=i+d;if(!sg.parts||j<0||j>=sg.parts.length
 function showAllParts(){return PRN.on?PRN.allParts!==false:window.matchMedia("(min-width:700px)").matches}
 function partChips(){
   var PL=partList();if(!PL)return "";var a=actPart(),h='<div id="partBar" class="partbar" role="tablist" aria-label="Spuren">';
-  PL.forEach(function(p,i){var it=partInst(i);h+='<span class="pch'+(i===a?' on':'')+(p.mute?' muted':'')+'" style="--pc:'+PCOL[i%PCOL.length]+'"><button data-pi="'+i+'" role="tab" aria-selected="'+(i===a)+'">'+IICON[it]+' '+esc(p.name)+'</button><button data-pmute="'+i+'" aria-label="'+esc(p.name)+' stumm schalten" title="Stumm an/aus">'+(p.mute?'🔇':'🔊')+'</button></span>';});
+  PL.forEach(function(p,i){var it=partInst(i);h+='<span class="pch'+(i===a?' on':'')+(p.mute?' muted':'')+'" style="--pc:'+PCOL[i%PCOL.length]+'"><button data-pi="'+i+'" role="tab" aria-selected="'+(i===a)+'">'+IICON[it]+' '+esc(p.name)+'</button><button data-pmute="'+i+'" aria-label="'+esc(p.name)+' stumm schalten" title="Stumm an/aus">'+(p.mute?'🔇':'🔊')+'</button>'+(i===a?'<button data-pdelc="'+i+'" class="pdelc" aria-label="Spur '+esc(p.name)+' löschen" title="Diese Spur löschen">✕</button>':'')+'</span>';});
   return h+'<button class="padd" data-padd="1" title="Spuren verwalten">＋ Spur</button></div>';
 }
 function noteAt(b,s,t){var bar=song().bars[b];return bar?bar.n[s+"_"+t]:null}
@@ -2201,8 +2202,9 @@ $("legBtn").onclick=function(){toggleFlag("h")};
 $("accBtn").onclick=function(){toggleFlag("a")};
 $("autoBtn").onclick=function(){S.auto=!S.auto;flagButtons();save()};
 $("score").addEventListener("click",function(e){
-  var pc=e.target.closest("[data-pi],[data-pmute],[data-padd],.opart");
+  var pc=e.target.closest("[data-pi],[data-pmute],[data-padd],[data-pdelc],.opart");
   if(pc){e.stopPropagation();var sg=song();
+    if(pc.dataset.pdelc!==undefined){delPart(+pc.dataset.pdelc);return;}
     if(pc.dataset.pmute!==undefined){var p=sg.parts[+pc.dataset.pmute];p.mute=!p.mute;render();save();status(p.name+(p.mute?" stumm":" hörbar"));return;}
     if(pc.dataset.padd){openSettings("song");return;}
     var i=pc.dataset.pi!==undefined?+pc.dataset.pi:+pc.dataset.part;if(i!==actPart())switchPart(i);return;}
