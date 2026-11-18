@@ -76,8 +76,8 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .bar.inloop{border-color:var(--second);border-width:2px;padding:3px 5px 7px}
 .bar .no{font-size:12px;color:var(--muted);font-weight:700}
 .grid{display:grid;position:relative}
-.sl{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;height:30px}
-.c{height:30px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;border-left:1px solid transparent}
+.sl{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;height:24px}
+.c{height:24px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;font-variant-numeric:tabular-nums;font-size:14px;font-weight:700;border-left:1px solid transparent}
 .c::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--line)}
 .c.bt{border-left-color:var(--line)}
 .c span{position:relative;background:var(--surface);padding:0 1px;line-height:1.15;border-radius:2px}
@@ -429,9 +429,9 @@ button{border-width:1.5px}
 #lineView svg{display:block;width:100%;height:auto}
 .linepick .tG{fill:var(--sG)}.linepick .tD{fill:var(--sD)}.linepick .tA{fill:var(--sA)}.linepick .tE{fill:var(--sE)}.linepick .tH{fill:var(--sH)}
 .modes{grid-template-columns:repeat(5,1fr)!important}.modes button{font-size:13px;padding:0 2px}
-#lineInfo{min-height:40px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--muted);border-radius:8px;margin-bottom:3px;padding:2px 8px;text-align:center}
-#lineInfo.on{font-size:17px;font-weight:700;color:#fff;background:var(--a-in)}
-#lineInfo.on b{font-size:28px}
+#lineInfo{min-height:32px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--muted);border-radius:8px;margin-bottom:3px;padding:2px 8px;text-align:center}
+#lineInfo.on{font-size:15px;font-weight:700;color:#fff;background:var(--a-in)}
+#lineInfo.on b{font-size:22px}
 #lineInfo.sG{background:var(--sG)}#lineInfo.sD{background:var(--sD)}#lineInfo.sA{background:var(--sA)}#lineInfo.sE{background:var(--sE)}#lineInfo.sH{background:var(--sH)}
 #lineInfo .bad{color:#fff;text-decoration:underline}
 #restKeys button{--ac:#45524D!important;background:#F1F3F2}
@@ -473,6 +473,28 @@ button{border-width:1.5px}
 .staff .spl{stroke:#45524D;stroke-width:1;stroke-dasharray:3 3;stroke-linecap:round}
 .staff .tsn{font-size:19px;font-weight:900;fill:currentColor;font-family:Georgia,"Times New Roman",serif}
 .bar .no .tsl{display:inline-block;margin:0 4px 2px 2px;padding:0 6px;border-radius:6px;background:color-mix(in srgb,var(--a-play) 10%,#fff);color:var(--a-play);font-size:12px;font-weight:800;border:1.5px solid color-mix(in srgb,var(--a-play) 50%,#fff)}
+#printArea{display:none}
+@media print{
+  @page{size:A4 portrait;margin:12mm 11mm 14mm}
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important;display:block!important}
+  body>*{display:none!important}
+  #printArea{display:block!important;color:#1A1A1A;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--font)}
+  #printArea .pt{text-align:center;margin-bottom:6mm;border-bottom:1.5px solid #004C3A;padding-bottom:3mm}
+  #printArea h1{margin:0;font-size:22pt;color:#004C3A}
+  #printArea .psub{font-size:12pt;margin-top:1mm;font-style:italic}
+  #printArea .pinfo{font-size:9.5pt;color:#45524D;margin-top:2mm}
+  #printArea .pnote{font-size:9.5pt;margin-top:1mm}
+  #printArea .pbars{display:grid;grid-template-columns:1fr 1fr;gap:4mm 5mm}
+  #printArea .bar{max-width:none;border:none;padding:0;break-inside:avoid;page-break-inside:avoid;background:#fff}
+  #printArea .bar.wide{grid-column:1/-1}
+  #printArea .c{height:18px;font-size:12px}#printArea .sl{height:18px}
+  #printArea .c span{font-size:12px}
+  #printArea .pf{margin-top:6mm;font-size:8pt;color:#6E7F79;text-align:center}
+  #printArea.bw .c span,#printArea.bw .sl{color:#1A1A1A!important}
+  #printArea.bw .staff ellipse,#printArea.bw .staff path.fl{fill:#1A1A1A!important;stroke:#1A1A1A!important}
+  #printArea.bw .staff .op{fill:#fff!important}
+  #printArea .bar .no .sec,#printArea .bar .no .tsl{background:#fff}
+}
 </style>
 </head>
 <body>
@@ -499,6 +521,7 @@ button{border-width:1.5px}
     <button id="refBtn" class="a-in" role="menuitem">📷 Vorlage</button>
     <button id="trainBtn" class="a-train" role="menuitem">🎓 Notenlese-Training <small>Noten lesen, spielen, Rhythmus</small></button>
     <button id="setBtn" class="a-play" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
+    <button id="pdfBtn" class="a-in" role="menuitem">📄 Als PDF speichern / drucken <small>mit Titel, Tonart, Tempo</small></button>
     <button id="helpBtn" class="a-help" role="menuitem">❓ Hilfe &amp; Wissen</button>
   </div>
 </div>
@@ -774,6 +797,20 @@ button{border-width:1.5px}
     <button id="rsCancel">Abbrechen</button>
   </div>
 </div>
+<div id="pdfDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="pdfT">
+  <div class="box">
+    <h2 id="pdfT">📄 PDF / Drucken</h2>
+    <label>Titel <input type="text" id="pdfTitle" maxlength="80"></label>
+    <label>Untertitel / Komponist <input type="text" id="pdfSub" maxlength="80" placeholder="optional"></label>
+    <label>Bemerkung <input type="text" id="pdfNote" maxlength="120" placeholder="optional, z. B. Übungsziel"></label>
+    <label>Inhalt <select id="pdfView"><option value="both">Noten + Tab</option><option value="notes">nur Noten</option><option value="tab">nur Tab</option></select></label>
+    <label class="ck"><input type="checkbox" id="pdfCnt"> Zählzeiten mitdrucken</label>
+    <label class="ck"><input type="checkbox" id="pdfCol" checked> Saitenfarben (aus = schwarz-weiß)</label>
+    <p>Im nächsten Fenster als Drucker <b>„Als PDF speichern“</b> wählen – oder einen echten Drucker.</p>
+    <div class="row"><button id="pdfGo" class="primary">PDF erstellen</button><button id="pdfCancel">Abbrechen</button></div>
+  </div>
+</div>
+<div id="printArea" aria-hidden="true"></div>
 <div id="chDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="chT">
   <div class="box">
     <h2 id="chT">Akkord</h2>
@@ -1535,6 +1572,36 @@ $("modeTab").onclick=function(){setMode("tab")};
 $("modeNote").onclick=function(){setMode("note")};
 $("modeFb").onclick=function(){setMode("fb")};
 $("modeLine").onclick=function(){setMode("line")};
+/* PDF / Drucken */
+function openPdf(){var sg=song();$("pdfTitle").value=sg.name||"";$("pdfSub").value=sg.sub||"";$("pdfNote").value=sg.note||"";$("pdfView").value=view();if(typeof syncSegs==="function")syncSegs();$("pdfCnt").checked=!!S.count;$("pdfDlg").classList.add("open");}
+function keyName(k){var L=["Ces-Dur / as-Moll","Ges-Dur / es-Moll","Des-Dur / b-Moll","As-Dur / f-Moll","Es-Dur / c-Moll","B-Dur / g-Moll","F-Dur / d-Moll","C-Dur / a-Moll","G-Dur / e-Moll","D-Dur / h-Moll","A-Dur / fis-Moll","E-Dur / cis-Moll","H-Dur / gis-Moll","Fis-Dur / dis-Moll","Cis-Dur / ais-Moll"];return L[k+7]||"";}
+function makePdf(){
+  var sg=song();sg.name=$("pdfTitle").value.trim()||sg.name;sg.sub=$("pdfSub").value.trim();sg.note=$("pdfNote").value.trim();
+  if(!sg.sub)delete sg.sub;if(!sg.note)delete sg.note;save();
+  var keepV=S.view,keepC=S.count,keepCur={bar:cursor.bar,str:cursor.str,step:cursor.step},keepLoop=loopOn;
+  S.view=$("pdfView").value;S.count=$("pdfCnt").checked;cursor.bar=-1;loopOn=false;
+  render();
+  var sc=$("score").cloneNode(true);
+  S.view=keepV;S.count=keepC;cursor.bar=keepCur.bar;cursor.str=keepCur.str;cursor.step=keepCur.step;loopOn=keepLoop;render();
+  var si=sc.querySelector("#songInfo");if(si)si.remove();
+  Array.prototype.forEach.call(sc.querySelectorAll(".cur,.inloop"),function(x){x.classList.remove("cur");x.classList.remove("inloop")});
+  Array.prototype.forEach.call(sc.querySelectorAll(".ph,.rhit,.stcur"),function(x){x.remove()});
+  var pb=sc.querySelectorAll(".bar"),bars2=song().bars;
+  Array.prototype.forEach.call(pb,function(x,i){if(sigAt(i).steps>16)x.classList.add("wide");});
+  for(var li=bars2.length-1;li>0;li--){var bb2=bars2[li];if(Object.keys(bb2.n).length||bb2.r||bb2.sec||bb2.rs||bb2.re||bb2.v||bb2.ch)break;if(pb[li])pb[li].remove();}
+  var d=new Date(),ds=d.toLocaleDateString("de-DE");
+  var info=["Tonart: "+keyName(keyN()),"Takt: "+sg.sig,"Tempo: "+sg.bpm+" bpm",nstr()+"-Saiter"].join(" · ");
+  var h='<header class="pt"><h1>'+esc(sg.name||"Ohne Titel")+'</h1>'+(sg.sub?'<div class="psub">'+esc(sg.sub)+'</div>':'')+'<div class="pinfo">'+esc(info)+'</div>'+(sg.note?'<div class="pnote">'+esc(sg.note)+'</div>':'')+'</header>';
+  h+='<div class="pbars">'+sc.innerHTML+'</div><footer class="pf">Erstellt am '+ds+' mit Bass-Tab Übungsplayer</footer>';
+  var pa=$("printArea");pa.innerHTML=h;pa.classList.toggle("bw",!$("pdfCol").checked);
+  $("pdfDlg").classList.remove("open");
+  var old=document.title;document.title=(sg.name||"Bass").replace(/[\\/:*?"<>|]/g,"_");
+  setTimeout(function(){try{window.print();}catch(e){status("Drucken ist hier nicht möglich – bitte in der installierten App oder im Browser öffnen.");}
+    setTimeout(function(){document.title=old;},1500);},120);
+}
+$("pdfBtn").onclick=function(){$("moreMenu").classList.remove("open");openPdf();};
+$("pdfGo").onclick=makePdf;$("pdfCancel").onclick=function(){$("pdfDlg").classList.remove("open")};
+
 /* Pausen: eigene Reihe + Pause antippen */
 function restIcon(l){
   var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
@@ -1599,7 +1666,7 @@ $("rsPull").onclick=function(){if(!RS||!RS.after)return;var bar=song().bars[RS.b
   bar.n=nn;shiftRests(bar,function(t){return t>=RS.re?t-d:(t>=RS.rs?null:t)});var b=RS.b,r0=RS.rs;closeRest();render();save();moveCursor(b,cursor.str,r0,true);status("Noten nachgerückt");};
 
 /* Eingabe direkt auf der Notenzeile */
-var LN={U:15,top:14};
+var LN={U:12.5,top:11};
 function lineRange(){return {lo:nstr()===5?-6:-3,hi:12};}
 function posMidi(pos){
   var d=18+pos,oct=Math.floor(d/7),L=((d%7)+7)%7;
@@ -2826,6 +2893,7 @@ var HELP=[
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Vier Übungen:</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen (bei Vorzeichen-Stufen vorher ♭/♯ wählen).</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe"},
+{t:"e",h:"Als PDF speichern oder drucken",b:"<p>Menü <b>⋯ → 📄 Als PDF speichern / drucken</b>. Titel, Untertitel (z. B. Komponist) und eine Bemerkung eintragen, Inhalt wählen (Noten + Tab, nur Noten, nur Tab), optional Zählzeiten und Saitenfarben. Dann <b>PDF erstellen</b> und im Druckfenster <b>„Als PDF speichern“</b> wählen.</p><p>Das PDF zeigt oben Titel, Tonart, Taktart, Tempo und Saitenzahl, darunter die Takte zu zweit nebeneinander (lange Takte über die ganze Breite).</p>",k:"pdf drucken export ausdruck titel"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
 /* ===== Musikzeichen ===== */
 {t:"z",h:"Notensystem und Bassschlüssel",b:"<p>Fünf Linien bilden das <b>Notensystem</b>. Der <b>Bassschlüssel</b> (F-Schlüssel) markiert mit seinen zwei Punkten die vierte Linie von unten als Ton <b>F</b>. Von unten gelesen: Linien G-H-D-F-A, Zwischenräume A-C-E-G.</p>"+exStaff([[3,0,3,4],[3,4,7,4],[2,8,5,4],[1,12,3,4]])+"<p>Bass-Noten werden eine <b>Oktave höher notiert als sie klingen</b> – sonst bräuchte man sehr viele Hilfslinien. Die App rechnet das automatisch um.</p>",k:"schlüssel f-schlüssel linien"},
@@ -2867,7 +2935,7 @@ var HGROUPS={
     ["Noten eingeben",["Notenlängen","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
-    ["Speichern und Importieren",["Speichern"]]],
+    ["Speichern und Importieren",["Speichern","Als PDF"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
     ["Tonhöhe",["Vorzeichen","Tonart-Vorzeichen"]],
@@ -3882,7 +3950,7 @@ function openSelPick(sel){
   $("spL").onclick=function(e){var b=e.target.closest("button");if(!b)return;sel.value=b.dataset.v;sel.dispatchEvent(new Event("change",{bubbles:true}));$("selPick").classList.remove("open");syncSegs();};
 }
 $("spClose").onclick=function(){$("selPick").classList.remove("open")};
-["spdSel","metMode","viewSel","sig","strings","keySel","accMode","rtSel","vSel","trAcc","trCount","trLo","trHi"].forEach(function(id){enhanceSelect($(id))});
+["pdfView","spdSel","metMode","viewSel","sig","strings","keySel","accMode","rtSel","vSel","trAcc","trCount","trLo","trHi"].forEach(function(id){enhanceSelect($(id))});
 /* Werte, die das Programm direkt setzt, nachziehen */
 document.addEventListener("click",function(){setTimeout(syncSegs,0);},true);
 /* Start */
