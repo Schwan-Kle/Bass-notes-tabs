@@ -868,7 +868,16 @@ function midiName(m){return NOTES[m%12]+(Math.floor(m/12)-1)}
 /* ---------- Darstellung ---------- */
 function view(){return S.view==="notes"||S.view==="tab"?S.view:"both"}
 var EXSVG=false;
-function render(){if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
+function cleanRests(bar){
+  if(!bar.r)return;var st=sig().steps,ns=nstr(),occ=new Uint8Array(st),k,t;
+  for(k in bar.n){var q=k.split("_");if(+q[0]>=ns)continue;t=+q[1];for(var i=0;i<bar.n[k].len&&t+i<st;i++)occ[t+i]=1;}
+  var nr={};
+  for(k in bar.r){t=+k;var e=Math.min(st,t+bar.r[k]),a=t;while(a<e&&occ[a])a++;if(a>=e)continue;var z=a;while(z<e&&!occ[z])z++;if(!nr[a])nr[a]=z-a;}
+  var keys=Object.keys(nr).map(Number).sort(function(x,y){return x-y});
+  for(var j=0;j<keys.length-1;j++){var a2=keys[j];if(a2+nr[a2]>keys[j+1])nr[a2]=keys[j+1]-a2;}
+  if(keys.length)bar.r=nr;else delete bar.r;
+}
+function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lineRender==="function")setTimeout(function(){lineRender()},0);
   var sg=sig(),st=sg.steps,ns=nstr(),bars=song().bars,sus={};
   for(var b=0;b<bars.length;b++){
     for(var key in bars[b].n){
@@ -953,6 +962,16 @@ function accSVG(a,x,y){
   if(a<0)return '<path class="acc" d="M'+r(x-2.6)+' '+r(y-12)+'V'+r(y+3.5)+'C'+r(x+1)+' '+r(y+1)+' '+r(x+4.6)+' '+r(y-1.5)+' '+r(x+3.6)+' '+r(y-3.8)+'C'+r(x+2.6)+' '+r(y-5.6)+' '+r(x-0.6)+' '+r(y-4)+' '+r(x-2.6)+' '+r(y-1.6)+'"/>';
   if(a>0)return '<path class="acc" d="M'+r(x-1.6)+' '+r(y-8.5)+'V'+r(y+9.5)+'M'+r(x+1.6)+' '+r(y-9.5)+'V'+r(y+8.5)+'"/><path class="accb" d="M'+r(x-3.6)+' '+r(y-1.6)+'L'+r(x+3.6)+' '+r(y-3.8)+'M'+r(x-3.6)+' '+r(y+3.8)+'L'+r(x+3.6)+' '+r(y+1.6)+'"/>';
   return '<path class="acc" d="M'+r(x-2)+' '+r(y-9.5)+'V'+r(y+3.4)+'M'+r(x+2)+' '+r(y-3.4)+'V'+r(y+9.5)+'"/><path class="accb" d="M'+r(x-2)+' '+r(y-1.6)+'L'+r(x+2)+' '+r(y-3.4)+'M'+r(x-2)+' '+r(y+3.4)+'L'+r(x+2)+' '+r(y+1.6)+'"/>';
+}
+function restSVG(b,dot,rx,ym,Y,sp,r){
+  var o="";
+  if(b>=16)o='<rect class="fl" x="'+r(rx-6)+'" y="'+Y(6)+'" width="12" height="'+(sp/2)+'"/>';
+  else if(b>=8)o='<rect class="fl" x="'+r(rx-6)+'" y="'+(Y(4)-sp/2)+'" width="12" height="'+(sp/2)+'"/>';
+  else if(b>=4)o='<path class="st" stroke-width="1.7" d="M'+r(rx-2)+' '+(ym-10)+' l5 6 l-5 5 l5 6 c-5 -2 -8 2 -3 5"/>';
+  else if(b>=2)o='<circle class="fl" cx="'+r(rx-2)+'" cy="'+(ym-3.5)+'" r="1.7"/><path class="st" stroke-width="1.5" d="M'+r(rx-2)+' '+(ym-2.5)+' q3 1 5 -2 l-3.5 12"/>';
+  else o='<circle class="fl" cx="'+r(rx-2)+'" cy="'+(ym-3.5)+'" r="1.6"/><circle class="fl" cx="'+r(rx-3.2)+'" cy="'+(ym+1.5)+'" r="1.6"/><path class="st" stroke-width="1.5" d="M'+r(rx-2)+' '+(ym-2.5)+' q3 1 5 -2 l-4.5 15 M'+r(rx-3.2)+' '+(ym+2.5)+' q3 1 4.6 -1.5"/>';
+  if(dot)o+='<circle class="fl" cx="'+r(rx+8)+'" cy="'+(ym-sp/4)+'" r="1.4"/>';
+  return '<g class="srest">'+o+'</g>';
 }
 function staffSVG(b,NI){
   var sg=sig(),st=sg.steps,beat=sg.beat,ns=nstr(),bar=song().bars[b];
@@ -1061,9 +1080,16 @@ function staffSVG(b,NI){
     any=true;
   }
   /* Pausen */
-  var ym=Y(4),base=b*st,occ=NI.occ,empty=true,t;
+  var ym=Y(4),base=b*st,occ0=NI.occ,empty=true,t;
+  var occ=occ0.slice(base,base+st);
+  if(bar.r)for(var rk in bar.r){var rt0=+rk;for(var ri=0;ri<bar.r[rk]&&rt0+ri<st;ri++)occ[rt0+ri]=1;}
+  base=0;
   function RH(tt,xx){if(!EXSVG)o.push('<rect class="rhit" data-t="'+tt+'" x="'+r(xx-10)+'" y="'+r(ym-16)+'" width="20" height="32" fill="#fff" fill-opacity="0" pointer-events="all"/>');}
   for(t=0;t<st;t++)if(occ[base+t]){empty=false;break;}
+  if(bar.r)for(var rk2 in bar.r){var rt=+rk2,rl=bar.r[rk2],rbx=X(rt);
+    var rd=(rl===3||rl===6||rl===12),rbase=rd?rl*2/3:rl;
+    if(beat===4&&bar.tb&&bar.tb[Math.floor(rt/4)]){rbase=rl>=2?4:2;rd=false;}
+    o.push(restSVG(rbase,rd,rbx,ym,Y,sp,r));RH(rt,rbx);}
   if(empty){
     o.push('<rect class="fl" x="'+r(G+st*U/2-6)+'" y="'+Y(6)+'" width="12" height="'+(sp/2)+'"/>');RH(0,G+st*U/2);
   }else{
@@ -1359,10 +1385,16 @@ function placeRest(l){
   var st=sig().steps,bar=song().bars[cursor.bar],t0=cursor.step,len=l;
   if(isTrip(cursor.bar,t0))len=Math.min(l>=4?2:1,3-t0%4);
   var end=Math.min(st,t0+len),ch=false;
+  pushUndo();
   for(var k in bar.n){var q=k.split("_"),t=+q[1],n=bar.n[k];
-    if(t>=t0&&t<end){if(!ch){pushUndo();ch=true;}delete bar.n[k];}
-    else if(t<t0&&t+n.len>t0){if(!ch){pushUndo();ch=true;}n.len=t0-t;}}
-  if(ch){render();save();}
+    if(t>=t0&&t<end)delete bar.n[k];
+    else if(t<t0&&t+n.len>t0)n.len=t0-t;}
+  bar.r=bar.r||{};
+  for(var rk in bar.r){var rt=+rk,rl=bar.r[rk];
+    if(rt>=t0&&rt<end)delete bar.r[rk];
+    else if(rt<t0&&rt+rl>t0)bar.r[rk]=t0-rt;}
+  bar.r[t0]=end-t0;
+  render();save();
   advance(len);status("Pause "+(LENS.filter(function(x){return x[0]===l})[0]||[0,""])[1]+" gesetzt");
 }
 $("restKeys").addEventListener("click",function(e){var b=e.target.closest("button[data-rl]");if(b)placeRest(+b.dataset.rl);});
@@ -1385,18 +1417,20 @@ function openRest(b,t){
   $("rsPull").disabled=!after||trip;$("rsPull").innerHTML="<b>⇤ Folgende Noten nachrücken</b><small>"+(trip?"nicht in Takten mit Triolen":!after?"dahinter keine Noten in diesem Takt":after+" Note(n) rücken nach vorn, die Pause wandert ans Taktende")+"</small>";
   $("restDlg").classList.add("open");
 }
+function shiftRests(bar,f){if(!bar.r)return;var nr={};for(var k in bar.r){var t=f(+k);if(t!==null)nr[t]=bar.r[k];}bar.r=nr;}
 function closeRest(){$("restDlg").classList.remove("open");RS=null;}
 $("rsCancel").onclick=closeRest;$("rsHere").onclick=closeRest;
 $("restDlg").addEventListener("click",function(e){if(e.target===this)closeRest();});
 $("rsExt").onclick=function(){if(!RS||RS.prev<0)return;var bar=song().bars[RS.b];pushUndo();
   for(var k in bar.n){var q=k.split("_");if(+q[1]===RS.prev)bar.n[k].len=RS.re-RS.prev;}
+  shiftRests(bar,function(t){return t>=RS.rs&&t<RS.re?null:t});
   var p=RS.prev,b=RS.b;closeRest();render();save();moveCursor(b,cursor.str,p,true);status("Note verlängert");};
 $("rsPush").onclick=function(){if(!RS||!RS.before)return;var bar=song().bars[RS.b],d=RS.re-RS.rs,nn={};pushUndo();
   for(var k in bar.n){var q=k.split("_"),s2=+q[0],t=+q[1];nn[s2+"_"+(t<RS.rs?t+d:t)]=bar.n[k];}
-  bar.n=nn;var b=RS.b;closeRest();render();save();moveCursor(b,cursor.str,0,true);status("Noten nach hinten gerückt – Pause steht jetzt vorn");};
+  bar.n=nn;shiftRests(bar,function(t){return t<RS.rs?t+d:(t<RS.re?null:t)});var b=RS.b;closeRest();render();save();moveCursor(b,cursor.str,0,true);status("Noten nach hinten gerückt – Pause steht jetzt vorn");};
 $("rsPull").onclick=function(){if(!RS||!RS.after)return;var bar=song().bars[RS.b],d=RS.re-RS.rs,nn={};pushUndo();
   for(var k in bar.n){var q=k.split("_"),s2=+q[0],t=+q[1];nn[s2+"_"+(t>=RS.re?t-d:t)]=bar.n[k];}
-  bar.n=nn;var b=RS.b,r0=RS.rs;closeRest();render();save();moveCursor(b,cursor.str,r0,true);status("Noten nachgerückt");};
+  bar.n=nn;shiftRests(bar,function(t){return t>=RS.re?t-d:(t>=RS.rs?null:t)});var b=RS.b,r0=RS.rs;closeRest();render();save();moveCursor(b,cursor.str,r0,true);status("Noten nachgerückt");};
 
 /* Eingabe direkt auf der Notenzeile */
 var LN={U:15,top:14};
@@ -1490,7 +1524,7 @@ function padState(){$("pad").classList.toggle("closed",!S.padOpen);$("padToggle"
 /* Takte */
 $("barAdd").onclick=function(){pushUndo();song().bars.splice(cursor.bar+1,0,emptyBar());cursor.bar++;cursor.step=0;afterBars()};
 $("barDup").onclick=function(){pushUndo();song().bars.splice(cursor.bar+1,0,JSON.parse(JSON.stringify(song().bars[cursor.bar])));cursor.bar++;afterBars()};
-$("barClr").onclick=function(){pushUndo();song().bars[cursor.bar].n={};afterBars()};
+$("barClr").onclick=function(){pushUndo();song().bars[cursor.bar].n={};delete song().bars[cursor.bar].r;afterBars()};
 $("barDel").onclick=function(){
   pushUndo();
   if(song().bars.length>1){song().bars.splice(cursor.bar,1);if(cursor.bar>=song().bars.length)cursor.bar=song().bars.length-1;}
@@ -2011,7 +2045,7 @@ function importMusicXML(xml,fname){
 }
 function convertPart(part,title){
   var div=1,beats=4,btype=4,fifths=null,tempo=0,trans=null,sigStr=null,warn={},maxString=0;
-  var evs=[],measures=kids(part,"measure"),mInfo={},openEnding=0;
+  var evs=[],restEvs=[],measures=kids(part,"measure"),mInfo={},openEnding=0;
   measures.forEach(function(m,mi){
     var t=0,lastStart=0,voice1=null;
     if(openEnding){mInfo[mi]=mInfo[mi]||{};mInfo[mi].v=openEnding;}
@@ -2056,7 +2090,7 @@ function convertPart(part,title){
         if(voice!==voice1){warn.voices=1;return;}
         var tmod=kid(c,"time-modification"),isTr=false;
         if(tmod){if(txtOf(tmod,"actual-notes")==="3"&&txtOf(tmod,"normal-notes")==="2"&&btype===4&&dur>0&&dur<=div*2/3+0.01)isTr=true;else warn.tuplet=1;}
-        if(kid(c,"rest"))return;
+        if(kid(c,"rest")){if(!isTr&&dur>0)restEvs.push({bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div))});return;}
         var ev={bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div)),midi:null,s:null,f:null};
         if(isTr){var bIx=Math.floor(start/div+1e-6),cl=Math.min(2,Math.round((start-bIx*div)/div*3));ev.pos=bIx*4+cl;ev.len=Math.max(1,Math.min(3-cl,Math.round(dur*3/div)));ev.trip=bIx;mInfo[mi]=mInfo[mi]||{};mInfo[mi].tb=mInfo[mi].tb||{};mInfo[mi].tb[bIx]=1;}
         var pt=kid(c,"pitch");
@@ -2110,6 +2144,7 @@ function convertPart(part,title){
   });
   /* Saite und Bund festlegen */
   var bars=[],hasRep=false;for(var b=0;b<measures.length;b++){var eb=emptyBar(),mi2=mInfo[b];if(mi2){for(var kk in mi2){eb[kk]=mi2[kk];if(kk==="rs"||kk==="re"||kk==="v")hasRep=true;}}bars.push(eb);}
+  restEvs.forEach(function(e){var bb=bars[e.bar];if(!bb||e.pos>=steps)return;bb.r=bb.r||{};bb.r[e.pos]=Math.min(e.len,steps-e.pos);});
   var ref=3,dropped=0;
   out.sort(function(a,c){return a.bar-c.bar||a.pos-c.pos||(c.midi||0)-(a.midi||0)});
   out.forEach(function(e){
@@ -2486,7 +2521,7 @@ function recFinish(){
   pushUndo();
   var bars=song().bars;
   while(bars.length<REC.start+nb)bars.push(emptyBar());
-  for(var b=REC.start;b<REC.start+nb;b++)bars[b].n={};
+  for(var b=REC.start;b<REC.start+nb;b++){bars[b].n={};delete bars[b].r;}
   var ref=lastFret();
   ev.forEach(function(e){
     var b=REC.start+Math.floor(e.pos/st),t=e.pos%st,best=null,bs=1e9;
@@ -2568,7 +2603,7 @@ var HELP=[
 {t:"e",h:"So funktioniert die Eingabe",b:"<p>Jedes Kästchen in der Tabulatur ist ein <b>Sechzehntel</b> auf einer Saite. Tippe ein Kästchen an – das gelbe Feld ist der <b>Cursor</b> (Takt, Saite, Zeitpunkt). Dann zuerst die <b>Notenlänge</b> wählen und danach den <b>Bund</b> (Tab-Eingabe) oder den <b>Ton</b> (Noten-Eingabe).</p><p>Mit <b>Auto→</b> springt der Cursor nach jeder Note um ihre Länge weiter, so kannst du eine Linie einfach durchtippen. Die Statuszeile unter dem Kopf zeigt immer Takt, Schlag, Saite, Bund und Tonname am Cursor.</p>",k:"cursor auto statuszeile anfang"},
 {t:"e",h:"Notenlängen",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt. In einem Triolen-Schlag gilt: 1/8 oder kürzer = eine Triolenachtel, 1/4 = zwei.</p>",k:"länge dauer punktiert"},
 {t:"e",h:"Tab-Eingabe (Bund-Zahlen)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
-{t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
+{t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Sprung, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>⇥ Sprung</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
@@ -2870,7 +2905,7 @@ $("selDlg").addEventListener("click",function(e){
   else if(d.sel==="cut"){pushUndo();S.clip=JSON.parse(JSON.stringify(bars.slice(r[0],r[1]+1)));bars.splice(r[0],cnt);if(!bars.length)bars.push(emptyBar());cursor.bar=Math.min(r[0],bars.length-1);cursor.step=0;selDone(txt+" ausgeschnitten.");}
   else if(d.sel==="ins"){if(!S.clip||!S.clip.length){selDone("Die Ablage ist leer. Erst Takte kopieren.");return;}pushUndo();var c=JSON.parse(JSON.stringify(S.clip));Array.prototype.splice.apply(bars,[cursor.bar+1,0].concat(c));cursor.bar++;cursor.step=0;selDone(c.length+" Takt(e) hinter Takt "+cursor.bar+" eingefügt.");}
   else if(d.sel==="rep"){if(!S.clip||!S.clip.length){selDone("Die Ablage ist leer. Erst Takte kopieren.");return;}pushUndo();var c2=JSON.parse(JSON.stringify(S.clip));for(var i=0;i<c2.length;i++){if(cursor.bar+i<bars.length)bars[cursor.bar+i]=c2[i];else bars.push(c2[i]);}selDone(c2.length+" Takt(e) ab Takt "+(cursor.bar+1)+" ersetzt.");}
-  else if(d.sel==="clr"){pushUndo();for(var j=r[0];j<=r[1];j++)bars[j].n={};selDone(txt+" geleert.");}
+  else if(d.sel==="clr"){pushUndo();for(var j=r[0];j<=r[1];j++){bars[j].n={};delete bars[j].r;}selDone(txt+" geleert.");}
   else if(d.sel==="del"){pushUndo();bars.splice(r[0],cnt);if(!bars.length)bars.push(emptyBar());cursor.bar=Math.min(r[0],bars.length-1);cursor.step=0;selDone(txt+" gelöscht.");}
   else if(d.tr){pushUndo();var lost=transposeBars(r[0],r[1],+d.tr);selDone(txt+" um "+({"-12":"eine Oktave tiefer","-1":"einen Halbton tiefer","1":"einen Halbton höher","12":"eine Oktave höher"})[d.tr]+" verschoben"+(lost?" – "+lost+" Note(n) passten nicht aufs Griffbrett und fielen weg":"")+".");}
   else if(d.lage!==undefined){pushUndo();for(var k=r[0];k<=r[1];k++)refingerBar(k,+d.lage);last=null;selDone(txt+" ab Bund "+d.lage+" gegriffen.");}
