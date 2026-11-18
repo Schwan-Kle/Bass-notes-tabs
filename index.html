@@ -40,10 +40,25 @@ button.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
 button.primary{background:var(--main);color:var(--on-main);border-color:var(--main);font-weight:700}
 select,input[type=number],input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:6px;min-height:34px;padding:0 6px}
 input[type=range]{accent-color:var(--accent)}
-header{background:var(--surface);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;flex-direction:column;gap:8px}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:6px 10px}
+.hbar{display:flex;align-items:center;gap:6px}
+.hbar button{min-height:40px}
+#menuBtn,#moreBtn{min-width:42px;font-size:20px;font-weight:700;color:var(--main);padding:0}
+.bpmv{min-width:46px;font-weight:700;font-variant-numeric:tabular-nums;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:0 2px}
+.bpmv::after{content:"bpm";font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
+.menuov{position:fixed;inset:0;display:none;z-index:9;background:rgba(0,0,0,.25)}
+.menuov.open{display:block}
+.mpanel{position:absolute;right:8px;top:54px;width:min(330px,calc(100vw - 16px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;flex-direction:column;padding:6px;gap:4px}
+.mpanel button{text-align:left;min-height:46px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;font-size:15px;border:none;border-radius:6px;padding:4px 10px}
+.mpanel button small{font-size:11px;color:var(--muted)}
+.mpanel button.on{background:var(--shade);color:var(--main)}
+.mpanel button.on small{color:var(--muted)}
+.setbox{max-width:560px}
+.setbox #bpm{width:100%}
 .transport{display:flex;align-items:center;gap:8px}
-#play{min-width:76px;min-height:42px;font-size:16px}
-.tempo{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+#play{min-width:48px;font-size:18px;padding:0}
+.tempo{display:flex;align-items:center;gap:2px}
+.tempo button:not(.bpmv){min-width:32px;padding:0}
 .tempo input[type=range]{flex:1;min-width:60px}
 #bpmOut{font-variant-numeric:tabular-nums;font-weight:700;min-width:64px;text-align:right}
 details{border-top:1px solid var(--line);padding-top:6px}
@@ -53,7 +68,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .row label{display:flex;align-items:center;gap:5px}
 .row h2{font-size:13px;margin:0;color:var(--muted);width:100%;font-weight:700;text-transform:none}
 .narrow{width:58px}
-#status{font-size:13px;color:var(--muted);padding:5px 16px;background:var(--shade);font-variant-numeric:tabular-nums;min-height:27px}
+#status{font-size:12px;color:var(--muted);padding:3px 10px;background:var(--shade);font-variant-numeric:tabular-nums;min-height:22px;line-height:1.35}
 #score{flex:1;overflow-y:auto;padding:10px 16px 16px;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
 .bar{flex:1 1 330px;max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 6px 8px}
 .bar.inloop{border-color:var(--second);border-width:2px;padding:3px 5px 7px}
@@ -81,6 +96,9 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 #pad{background:var(--surface);border-top:1px solid var(--line);padding:6px 10px 10px;display:flex;flex-direction:column;gap:5px}
 .modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
 .modes button{min-height:30px;font-size:13px}
+#pad .keys button{min-height:34px}
+#pad .keys.small button{min-height:32px}
+#pad{padding:4px 8px 8px;gap:4px}
 #padToggle{color:var(--muted)}
 .alts{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .alts .lbl{font-size:12px;color:var(--muted);min-width:86px}
@@ -198,7 +216,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .hplay{margin:4px 6px 4px 0;min-height:32px;font-size:13px;color:var(--main);border-color:var(--second)}
 .sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
 .sw.y{background:var(--hi)}.sw.g{background:var(--second)}
-#pad{max-height:50vh;overflow-y:auto;overscroll-behavior:contain}
+#pad{max-height:62vh;overflow-y:auto;overscroll-behavior:contain}
 .modes{grid-template-columns:repeat(4,1fr)}
 .keys.small button{font-size:12px;line-height:1.1;padding:0 2px;hyphens:manual}
 #padFb{display:none}
@@ -235,29 +253,34 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 </head>
 <body>
 <header>
-  <div class="songbar">
-    <button id="menuBtn" aria-label="Meine Stücke öffnen">☰ Meine Stücke</button>
+  <div class="hbar">
+    <button id="menuBtn" aria-label="Meine Stücke">☰</button>
     <button id="songTitle" class="stitle" title="Stück wechseln, umbenennen, sichern"></button>
-    <button id="helpBtn" aria-label="Hilfe und Musikwissen" title="Hilfe, Musikzeichen, Wiki">❓</button>
-  </div>
-  <div class="transport">
-    <button id="play" class="primary">▶ Start</button>
     <div class="tempo">
       <button id="bpmDown" aria-label="Tempo minus 5">−</button>
-      <input type="range" id="bpm" min="30" max="220" step="1" aria-label="Tempo">
+      <button id="bpmOut" class="bpmv" title="Tempo und Einstellungen"></button>
       <button id="bpmUp" aria-label="Tempo plus 5">+</button>
-      <span id="bpmOut"></span>
     </div>
+    <button id="play" class="primary" aria-label="Start oder Stopp">▶</button>
+    <button id="moreBtn" aria-label="Werkzeuge und Einstellungen" aria-expanded="false">⋯</button>
   </div>
-  <div class="tools">
-    <button id="recBtn" title="Mit dem Bass einspielen und automatisch notieren">🎙 Einspielen</button>
-    <button id="tunerBtn" title="Stimmgerät über das Mikrofon">🎯 Stimmen</button>
-    <button id="fbBtn" title="Griffbrett ein- oder ausblenden">🎸 Griffbrett</button>
-    <button id="refBtn" title="Foto deiner Noten als Vorlage einblenden">📷 Vorlage</button>
+</header>
+<div id="moreMenu" class="menuov" aria-hidden="true">
+  <div class="mpanel" role="menu" aria-label="Werkzeuge">
+    <button id="recBtn" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
+    <button id="tunerBtn" role="menuitem">🎯 Stimmgerät</button>
+    <button id="fbBtn" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
+    <button id="refBtn" role="menuitem">📷 Vorlage</button>
+    <button id="setBtn" role="menuitem">⚙ Metronom, Schleife, Tempo-Trainer, Einstellungen</button>
+    <button id="helpBtn" role="menuitem">❓ Hilfe &amp; Wissen</button>
   </div>
-  <details id="optsBox">
-    <summary>Metronom, Schleife, Einstellungen</summary>
+</div>
+<div id="setDlg" class="modal" role="dialog" aria-modal="true" aria-labelledby="setT">
+  <div class="box setbox">
+    <div class="dhead"><h2 id="setT">Einstellungen</h2><button id="setClose" aria-label="Einstellungen schließen">✕</button></div>
     <div class="opts">
+      <div class="row"><h2>Tempo</h2><input type="range" id="bpm" min="30" max="220" step="1" aria-label="Tempo"></div>
+
       <div class="row">
         <h2>Metronom</h2>
         <label>Klick <select id="metMode">
@@ -308,9 +331,10 @@ button.danger{color:var(--warn);border-color:var(--warn)}
         <label><input type="checkbox" id="showNotes"> Noten über der Tabulatur anzeigen</label>
 
       </div>
-    </div>
-  </details>
-</header>
+    
+  </div>
+</div>
+</div>
 <div id="status" aria-live="polite"></div>
 <section id="ref" class="ref sz-m" hidden aria-label="Notenvorlage">
   <div class="refbar">
@@ -335,7 +359,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
     <button id="modeTab">Tab</button>
     <button id="modeNote">Noten</button>
     <button id="modeFb">Griffbrett</button>
-    <button id="padToggle">ausblenden</button>
+    <button id="padToggle" aria-label="Eingabe aus- oder einblenden">▾ weg</button>
   </div>
   <div class="alts" id="altNote"></div>
   <div class="keys k7 small" id="lenKeys"></div>
@@ -1026,7 +1050,7 @@ $("score").addEventListener("click",function(e){
   hearNote(noteAt(cursor.bar,cursor.str,cursor.step),cursor.str);
 });
 $("padToggle").onclick=function(){S.padOpen=!S.padOpen;padState();save()};
-function padState(){$("pad").classList.toggle("closed",!S.padOpen);$("padToggle").textContent=S.padOpen?"ausblenden":"Tastatur zeigen";if(S.padOpen&&S.mode==="fb"&&typeof updateFB==="function")updateFB();}
+function padState(){$("pad").classList.toggle("closed",!S.padOpen);$("padToggle").textContent=S.padOpen?"▾ weg":"▴ Tastatur";if(S.padOpen&&S.mode==="fb"&&typeof updateFB==="function")updateFB();}
 
 /* Takte */
 $("barAdd").onclick=function(){pushUndo();song().bars.splice(cursor.bar+1,0,emptyBar());cursor.bar++;cursor.step=0;afterBars()};
@@ -1233,13 +1257,13 @@ function play(opt){
   vq=[];phBar=-1;
   timer=setInterval(tick,25);tick();
   raf=requestAnimationFrame(draw);
-  $("play").textContent="■ Stopp";
+  $("play").textContent="■";
 }
 function stop(){
   if(timer){clearInterval(timer);timer=null;}
   P=null;vq=[];cancelAnimationFrame(raf);
   if(ph&&ph.parentNode)ph.parentNode.removeChild(ph);
-  $("play").textContent="▶ Start";
+  $("play").textContent="▶";
   status();
 }
 function togglePlay(){if(REC.on){recFinish();return;}if(P)stop();else play()}
@@ -1273,7 +1297,7 @@ $("trNow").onclick=function(){$("trFrom").value=song().bpm;trainerRead();};
 /* ---------- Einstellungen ---------- */
 function setBpm(v){
   v=Math.max(30,Math.min(220,Math.round(v)));
-  song().bpm=v;$("bpm").value=v;$("bpmOut").textContent=v+" bpm";save();
+  song().bpm=v;$("bpm").value=v;$("bpmOut").textContent=v;save();
 }
 $("bpm").oninput=function(){setBpm(+this.value)};
 $("bpmDown").onclick=function(){setBpm(song().bpm-5)};
@@ -1384,7 +1408,7 @@ $("dList").addEventListener("click",function(e){
 $("dList").addEventListener("keydown",function(e){
   if(e.key==="Enter"&&e.target.id&&e.target.id.indexOf("ren")===0){var b=e.target.parentNode.querySelector("button");if(b)b.click();}
 });
-document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();$("help").classList.remove("open");}});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeDrawer();$("dlg").classList.remove("open");$("pick").classList.remove("open");$("barDlg").classList.remove("open");if($("tunerDlg").classList.contains("open"))$("tunClose").click();$("help").classList.remove("open");closeMore();$("setDlg").classList.remove("open");}});
 
 function fileName(n){return String(n||"stueck").replace(/[^\wäöüÄÖÜß -]/g,"_").trim()||"stueck"}
 var dlAPI;
@@ -2112,8 +2136,8 @@ var HELP=[
 {t:"e",h:"Takte… (mehrere Takte bearbeiten)",b:"<p>Von Takt … bis … wählen, dann: <b>Kopieren</b>, <b>Ausschneiden</b>, <b>Leeren</b>, <b>Löschen</b>, <b>Als Schleife</b>. Aus der Ablage <b>einfügen</b> – hinter dem Cursor-Takt oder ab dem Cursor-Takt ersetzend (die Ablage bleibt auch beim Wechsel in ein anderes Stück). <b>Transponieren</b> um Halbtöne oder Oktaven und <b>Greifen ab Bund</b> für den ganzen Bereich.</p>",k:"auswahl kopieren einfügen transponieren bereich ablage"},
 {t:"e",h:"Techniken und ihre Zeichen in der Tab",b:"<table><tr><td>5·</td><td>Staccato (kurz)</td></tr><tr><td>/5</td><td>Slide hinein</td></tr><tr><td>5\\</td><td>Slide heraus</td></tr><tr><td>5b</td><td>Bend</td></tr><tr><td>5~</td><td>Vibrato</td></tr><tr><td>T5 / P5</td><td>Slap / Pop</td></tr><tr><td>&lt;12&gt;</td><td>Flageolett</td></tr><tr><td>Bogen</td><td>gebunden (⌒)</td></tr><tr><td>x</td><td>Dead Note</td></tr></table><p>In den Noten stehen die Zeichen über der Note; Flageolett hat einen Rauten-Notenkopf. Die Wiedergabe spielt die Techniken hörbar nach.</p>",k:"technik slide bend vibrato slap pop flageolett staccato zeichen"},
 {t:"e",h:"Takt-Leiste (+ Takt, Kopie, Leeren, Löschen, ‖: Wdh., Takte…, ↶)",b:"<ul><li><b>+ Takt</b> fügt hinter dem Cursor-Takt einen leeren Takt ein.</li><li><b>Kopie</b> setzt eine Kopie des Takts dahinter.</li><li><b>Leeren</b> löscht alle Noten (Wiederholungszeichen bleiben).</li><li><b>Löschen</b> entfernt den Takt.</li><li><b>‖: Wdh.</b> Wiederholungszeichen und Klammern für diesen Takt.</li><li><b>Takte…</b> mehrere Takte kopieren, einfügen, transponieren, umgreifen.</li><li><b>↶</b> nimmt die letzten Schritte zurück (auch Einspielen und Umlegen).</li></ul>",k:"takt kopieren rückgängig undo"},
-{t:"e",h:"Kopfleiste und Werkzeuge",b:"<ul><li><b>☰ Meine Stücke</b>: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup.</li><li><b>▶ Start / ■ Stopp</b>, daneben das Tempo (30–220 bpm).</li><li><b>🎙 Einspielen</b>: mit dem Bass einspielen, die App notiert mit (nur installierte App).</li><li><b>🎯 Stimmen</b>: Stimmgerät (nur installierte App).</li><li><b>🎸 Griffbrett</b>: zeigt die Töne auf dem Griffbrett; Antippen setzt eine Note.</li><li><b>📷 Vorlage</b>: Foto deiner Noten zum Abtippen einblenden.</li><li><b>❓</b>: diese Hilfe.</li></ul>",k:"menü werkzeuge kopf"},
-{t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Noten ein/aus.</li></ul>",k:"metronom schleife trainer tonart taktart"},
+{t:"e",h:"Kopfleiste und Menü ⋯",b:"<ul><li><b>☰</b> Meine Stücke: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup. Auch der Stückname daneben öffnet die Liste.</li><li><b>− 80 +</b> Tempo in bpm; Antippen der Zahl öffnet die Einstellungen mit Tempo-Regler.</li><li><b>▶ / ■</b> Start und Stopp.</li><li><b>⋯</b> Menü mit 🎙 Einspielen, 🎯 Stimmgerät, 🎸 Griffbrett anzeigen, 📷 Vorlage, ⚙ Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück) und ❓ Hilfe.</li><li><b>▾ weg</b> rechts über der Eingabe blendet die Eingabe aus, <b>▴ Tastatur</b> wieder ein.</li></ul>",k:"menü werkzeuge kopf einstellungen tempo"},
+{t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Noten ein/aus.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
@@ -2356,6 +2380,16 @@ $("techBtn").onclick=openTech;
 $("chBtn").onclick=openChord;
 $("barSel").onclick=openSel;
 
+/* ---------- Menü ⋯ und Einstellungen ---------- */
+function openMore(){$("moreMenu").classList.add("open");$("moreMenu").setAttribute("aria-hidden","false");$("moreBtn").setAttribute("aria-expanded","true");}
+function closeMore(){$("moreMenu").classList.remove("open");$("moreMenu").setAttribute("aria-hidden","true");$("moreBtn").setAttribute("aria-expanded","false");}
+$("moreBtn").onclick=function(){if($("moreMenu").classList.contains("open"))closeMore();else openMore();};
+$("moreMenu").addEventListener("click",function(e){if(e.target===$("moreMenu")||e.target.closest("button"))closeMore();});
+function openSettings(){$("setDlg").classList.add("open");}
+$("setBtn").onclick=openSettings;
+$("bpmOut").onclick=openSettings;
+$("setClose").onclick=function(){$("setDlg").classList.remove("open");};
+$("setDlg").addEventListener("click",function(e){if(e.target===$("setDlg"))$("setDlg").classList.remove("open");});
 /* Start */
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
 $("metMode").value=S.metMode;$("metAcc").checked=!!S.metAcc;$("countIn").checked=!!S.countIn;
