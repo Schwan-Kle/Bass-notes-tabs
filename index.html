@@ -495,6 +495,10 @@ button{border-width:1.5px}
   #printArea.bw .staff .op{fill:#fff!important}
   #printArea .bar .no .sec,#printArea .bar .no .tsl{background:#fff}
 }
+#lenKeys button.nv{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1;padding:1px 0;min-height:38px}
+#lenKeys button.nv svg{display:block}
+#lenKeys button.nv small{font-size:8.5px;font-weight:700;opacity:.75;margin-top:-1px}
+.staff .stem{stroke-linecap:butt}
 </style>
 </head>
 <body>
@@ -1138,6 +1142,11 @@ function restSVG(b,dot,rx,ym,Y,sp,r){
   if(dot)o+='<circle class="fl" cx="'+r(rx+8)+'" cy="'+(ym-sp/4)+'" r="1.4"/>';
   return '<g class="srest">'+o+'</g>';
 }
+function tieArc(x1,y1,x2,y2,below){
+  var dx=Math.max(8,x2-x1),h=Math.min(9,3.5+dx*0.12),d=below?1:-1,mx=(x1+x2)/2,my=Math.max(y1,y2)*(below?1:0)+Math.min(y1,y2)*(below?0:1);
+  function r(v){return Math.round(v*10)/10}
+  return '<path class="fl tie" d="M'+r(x1)+' '+r(y1)+' C'+r(x1+dx*0.25)+' '+r(my+d*h)+' '+r(x2-dx*0.25)+' '+r(my+d*h)+' '+r(x2)+' '+r(y2)+' C'+r(x2-dx*0.25)+' '+r(my+d*(h-1.6))+' '+r(x1+dx*0.25)+' '+r(my+d*(h-1.6))+' '+r(x1)+' '+r(y1)+'Z"/>';
+}
 function staffSVG(b,NI){
   var sg=sigAt(b),st=sg.steps,beat=sg.beat,ns=nstr(),bar=song().bars[b];
   var U=22,sp=8,G=GUTb(b)*U,W=(st+GUTb(b))*U,padT=3*sp+10,H=padT+(NI.pMax-NI.pMin)*sp/2+3*sp+10,hx=4.9;
@@ -1189,7 +1198,7 @@ function staffSVG(b,NI){
       var x0=X(L[i].t)+sx,x1=X(L[j].t)+sx;
       var ya=up?Y(L[i].hi)-3.3*sp:Y(L[i].lo)+3.3*sp,yb=up?Y(L[j].hi)-3.3*sp:Y(L[j].lo)+3.3*sp;
       var bsE=Math.floor(L[i].t/beat)*beat,ext=L[i].t>bsE&&!(bar.tb&&beat===4&&bar.tb[bsE/4]);
-      if(ext){if(up)ya=yb=Math.min(ya,yb);else ya=yb=Math.max(ya,yb);}
+      if(ext){if(up)ya=yb=Math.min(ya,yb,Y(8)-4);else ya=yb=Math.max(ya,yb,Y(0)+4);}
       var dd=Math.max(-sp*0.9,Math.min(sp*0.9,(yb-ya)*0.5)),kq=x1>x0?dd/(x1-x0):0;
       var BY=function(xx){return ya+(xx-x0)*kq;},sh=0;
       for(k=i;k<=j;k++){var xq=X(L[k].t)+sx,need=up?BY(xq)-(Y(L[k].hi)-2.6*sp):(Y(L[k].lo)+2.6*sp)-BY(xq);if(need>sh)sh=need;}
@@ -1200,6 +1209,7 @@ function staffSVG(b,NI){
       var beamP=function(u,v,off){var a1=BY(u)+(up?off:-off),b1=BY(v)+(up?off:-off),t2=up?TH:-TH;
         return '<path class="bm" d="M'+r(u)+' '+r(a1)+'L'+r(v)+' '+r(b1)+'L'+r(v)+' '+r(b1+t2)+'L'+r(u)+' '+r(a1+t2)+'Z"/>';};
       o.push(beamP(xa,xb,0));
+      for(k=i;k<=j;k++){L[k].bF=(k===i&&xa===x0);L[k].bL=(k===j);}
       for(k=i;k<=j;k++){
         if(L[k].base!==1)continue;
         var xk=X(L[k].t)+sx;
@@ -1220,7 +1230,10 @@ function staffSVG(b,NI){
     if(!e.beamed){e.up=(e.lo+e.hi)/2<4;e.end=e.up?Y(e.hi)-3*sp:Y(e.lo)+3*sp;}
     var xs=x+(e.up?hx:-hx);
     if(e.base<16){
-      o.push('<line class="st" x1="'+r(xs)+'" x2="'+r(xs)+'" y1="'+Y(e.up?e.lo:e.hi)+'" y2="'+r(e.end)+'"/>');
+      o.push('<line class="st stem" x1="'+r(xs)+'" x2="'+r(xs)+'" y1="'+Y(e.up?e.lo:e.hi)+'" y2="'+r(e.beamed?e.end+(e.up?0.9:-0.9):e.end)+'"/>');
+      if(e.beamed){var yc=e.up?e.end+3.1:e.end-3.1,dv2=e.up?1:-1;
+        var fl2=e.bF?xs:xs-2.4,fr2=e.bL?xs:xs+2.4;
+        o.push('<path class="fl" d="M'+r(fl2)+' '+r(yc)+(e.bF?' L'+r(xs-0.6)+' '+r(yc):' Q'+r(xs-0.6)+' '+r(yc)+' '+r(xs-0.6)+' '+r(yc+dv2*2.6))+' L'+r(xs-0.6)+' '+r(yc+dv2*2.6)+' L'+r(xs+0.6)+' '+r(yc+dv2*2.6)+(e.bL?' L'+r(xs+0.6)+' '+r(yc):' Q'+r(xs+0.6)+' '+r(yc)+' '+r(fr2)+' '+r(yc))+'Z"/>');}
       if(!e.beamed&&e.base<4){
         var nf=e.base===1?2:1;
         for(var f=0;f<nf;f++){
@@ -1247,8 +1260,10 @@ function staffSVG(b,NI){
       if(e.dot)o.push('<circle class="fl" cx="'+r(x+8.5)+'" cy="'+(nn.pos%2===0?y-sp/4:y)+'" r="1.4"/>');
     });
     if(e.h){
-      var x0=i>0?X(L[i-1].t):x-16,ya=e.up?Y(e.lo)+8:Y(e.hi)-8,bend=e.up?7:-7;
-      o.push('<path class="fl" d="M'+r(x0+2)+' '+ya+' Q'+r((x0+x)/2)+' '+(ya+bend*1.25)+' '+r(x-2)+' '+ya+' Q'+r((x0+x)/2)+' '+(ya+bend*0.8)+' '+r(x0+2)+' '+ya+'Z"/>');
+      var below=e.up,yb2=below?Y(e.lo)+6:Y(e.hi)-6,xa2,ya2;
+      if(i>0){var pe=L[i-1];xa2=X(pe.t)+5;ya2=below?Y(pe.lo)+6:Y(pe.hi)-6;}
+      else{xa2=Math.max(2,x-30);ya2=yb2;}
+      o.push(tieArc(xa2,ya2,x-5,yb2,below));
     }
     var artY=Math.min(Y(8),e.up?e.end:Y(e.hi))-7;
     if(e.st){o.push('<circle class="fl" cx="'+r(x)+'" cy="'+r(artY)+'" r="1.7"/>');artY-=7;}
@@ -1259,6 +1274,9 @@ function staffSVG(b,NI){
     if(mk)o.push('<text x="'+r(x)+'" y="'+r(artY+1)+'" font-size="10" font-weight="700" text-anchor="middle">'+mk+'</text>');
     any=true;
   }
+  /* Bogen in den nächsten Takt */
+  if(L.length&&!EXSVG){var nb=song().bars[b+1];if(nb){var ft=1e9,fh=false;for(var nk in nb.n){var qq=nk.split("_"),tq=+qq[1];if(+qq[0]>=ns)continue;if(tq<ft){ft=tq;fh=!!nb.n[nk].h;}else if(tq===ft&&nb.n[nk].h)fh=true;}
+    if(fh&&ft===0){var le=L[L.length-1],lb=le.up,ly=lb?Y(le.lo)+6:Y(le.hi)-6;o.push(tieArc(X(le.t)+5,ly,W-2,ly,lb));}}}
   /* Spannen: Harm. / P.M. */
   [["hm","Harm."],["pm","P.M."]].forEach(function(sp2){
     var k2=sp2[0],i3=0;
@@ -1564,7 +1582,7 @@ function nav(d){
 
 (function buildKeys(){
   var h="";
-  LENS.forEach(function(l){h+='<button data-len="'+l[0]+'">'+l[1]+'</button>'});
+  LENS.forEach(function(l){h+='<button data-len="'+l[0]+'" class="nv" title="Notenlänge '+l[1]+'" aria-label="Notenlänge '+l[1]+'">'+noteIcon(l[0])+'<small>'+l[1]+'</small></button>'});
   $("lenKeys").innerHTML=h;h="";
   for(var i=0;i<=24;i++)h+='<button data-f="'+i+'">'+i+'</button>';
   h+='<button data-f="x" title="Dead Note">x</button><button data-f="del" aria-label="Note löschen">⌫</button>';
@@ -1622,6 +1640,16 @@ $("pdfBtn").onclick=function(){$("moreMenu").classList.remove("open");openPdf();
 $("pdfGo").onclick=makePdf;$("pdfCancel").onclick=function(){$("pdfDlg").classList.remove("open")};
 
 /* Pausen: eigene Reihe + Pause antippen */
+function noteIcon(l){
+  var d=(l===3||l===6||l===12),b=d?(l===3?2:l===6?4:8):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
+  var open=b>=8,cx=12,cy=23;
+  o+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="5.2" ry="3.7" transform="rotate(-22 '+cx+' '+cy+')" '+(open?'fill="none" stroke="currentColor" stroke-width="1.8"':'fill="currentColor"')+'/>';
+  if(b<16)o+='<line x1="16.6" y1="22" x2="16.6" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>';
+  if(b<=2)o+='<path d="M16.6 3 c0.6 3.6 6.4 4.8 5.4 11 c-0.4 -3 -2.6 -4.6 -5.4 -5.6z" fill="currentColor"/>';
+  if(b<=1)o+='<path d="M16.6 8.5 c0.6 3.4 6.2 4.4 5.2 10 c-0.4 -2.8 -2.6 -4.2 -5.2 -5.2z" fill="currentColor"/>';
+  if(d)o+='<circle cx="22.5" cy="23" r="2" fill="currentColor"/>';
+  return o+'</svg>';
+}
 function restIcon(l){
   var d=(l===3||l===6||l===12),b=d?(l===3?2:4):l,o='<svg viewBox="0 0 30 30" width="22" height="22" aria-hidden="true">';
   if(b===16)o+='<line x1="5" x2="25" y1="11" y2="11" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="11" width="12" height="5" fill="currentColor"/>';
