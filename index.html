@@ -550,7 +550,7 @@ body.dragging{user-select:none;-webkit-user-select:none}
 .pk .pw.on{background:var(--a-in)}.pk .pw.on span{color:#fff}
 .pk .pb.on{background:var(--a-in);border-color:#00332A}
 .pk .pw:active{background:#DCE8E3}.pk .pb:active{background:#444}
-body.piano #fretKeys,body.piano #modeFb,body.piano #altNote,body.piano #posBtn,body.piano .bassonly,body.piano #recBtn,body.piano #tunerBtn,body.piano #fbBtn,body.piano #techBtn,body.piano .viewrow{display:none!important}
+body.piano #fretKeys,body.piano #modeFb,body.piano #altNote,body.piano #posBtn,body.piano .bassonly,body.piano:not(.voice) #recBtn,body.piano #tunerBtn,body.piano #fbBtn,body.piano #techBtn,body.piano .viewrow{display:none!important}
 .gstaff{border-left:2.5px solid #1A1A1A;border-radius:6px 0 0 6px;padding-left:2px}
 .gstaff svg+svg{margin-top:-14px}
 /* Einstellungen in Reitern */
@@ -614,6 +614,19 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
 .sl.sCr,.sl.sRd{color:#B07400}.sl.sHO,.sl.sHH{color:#00838F}.sl.sSD{color:#C2185B}.sl.sTm{color:#6A1B9A}.sl.sBD{color:#1E3A8A}
 .accbtn{width:100%;margin:6px 0 2px;border:2px solid var(--a-train);color:var(--a-train);text-align:left}
 .smd{font-size:12px;color:var(--muted)}
+/* Passende Töne */
+#fretKeys button.kct{background:#DDF2D8;border-color:#2E7D32;color:#1B5E20;font-weight:800}
+#fretKeys button.kroot{background:#FFE3A3;border-color:#B07400;color:#5A3A00;font-weight:900}
+#fretKeys button.kout{color:#9AA8A3}
+.pk .pw.kct{background:linear-gradient(#fff 55%,#CFEBC8)}.pk .pw.kroot{background:linear-gradient(#fff 50%,#FFD27A)}
+.pk .pb.kct{background:linear-gradient(#1A1A1A 55%,#2E7D32)}.pk .pb.kroot{background:linear-gradient(#1A1A1A 50%,#B07400)}
+.pk .pw.on,.pk .pb.on{background:var(--a-in)!important}
+.legend i.l-ct{background:#DDF2D8;border-color:#2E7D32}.legend i.l-root{background:#FFE3A3;border-color:#B07400}
+.hleg{display:contents}
+/* Ablauf */
+.formseq button.fs{border:2px solid var(--a-train);color:var(--a-train);font-weight:800}.formseq button.bad{border-color:var(--a-del);color:var(--a-del)}
+.farr{align-self:center;color:var(--a-train);font-weight:900}
+.songinfo .formchip{border-color:var(--a-train);color:var(--a-train);font-weight:800}
 /* Spuren */
 .partbar{flex:1 1 100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:-10px;z-index:6;background:var(--bg);padding:6px 0 4px;margin:-4px 0 0}
 @media (max-width:699px){.partbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.partbar>*{flex-shrink:0}.pch button[data-pi]{padding:0 8px}}
@@ -823,7 +836,7 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
     <button id="barSel" class="sub ic" title="Mehrere Takte kopieren, einfügen, löschen, transponieren, umgreifen"><i>▦</i><small>Takte</small></button>
     <button id="undoBtn" class="ic" title="Rückgängig"><i>↶</i><small>Zurück</small></button>
   </div>
-  <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span></div>
+  <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span><span id="hlegend" class="hleg"></span></div>
 </section>
 <div id="drawer" class="drawer" aria-hidden="true">
   <div class="dpanel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -1033,6 +1046,12 @@ body.drums #pad::before{content:"🥁 Kästchen im Raster antippen = Schlag setz
       <div class="row"><input type="text" id="secIn" maxlength="16" placeholder="eigener Name, z. B. Solo 2" aria-label="Abschnittsname"><button id="secDel">entfernen</button></div>
       <button id="secLoop" class="rsbig"><b>🔁 Schleife auf diesen Abschnitt</b><small>übt den Abschnitt bis zur nächsten Marke</small></button>
     </div>
+    <div class="secbox" id="formBox"><b>🧩 Ablauf des Stücks</b>
+      <p class="lyhint">Abschnitte antippen = hinten anfügen. So spielt die App das Stück (z. B. Intro → Strophe → Refrain → Strophe → Refrain). Leer = von vorn bis hinten.</p>
+      <div class="chips" id="formAdd"></div>
+      <div class="chips formseq" id="formSeq"></div>
+      <div class="row"><button id="formClr">Ablauf leeren</button><button id="formOut" title="Ablauf als echte Takte hintereinander schreiben">📄 Ausschreiben</button></div>
+    </div>
     <div class="secbox"><b>📝 Text vor diesem Takt</b>
       <textarea id="txIn" rows="3" maxlength="2000" placeholder="z. B. Hinweise, Ablauf, Liedtext-Strophe … Zeile mit # am Anfang = Überschrift"></textarea>
       <label class="txe">📝 Text am Ende des Stücks<textarea id="txEnd" rows="2" maxlength="2000" placeholder="optional"></textarea></label>
@@ -1151,8 +1170,22 @@ function inHand(s){if(!isPiano()||!STAFF.clef)return true;var m=OPEN[88][s];retu
 function posM(m){var sp0=isKeys()?spell(m):spell(m+12);return effClef()==="treble"?sp0.pos-12:sp0.pos;}
 function spellM2(m){var x=isKeys()?spell(m):spell(m+12);if(effClef()==="treble")x={pos:x.pos-12,acc:x.acc,L:x.L,oct:x.oct};return x;}
 function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
-function pushUndo(){var sg=song();undo.push(JSON.stringify({b:sg.bars,i:sg.inst||null,s:sg.strings,pa:sg.pa||0,ps:sg.parts||null}));if(undo.length>60)undo.shift()}
-function popUndo(){var o=JSON.parse(undo.pop()),sg=song();if(Array.isArray(o)){sg.bars=o;return;}sg.bars=o.b;if(o.i)sg.inst=o.i;else delete sg.inst;sg.strings=o.s;if(o.ps){sg.parts=o.ps;sg.pa=o.pa;}else{delete sg.parts;delete sg.pa;}if(cursor.str>=nstr())cursor.str=nstr()-1;if(typeof instUI==="function")instUI();}
+function pushUndo(){var sg=song();undo.push(JSON.stringify({b:sg.bars,i:sg.inst||null,s:sg.strings,pa:sg.pa||0,ps:sg.parts||null,fm:sg.form||null}));if(undo.length>60)undo.shift()}
+function popUndo(){var o=JSON.parse(undo.pop()),sg=song();if(Array.isArray(o)){sg.bars=o;return;}sg.bars=o.b;if(o.i)sg.inst=o.i;else delete sg.inst;sg.strings=o.s;if(o.ps){sg.parts=o.ps;sg.pa=o.pa;}else{delete sg.parts;delete sg.pa;}if(o.fm)sg.form=o.fm;else delete sg.form;if(cursor.str>=nstr())cursor.str=nstr()-1;if(typeof instUI==="function")instUI();}
+/* ---------- Passende Töne markieren ---------- */
+function harmCtx(){
+  var k=keyN(),ton=((k*7)%12+12)%12,scale={};[0,2,4,5,7,9,11].forEach(function(d){scale[(ton+d)%12]=1;});
+  var sym=typeof chordIn==="function"?chordIn(cursor.bar,cursor.step):"",c=sym?parseChord(sym):null,ct={};
+  if(c)c.pcs.forEach(function(p){ct[p]=1;});
+  return {scale:scale,ct:ct,root:c?c.root:null,sym:sym};
+}
+function markKeys(){
+  if(isDrums())return;var H=harmCtx(),ns=nstr(),hasC=H.root!==null;
+  if(!isKeys()){var base=OPEN[ns][cursor.str];
+    Array.prototype.forEach.call($("fretKeys").querySelectorAll("button[data-f]"),function(b){var f=+b.dataset.f;if(isNaN(f)){b.className="";return;}var pc=(base+f)%12;
+      b.className=hasC&&pc===H.root?"kroot":hasC&&H.ct[pc]?"kct":H.scale[pc]?"":"kout";});}
+  var lg=$("hlegend");if(lg)lg.innerHTML=hasC?'<span><i class="l-root"></i>Grundton '+esc(H.sym)+'</span><span><i class="l-ct"></i>Akkordton</span>':'';
+}
 /* ---------- Spuren (mehrere Instrumente) ---------- */
 var PART={noCh:false},OTHC={k:null,v:null};
 var PCOL=["#1565C0","#00838F","#7B1FA2","#E65100","#2E7D32","#AD1457"];
@@ -1663,6 +1696,7 @@ function moveCursor(b,s,t,noScroll){
 }
 function status(msg){
   if(msg){$("status").textContent=msg;return;}
+  if(typeof markKeys==="function")try{markKeys();}catch(e){}
   var sg=sigAt(cursor.bar),ns=nstr(),n=noteAt(cursor.bar,cursor.str,cursor.step);
   var beat=Math.floor(cursor.step/sg.beat)+1,sub=cursor.step%sg.beat+1;
   var t="Takt "+(cursor.bar+1)+" · Schlag "+beat+"."+sub+(isKeys()?"":isDrums()?" · "+DRN[cursor.str]:" · "+SNAME[ns][cursor.str]+"-Saite");
@@ -1958,14 +1992,15 @@ $("modeLine").onclick=function(){setMode("line")};
 /* Klavier: Tastatur */
 var PK={lo:48};
 function pkRender(){
+  var HK=harmCtx();HK.has=HK.root!==null;
   var h="",wi=0,lo=PK.lo,hi=lo+24,BL={1:1,3:1,6:1,8:1,10:1},cur=noteAt(cursor.bar,cursor.str,cursor.step),bar=song().bars[cursor.bar],act={};
   if(bar)for(var k in bar.n){var q=k.split("_");if(+q[1]===cursor.step)act[OPEN[88][+q[0]]]=1;}
   var nW=0;for(var m=lo;m<hi;m++)if(!BL[m%12])nW++;
   for(m=lo;m<hi;m++){
     if(BL[m%12])continue;
     var lab=m%12===0?"C"+(Math.floor(m/12)-1):"";
-    h+='<button class="pw'+(act[m]?' on':'')+(m===60?' c4':'')+'" data-pm="'+m+'" style="left:'+(wi*100/nW)+'%;width:'+(100/nW)+'%"><span>'+lab+'</span></button>';wi++;
-    if(BL[(m+1)%12]&&m+1<hi)h+='<button class="pb'+(act[m+1]?' on':'')+'" data-pm="'+(m+1)+'" style="left:'+((wi-0.32)*100/nW)+'%;width:'+(0.64*100/nW)+'%"></button>';
+    h+='<button class="pw'+(act[m]?' on':'')+(m===60?' c4':'')+(HK.root===m%12&&HK.has?' kroot':HK.has&&HK.ct[m%12]?' kct':'')+'" data-pm="'+m+'" style="left:'+(wi*100/nW)+'%;width:'+(100/nW)+'%"><span>'+lab+'</span></button>';wi++;
+    if(BL[(m+1)%12]&&m+1<hi)h+='<button class="pb'+(act[m+1]?' on':'')+(HK.root===(m+1)%12&&HK.has?' kroot':HK.has&&HK.ct[(m+1)%12]?' kct':'')+'" data-pm="'+(m+1)+'" style="left:'+((wi-0.32)*100/nW)+'%;width:'+(0.64*100/nW)+'%"></button>';
   }
   $("pk").innerHTML=h;$("pkLbl").textContent="C"+(Math.floor(lo/12)-1)+" – H"+(Math.floor((hi-1)/12)-1);
 }
@@ -1986,6 +2021,7 @@ function instUI(){
   document.body.classList.toggle("guitar",isGuitar());
   if(typeof syncSegs==="function")syncSegs();
   if(typeof flagButtons==="function")flagButtons();
+  $("recBtn").innerHTML=isVoice()?"🎤 Melodie einsingen <small>singen oder summen, App notiert mit</small>":"🎙 Einspielen <small>mit dem Bass, App notiert mit</small>";
 }
 function instOf(){return isPiano()?"piano":isVoice()?"voice":isDrums()?"drums":isGuitar()?"guitar":"bass"}
 function convertInst(to){
@@ -2078,7 +2114,7 @@ function makePdf(){
   var d=new Date(),ds=d.toLocaleDateString("de-DE");
   var h='<header class="pt"><h1>'+esc(sg.name||"Ohne Titel")+'</h1>'+(sg.sub?'<div class="psub">'+esc(sg.sub)+'</div>':'')+
     '<div class="pmeta"><div class="pl"><b>Tempo</b> '+sg.bpm+' bpm<br><b>Tonart</b> '+esc(keyName(keyN()))+'</div><div class="pr"><b>Takt</b> '+esc(sg.sig)+'<br>'+(partList()&&PRN.allParts!==false?'<b>Besetzung</b> '+esc(partList().map(function(p){return p.name}).join(", ")):partList()?'<b>Stimme</b> '+esc(partList()[actPart()].name):isGuitar()||isPiano()||isVoice()?'<b>'+INAME[instOf()]+'</b>':'<b>Bass</b> '+nstr()+'-saitig')+'</div></div>'+
-    (sg.note?'<div class="pnote">'+esc(sg.note)+'</div>':'')+'</header>';
+    (sg.form&&sg.form.length?'<div class="pnote"><b>Ablauf:</b> '+esc(sg.form.join(" → "))+'</div>':'')+(sg.note?'<div class="pnote">'+esc(sg.note)+'</div>':'')+'</header>';
   if(sg.endTx)rowsH+='<div class="ptx">'+txHTML(sg.endTx)+'</div>';
   h+='<div class="pbars">'+rowsH+'</div><footer class="pf">'+esc(sg.name||"")+' · erstellt am '+ds+'</footer>';
   var pa=$("printArea");pa.innerHTML=h;pa.classList.toggle("bw",!$("pdfCol").checked);pa.classList.toggle("multi",!!partList()&&PRN.allParts!==false);
@@ -2185,6 +2221,7 @@ function lineRender(ghost){
   if(isGuitar()||isVoice())o.push(trebleSVG(4,Y(2),U*1.05,isGuitar()));else  o.push('<g transform="translate(4 '+yF+') scale('+sc+') translate(0 '+(-yF)+')"><circle class="fl" cx="3.5" cy="'+yF+'" r="2"/><path class="st" stroke-width="1.8" d="M3.5 '+(yF+1)+' C3.5 '+(yF-6)+' 12 '+(yF-6)+' 12 '+(yF+3)+' C12 '+(yF+11)+' 6 '+(yF+17)+' 2 '+(yF+20)+'"/><circle class="fl" cx="15.2" cy="'+(yF-4)+'" r="1.3"/><circle class="fl" cx="15.2" cy="'+(yF+4)+'" r="1.3"/></g>');
   var kn=keyN();for(var ki=0;ki<Math.abs(kn);ki++){[isGuitar()||isVoice()?2:0].concat(isPiano()?[14]:[]).forEach(function(off){var kp=(kn<0?FLAT_POS:SHARP_POS)[ki]+off;o.push('<g transform="translate('+(44+ki*9)+' '+Y(kp)+') scale(1.6) translate('+(-(44+ki*9))+' '+(-Y(kp))+')">'+accSVG(kn<0?-1:1,44+ki*9,Y(kp))+'</g>');});}
   var kx=Math.abs(kn)?44+Math.abs(kn)*9+6:46,gx=kx+34,zx=W*0.55;
+  var HL=harmCtx();if(HL.root!==null)for(var hp=R.lo;hp<=R.hi;hp++){var hm=posMidi(hp).m%12;if(HL.ct[hm])o.push('<rect x="'+(gx+20)+'" y="'+(Y(hp)-U/4+0.5)+'" width="'+(zx-gx-26)+'" height="'+(U/2-1)+'" rx="3" fill="'+(hm===HL.root?'#F6A924':'#2E7D32')+'" opacity="'+(hm===HL.root?'.35':'.18')+'"/>');}
   o.push('<rect x="'+zx+'" y="2" width="'+(W-zx-2)+'" height="'+(H-4)+'" rx="8" fill="#004C3A" opacity=".06"/>');
   o.push('<text x="'+((zx+W)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="11" fill="#45524D" font-weight="700">☝ hier tippen &amp; schieben</text>');
   var info=$("lineInfo"),CH=chordOn()?stepNotes():[],onHit=false;
@@ -2261,6 +2298,7 @@ $("score").addEventListener("click",function(e){
     var i=pc.dataset.pi!==undefined?+pc.dataset.pi:+pc.dataset.part;if(i!==actPart())switchPart(i);return;}
 },true);
 $("score").addEventListener("click",function(e){
+  if(e.target.closest("#songInfo [data-form]")){openBarDlg();setTimeout(function(){$("formBox").scrollIntoView({block:"start"})},60);return;}
   if(e.target.closest("#songInfo button")){openKeyDlg(false);return;}
   var rh=e.target.closest(".rhit");
   if(rh){var sv0=rh.closest("svg.staff");openRest(+sv0.dataset.b,+rh.dataset.t);return;}
@@ -2455,6 +2493,7 @@ function playOther(pt,nm,tt,t,sd){
 }
 /* Reihenfolge mit Wiederholungen und Klammern */
 function playOrder(){
+  var F=song().form;if(F&&F.length){var fs=[];F.forEach(function(nm){var r=secRangeByName(nm);if(r)for(var q=r[0];q<=r[1];q++)fs.push(q);});if(fs.length)return fs;}
   var bars=song().bars,n=bars.length,seq=[],i=0,repStart=0,pass=1,cnt={},guard=0;
   while(i<n&&guard++<20000){
     var b=bars[i];
@@ -3139,7 +3178,7 @@ var barDlgB=0;
 function openBarDlg(){
   barDlgB=cursor.bar;var b=song().bars[barDlgB];
   $("barDlgT").textContent="Takt "+(barDlgB+1)+" · Abschnitt & Wiederholung";
-  secFill(b);tsFill(b);$("txIn").value=b.tx||"";$("txEnd").value=song().endTx||"";
+  secFill(b);tsFill(b);formFill();$("txIn").value=b.tx||"";$("txEnd").value=song().endTx||"";
   $("rsChk").checked=!!b.rs;$("reChk").checked=!!b.re;$("rtSel").value=String(b.rt||2);$("vSel").value=String(b.v||0);
   pushUndo();
   $("barDlg").classList.add("open");
@@ -3176,6 +3215,29 @@ function secFill(b){
   $("secChips").innerHTML=SECS.map(function(x){return '<button data-sec="'+x+'" class="'+(b.sec===x?'on':'')+'">'+x+'</button>'}).join("");
   $("secIn").value=b.sec&&SECS.indexOf(b.sec)<0?b.sec:"";
   $("secLoop").disabled=!secRange(barDlgB);
+}
+function secNames(){var o=[];song().bars.forEach(function(b){if(b.sec&&o.indexOf(b.sec)<0)o.push(b.sec);});return o;}
+function secRangeByName(nm){var bars=song().bars;for(var i=0;i<bars.length;i++)if(bars[i].sec===nm)return secRange(i);return null;}
+function formFill(){
+  var nm=secNames(),F=song().form||[];
+  $("formAdd").innerHTML=nm.length?nm.map(function(x){return '<button data-fadd="'+esc(x)+'">＋ '+esc(x)+'</button>'}).join(""):'<span class="lbl">Erst Abschnitte markieren (oben), dann hier zusammenstecken.</span>';
+  $("formSeq").innerHTML=F.length?F.map(function(x,i){return '<button data-fdel="'+i+'" class="fs'+(secRangeByName(x)?'':' bad')+'" title="antippen = aus dem Ablauf nehmen">'+(i+1)+'. '+esc(x)+' ✕</button>'}).join('<span class="farr">→</span>'):'<span class="lbl">Kein Ablauf – gespielt wird von vorn bis hinten.</span>';
+  $("formOut").disabled=!F.length;$("formClr").disabled=!F.length;
+}
+$("formBox").addEventListener("click",function(e){var x=e.target.closest("button");if(!x)return;var sg=song();
+  if(x.dataset.fadd!==undefined){pushUndo();sg.form=(sg.form||[]).concat([x.dataset.fadd]);}
+  else if(x.dataset.fdel!==undefined){pushUndo();sg.form.splice(+x.dataset.fdel,1);if(!sg.form.length)delete sg.form;}
+  else if(x.id==="formClr"){pushUndo();delete sg.form;}
+  else if(x.id==="formOut"){formWriteOut();return;}
+  else return;
+  formFill();render();save();});
+function formWriteOut(){
+  var sg=song(),F=sg.form||[],out=[],miss=0;if(!F.length)return;
+  if(!confirm("Den Ablauf als Takte hintereinander ausschreiben? Danach stehen alle Teile einzeln im Stück (gut fürs PDF), der Ablauf wird gelöscht. ↶ Zurück geht."))return;
+  pushUndo();
+  F.forEach(function(nm,fi){var r=secRangeByName(nm);if(!r){miss++;return;}for(var i=r[0];i<=r[1];i++){var c=JSON.parse(JSON.stringify(sg.bars[i]));if(i===r[0]&&F.indexOf(nm)<fi)c.sec=nm;delete c.rs;delete c.re;delete c.rt;delete c.v;out.push(c);}});
+  sg.bars=out.length?out:sg.bars;delete sg.form;cursor.bar=0;cursor.step=0;$("barDlg").classList.remove("open");afterBars();
+  status("Ablauf ausgeschrieben: "+out.length+" Takte"+(miss?" ("+miss+" Abschnitt(e) nicht gefunden)":"")+". ↶ Zurück macht es rückgängig.");
 }
 function secRange(bi){var bars=song().bars,a=-1;for(var i=bi;i>=0;i--)if(bars[i].sec){a=i;break;}if(a<0)return null;var e=bars.length-1;for(var j=a+1;j<bars.length;j++)if(bars[j].sec){e=j-1;break;}return [a,e,bars[a].sec];}
 function setSec(v){var b=song().bars[barDlgB];pushUndo();if(v)b.sec=v;else delete b.sec;secFill(b);render();save();}
@@ -3290,7 +3352,7 @@ function detectPitch(){
   MIC.rawAn.getFloatTimeDomainData(MIC.raw);
   for(i=0;i<MIC.raw.length;i++)rms+=MIC.raw[i]*MIC.raw[i];
   rms=Math.sqrt(rms/MIC.raw.length);
-  var tMin=Math.floor(sr/450),tMax=Math.min(Math.floor(sr/27),Math.floor(N/2)),W=N-tMax;
+  var tMin=Math.floor(sr/(isVoice()?1100:450)),tMax=Math.min(Math.floor(sr/27),Math.floor(N/2)),W=N-tMax;
   if(!yd||yd.length!==tMax+1)yd=new Float32Array(tMax+1);
   yd[0]=1;var run=0,best=-1;
   for(var tau=1;tau<=tMax;tau++){
@@ -3337,7 +3399,7 @@ $("tunClose").onclick=function(){clearInterval(TUN.timer);TUN.timer=null;$("tune
 /* ---------- Einspielen ---------- */
 var REC={on:false,frames:[],timer:null};
 $("recBtn").onclick=function(){
-  if(P)stop();
+  if(P)stop();$("recT").textContent=isVoice()?"🎤 Melodie einsingen":"Einspielen";
   $("recStartBar").textContent=cursor.bar+1;$("recBpm").textContent=song().bpm;
   $("recLat").value=S.recLat;$("recLatV").textContent=S.recLat+" ms";
   $("recNote").textContent="–";$("recBeatTxt").textContent="";$("recLevel").style.width="0";
@@ -3349,6 +3411,7 @@ function recBeat(t){$("recBeatTxt").textContent=t}
 $("recGo").onclick=function(){
   $("recInfo").textContent="Mikrofon wird gestartet …";
   micStart().then(function(){
+    if(MIC.lp)MIC.lp.frequency.value=isVoice()?2400:900;
     REC.on=true;REC.frames=[];REC.start=cursor.bar;
     $("recGo").hidden=true;$("recEnd").hidden=false;$("recInfo").textContent="Erst 1 Takt einzählen, dann spielen. Zum Beenden „Stopp & übernehmen“.";
     play({rec:true,recStart:REC.start});
@@ -3374,7 +3437,7 @@ function recFinish(){
   var floor=ci.length?ci[Math.floor(ci.length/2)]:0.002,thr=Math.max(0.006,floor*3);
   var notes=segment(fr.filter(function(x){return x.t>=t0-0.05}),thr);
   if(!notes.length){status("Keine Töne erkannt. Spiele lauter oder näher am Mikrofon, und prüfe die Mikrofon-Berechtigung.");return;}
-  var sd=60/tempoAt(REC.start)/4,st=sigAt(REC.start).steps,ns=nstr(),lo=OPEN[ns][ns-1],hi=OPEN[ns][0]+24,ev=[];
+  var sd=60/tempoAt(REC.start)/4,st=sigAt(REC.start).steps,ns=nstr(),lo=isKeys()?(isVoice()?43:21):OPEN[ns][ns-1],hi=isKeys()?(isVoice()?88:108):OPEN[ns][0]+24,ev=[];
   notes.forEach(function(n){
     var s=Math.round((n.on-t0)/sd),e=Math.round((n.off-t0)/sd);if(s<0)s=0;
     var m=Math.round(n.m);while(m<lo)m+=12;while(m>hi)m-=12;
@@ -3391,6 +3454,7 @@ function recFinish(){
   var ref=lastFret();
   ev.forEach(function(e){
     var b=REC.start+Math.floor(e.pos/st),t=e.pos%st,best=null,bs=1e9;
+    if(isKeys()){bars[b].n[pIdx(e.m)+"_"+t]={f:0,len:Math.min(e.len,64)};return;}
     for(var k=0;k<ns;k++){var f=e.m-OPEN[ns][k];if(f<0||f>24)continue;var sc=Math.abs(f-ref)+(f>12?0.5:0);if(sc<bs){bs=sc;best={s:k,f:f};}}
     if(!best)return;
     bars[b].n[best.s+"_"+t]={f:best.f,len:Math.min(e.len,64)};ref=best.f||ref;
@@ -3478,9 +3542,11 @@ var HELP=[
 {t:"e",h:"Akkorde eingeben (mehrere Töne gleichzeitig)",b:"<p>In der unteren Navigationsreihe <b>♫ Akkord</b> einschalten (dunkel = an). Die App merkt sich das je Instrument.</p><ul><li><b>🎼 Zeile</b> oder <b>🎹 Tasten</b>: Töne nacheinander antippen – sie stapeln sich am Cursor, der Cursor bleibt stehen. Die Töne des Akkords stehen groß in der Zeile und in der Leiste darüber.</li><li><b>Einen Ton entfernen:</b> genau diesen Ton noch einmal antippen. In der Zeile wird er beim Drüberfahren rot mit ✕ markiert – loslassen entfernt nur ihn.</li><li><b>➜ weiter</b> (orange) springt um die Länge des Akkords zum nächsten Schlag.</li><li>Gitarre: jeder Ton bekommt automatisch eine freie Saite. Im Tab kannst du wie gewohnt Saite für Saite eintippen.</li><li>Alle Töne eines Akkords haben dieselbe Länge; vorher die Länge wählen.</li><li>Akkord wieder aus: Eingabe springt nach jeder Note weiter (Melodie).</li></ul>"},
 {t:"e",h:"Komponieren: Begleitung aus Akkorden",b:"<p>Erst die <b>Akkordfolge</b> schreiben (Cursor setzen, <b>C7 Akkord</b>, z. B. Am F C G – ein Akkord gilt, bis der nächste kommt). Dann für jede Spur eine Begleitung erzeugen lassen und danach frei ändern.</p><ul><li>Spur wählen, <b>C7 Akkord</b> → <b>✨ Begleitung aus den Akkorden …</b>, Takte von/bis prüfen, Muster antippen.</li><li><b>Bass:</b> Grundton, Halbe, Grundton + Quinte, Achtel-Rock, Oktaven, Walking (mit chromatischem Übergang zum nächsten Akkord).</li><li><b>Klavier:</b> Akkorde ruhig, Akkorde Viertel, Pop-Achtel, Gebrochen (Arpeggio).</li><li><b>Gitarre:</b> Schlagmuster.</li><li>Ersetzt die Noten dieser Spur in den gewählten Takten – <b>↶ Zurück</b> nimmt es zurück.</li></ul>"},
 {t:"e",h:"Schlagzeug-Spur",b:"<p><b>⚙ → Spuren → ＋ 🥁 Schlagzeug</b>. Die Spur ist ein Raster: Zeilen Becken, Ride, Hi-Hat offen, Hi-Hat, Snare, Tom, Bassdrum; Spalten sind Sechzehntel.</p><ul><li><b>Kästchen antippen</b> = Schlag setzen, nochmal = weg. <b>&gt; Akzent</b> betont den Schlag am Cursor.</li><li><b>✨ Groove</b> (statt „Akkord“) setzt fertige Grooves: Rock, Pop, Disco, Halftime, Funk, Ballade, Walzer, 6/8 – im ersten Takt mit Becken.</li><li>Tipp: Metronom ausschalten, wenn das Schlagzeug läuft.</li></ul>"},
+{t:"e",h:"Passende Töne (Farben auf den Tasten)",b:"<p>Steht an der Cursor-Stelle ein Akkord, färbt die App die Eingabe automatisch: <b style='color:#B07400'>gelb</b> = Grundton, <b style='color:#2E7D32'>grün</b> = Akkordton. Bei den Bünden sind Töne außerhalb der Tonart blass grau.</p><ul><li>Gilt für die Bund-Tasten (bezogen auf die Saite am Cursor), die Klaviertasten und die 🎼 Zeile (farbige Streifen).</li><li>Die Legende unten nennt den Akkord. Ohne Akkord wird nur die Tonart berücksichtigt.</li><li>Praktisch zum Erfinden einer Basslinie oder Melodie: grüne Töne passen immer.</li></ul>"},
+{t:"e",h:"Ablauf: Abschnitte zusammenstecken",b:"<p>Teile einmal schreiben und mit <b>📍 Abschn.</b> benennen (Intro, Strophe, Refrain …). Dann im selben Fenster unter <b>🧩 Ablauf des Stücks</b> die Abschnitte in der gewünschten Reihenfolge antippen.</p><ul><li>Die App spielt dann genau diesen Ablauf; der Ablauf steht oben über den Takten (antippen = bearbeiten) und im PDF-Kopf.</li><li>Im Ablauf ✕ antippen = Teil herausnehmen; „Ablauf leeren“ = wieder von vorn bis hinten.</li><li><b>📄 Ausschreiben</b> schreibt den Ablauf als echte Takte hintereinander (z. B. fürs PDF oder um eine Strophe abzuwandeln). ↶ Zurück geht.</li><li>Wiederholungszeichen innerhalb der Abschnitte werden beim Abspielen eines Ablaufs nicht ausgeführt.</li></ul>"},
 {t:"e",h:"Spuren: mehrere Instrumente",b:"<p>Ein Stück kann mehrere Spuren haben, z. B. Bass + Gitarre + Gesang. <b>⚙ Einstellungen → 🎵 Stück → Spuren → ＋ Spur</b>. Alle Spuren spielen zusammen.</p><ul><li><b>Wechseln:</b> oben über den Takten die farbigen Knöpfe antippen. Eingegeben wird immer in der hervorgehobenen Spur.</li><li><b>🔊/🔇</b> neben dem Namen schaltet eine Spur stumm.</li><li><b>Handy:</b> nur die aktive Spur wird gezeigt. <b>Tablet und PC:</b> alle Spuren untereinander, jede mit eigener Farbe am Rand; eine andere Spur antippen wechselt dorthin.</li><li>Taktart, Tempo, Abschnitte, Wiederholungen, Akkordsymbole und Triolen gelten für alle Spuren gemeinsam.</li><li>In den Einstellungen: umbenennen, mit ↑↓ sortieren, ✕ löschen (↶ Zurück holt sie).</li><li><b>PDF:</b> alle Spuren als Partitur – oder Haken bei „nur aktive Spur“ für eine Einzelstimme.</li></ul>"},
 {t:"e",h:"Gitarren-Akkorde und Schlagmuster",b:"<p>In der Gitarrenspur: Cursor setzen, <b>C7 Akkord</b> antippen.</p><ul><li><b>Vorschläge</b> (★) passen zur Tonart und zum tiefsten Ton, der dort klingt – auch aus der Bassspur.</li><li>Das <b>Griffbild</b> erscheint im Dialog; <b>＋ Griff in Tab</b> trägt den Griff mit der gewählten Länge ein.</li><li>Über den Gitarrennoten stehen die Griffbilder automatisch.</li><li><b>🥁 Schlagmuster …</b>: Muster wählen (z. B. Pop ↓ ↓↑ ↑↓↑) und Takte von/bis – die App trägt die Akkorde als Anschläge ein, mit ↓/↑ über dem Tab. Ersetzt die Gitarrennoten in diesen Takten.</li><li>Griffe stammen aus einer Liste gängiger Griffe, sonst sucht die App einen spielbaren Griff – bei seltenen Akkorden bitte prüfen.</li></ul>"},
-{t:"e",h:"Gesang und Liedtext",b:"<p>Spur „Gesang“ anlegen: Melodie im Violinschlüssel, Eingabe über 🎹 Tasten, Namen oder Zeile.</p><ul><li><b>🎤 Text</b> (Werkzeug-Leiste): Silbe für die Note eintippen, <b>Enter</b> = weiter zur nächsten Note. Ein „-“ am Ende verbindet zur nächsten Silbe (Hal- lo).</li><li><b>Ganze Zeile verteilen:</b> Text eintippen oder <b>🎙 Einsprechen</b>, mit <b>✂ Silben trennen</b> automatisch trennen lassen, dann <b>⤵ Ab dieser Note verteilen</b>.</li><li>Einsprechen nutzt die Spracherkennung von Chrome (Android/PC): braucht Internet, die Aufnahme geht an Google. Die automatische Silbentrennung ist eine Näherung – bitte prüfen.</li><li>Eine Silbe unter den Noten antippen öffnet sie zum Ändern.</li></ul>"},
+{t:"e",h:"Gesang und Liedtext",b:"<p>Spur „Gesang“ anlegen: Melodie im Violinschlüssel, Eingabe über 🎹 Tasten, Namen oder Zeile.</p><ul><li><b>🎤 Text</b> (Werkzeug-Leiste): Silbe für die Note eintippen, <b>Enter</b> = weiter zur nächsten Note. Ein „-“ am Ende verbindet zur nächsten Silbe (Hal- lo).</li><li><b>Ganze Zeile verteilen:</b> Text eintippen oder <b>🎙 Einsprechen</b>, mit <b>✂ Silben trennen</b> automatisch trennen lassen, dann <b>⤵ Ab dieser Note verteilen</b>.</li><li>Einsprechen nutzt die Spracherkennung von Chrome (Android/PC): braucht Internet, die Aufnahme geht an Google. Die automatische Silbentrennung ist eine Näherung – bitte prüfen.</li><li>Eine Silbe unter den Noten antippen öffnet sie zum Ändern.</li><li><b>🎤 Melodie einsingen</b> (⋯-Menü, in der Gesangsspur): singen oder summen, die App notiert die Melodie ab dem Cursor-Takt mit (nur in der installierten App, Mikrofon nötig). Einfache, deutliche Töne klappen am besten – danach prüfen.</li></ul>"},
 {t:"e",h:"Textblöcke im Stück",b:"<p>Text vor einem Takt (Hinweise, Ablauf, eine Strophe) oder am Ende: Cursor in den Takt, <b>📍 Abschn.</b> → <b>📝 Text vor diesem Takt</b>. Zeile mit <b>#</b> am Anfang wird Überschrift. Der Text steht im Stück und im PDF; antippen öffnet ihn zum Bearbeiten.</p>"},
 {t:"e",h:"Klavier und Gitarre",b:"<p><b>Gitarre:</b> ⚙ Einstellungen → 🎵 Stück → Instrument → Gitarre. Tab mit 6 Saiten (e H G D A E), Noten im Violinschlüssel mit kleiner 8 darunter (Gitarre klingt eine Oktave tiefer als notiert), Eingabe wie beim Bass über Bünde, Namen oder Zeile.</p><p>Ein Stück kann statt für Bass auch fürs <b>Klavier</b> sein: <b>⚙ Einstellungen → Instrument → Klavier</b>. Vorhandene Noten werden übernommen (zurück zum Bass gehen Töne, die nicht auf den Bass passen, verloren – ↶ Zurück holt sie).</p><ul><li><b>Notenbild:</b> Klaviersystem mit Violinschlüssel (rechte Hand, ab C4) und Bassschlüssel (linke Hand, unter C4), verbunden durch eine Klammer.</li><li><b>🎹 Tasten:</b> Klaviatur über zwei Oktaven, mit ◀ tiefer / höher ▶ verschieben. Antippen setzt die Note mit der gewählten Länge. <b>Akkorde:</b> ⏩ Auto ausschalten, dann mehrere Tasten an derselben Stelle antippen.</li><li><b>♪ Namen</b> und <b>🎼 Zeile</b> funktionieren wie beim Bass, die Zeile zeigt beide Schlüssel.</li><li>Tab, Griffbrett, Saiten-Techniken, Stimmgerät und Einspielen gibt es nur beim Bass.</li></ul>",k:"klavier piano gitarre violinschlüssel tasten instrument akkord"},
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p><b>Noch schneller:</b> Einen Notenwert (oder eine Pause) aus den Reihen darüber <b>auf die Zeile ziehen</b> und auf der richtigen Linie loslassen – Länge und Tonhöhe in einem Zug. Antippen der Knöpfe funktioniert weiter wie gewohnt.</p><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
@@ -3542,7 +3608,7 @@ var HGROUPS={
  e:[["Erste Schritte",["Schnellstart","So funktioniert","Kopfleiste","Knopf-Farben","Ansicht","Tonart, Taktart"]],
     ["Noten eingeben",["Notenlängen","Akkorde eingeben","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
-    ["Mehrere Instrumente",["Spuren","Komponieren","Schlagzeug","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
+    ["Mehrere Instrumente",["Spuren","Komponieren","Ablauf","Passende Töne","Schlagzeug","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
     ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern","Als PDF"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
@@ -4808,7 +4874,7 @@ function keyLabel(k){
 function keySig(k){return k===0?"":Math.abs(k)+(k<0?"♭":"♯")+" "}
 function songInfoHTML(){
   var k=keyN();
-  return '<div id="songInfo" class="songinfo"><button class="sub" title="Tonart, Taktart und Saiten ändern">Tonart: '+keySig(k)+esc(keyLabel(k))+'</button><button class="sub">Takt '+esc(song().sig)+'</button><button class="sub">'+(isKeys()?INAME[instOf()]:nstr()+' Saiten')+'</button></div>';
+  return '<div id="songInfo" class="songinfo"><button class="sub" title="Tonart, Taktart und Saiten ändern">Tonart: '+keySig(k)+esc(keyLabel(k))+'</button><button class="sub">Takt '+esc(song().sig)+'</button><button class="sub">'+(isKeys()?INAME[instOf()]:isDrums()?INAME.drums:nstr()+' Saiten')+'</button>'+(song().form&&song().form.length?'<button class="sub formchip" data-form="1" title="Ablauf bearbeiten">🧩 '+esc(song().form.join(" → "))+'</button>':'')+'</div>';
 }
 function openKeyDlg(isNew){
   $("kdT").textContent=isNew?"Neues Stück: Tonart und Takt":"Tonart und Takt";
