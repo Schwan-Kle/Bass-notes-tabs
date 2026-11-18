@@ -249,6 +249,19 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .scmsg{margin:0;font-size:13px;color:var(--muted)}
 .exp{font-size:11px;font-weight:700;color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:0 4px;vertical-align:middle}
 #scan .chips label{font-size:13px;display:flex;align-items:center;gap:4px}
+button.sub{background:color-mix(in srgb,var(--hi) 16%,var(--surface));border-style:dashed;border-color:color-mix(in srgb,var(--hi) 70%,var(--line))}
+button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--muted);align-items:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:18px;height:12px;border:1px solid var(--line);border-radius:3px;vertical-align:middle;margin-right:3px}
+.legend i.l-sub{background:color-mix(in srgb,var(--hi) 16%,var(--surface));border-style:dashed;border-color:color-mix(in srgb,var(--hi) 70%,var(--line))}
+.legend i.l-on{background:var(--main);border-color:var(--main)}
+.stwrap{position:relative}
+.stcur{fill:var(--hi);opacity:.35}
+.bar.notab .grid{display:none}
+.viewrow{display:flex;align-items:center;gap:4px;padding:2px 2px 6px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.viewrow span{font-size:12px;color:var(--muted);margin-right:4px}
+.mpanel .viewrow button{flex:1;min-height:34px;font-size:13px;align-items:center;border:1px solid var(--line);padding:0 4px}
+.mpanel .viewrow button.on{background:var(--main);color:var(--on-main);border-color:var(--main)}
 #dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:8}
 #dlg.open{display:flex}
 #dlg .box{background:var(--surface);border-radius:8px;padding:14px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:8px}
@@ -274,6 +287,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 </header>
 <div id="moreMenu" class="menuov" aria-hidden="true">
   <div class="mpanel" role="menu" aria-label="Werkzeuge">
+    <div class="viewrow"><span>Ansicht</span><button data-view="both">Noten + Tab</button><button data-view="notes">Noten</button><button data-view="tab">Tab</button></div>
     <button id="recBtn" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
     <button id="tunerBtn" role="menuitem">🎯 Stimmgerät</button>
     <button id="fbBtn" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
@@ -336,7 +350,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
           <option value="7">7 ♯ (Cis-Dur / ais-Moll)</option>
         </select></label>
         <label>Ohne Tonart schreiben als <select id="accMode"><option value="b">♭</option><option value="#">♯</option></select></label>
-        <label><input type="checkbox" id="showNotes"> Noten über der Tabulatur anzeigen</label>
+        <label>Ansicht <select id="viewSel"><option value="both">Noten + Tab</option><option value="notes">nur Noten</option><option value="tab">nur Tab</option></select></label>
 
       </div>
     
@@ -384,7 +398,7 @@ button.danger{color:var(--warn);border-color:var(--warn)}
     <button id="deadBtn" title="Dead Note">x</button>
     <button id="delBtn2" aria-label="Note löschen">⌫</button>
   </div>
-  <div class="hint nk">Tonhöhe wählt automatisch die nächstliegende Oktave zur vorigen Note. Tastatur: c d e f g a h (b = B), vorher - / # / n für ♭ ♯ ♮, Oktave mit , und '</div>
+  <div class="hint nk">Oktave wählt die App automatisch – mit Okt ↑/↓ ändern.</div>
   <div class="keys k8 small" id="navKeys">
     <button data-nav="l" aria-label="Schritt zurück">←</button>
     <button data-nav="r" aria-label="Schritt vor">→</button>
@@ -402,18 +416,19 @@ button.danger{color:var(--warn);border-color:var(--warn)}
     <button id="rhyBtn" title="Erst nur den Rhythmus tippen">♩ Rhyth&shy;mus</button>
     <button id="repBtn" title="Tonhöhen der vorhandenen Noten neu vergeben">♪ Töne</button>
     <button id="trpBtn" title="Schlag am Cursor als Achteltriole">³ Triole</button>
-    <button id="techBtn" title="Spieltechnik für die Note am Cursor">Tech&shy;nik</button>
-    <button id="chBtn" title="Akkordsymbol an dieser Stelle">Akkord</button>
+    <button id="techBtn" class="sub" title="Spieltechnik für die Note am Cursor">Technik</button>
+    <button id="chBtn" class="sub" title="Akkordsymbol an dieser Stelle">Akkord</button>
   </div>
   <div class="keys k7 small">
     <button id="barAdd">+ Takt</button>
-    <button id="barDup" title="Takt dahinter kopieren">Kopie</button>
-    <button id="barClr" title="Noten im Takt löschen">Leeren</button>
-    <button id="barDel" title="Takt entfernen">Löschen</button>
-    <button id="barRep" title="Wiederholungszeichen und Klammern für diesen Takt">‖: Wdh.</button>
-    <button id="barSel" title="Mehrere Takte kopieren, einfügen, transponieren, umgreifen">Takte…</button>
-    <button id="undoBtn">↶</button>
+    <button id="barDup" title="Takt dahinter kopieren">Takt ⧉</button>
+    <button id="barClr" title="Noten im Takt löschen">Takt leeren</button>
+    <button id="barDel" title="Takt am Cursor entfernen" class="danger">− Takt</button>
+    <button id="barRep" class="sub" title="Wiederholungszeichen und Klammern für diesen Takt">‖: Wdh</button>
+    <button id="barSel" class="sub" title="Mehrere Takte kopieren, einfügen, löschen, transponieren, umgreifen">Takte</button>
+    <button id="undoBtn" title="Rückgängig">↶</button>
   </div>
+  <div class="legend"><span><i></i>wirkt sofort</span><span><i class="l-on"></i>an/aus</span><span><i class="l-sub"></i>▸ öffnet Auswahl</span></div>
 </section>
 <div id="drawer" class="drawer" aria-hidden="true">
   <div class="dpanel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -589,6 +604,8 @@ function noteAt(b,s,t){var bar=song().bars[b];return bar?bar.n[s+"_"+t]:null}
 function midiName(m){return NOTES[m%12]+(Math.floor(m/12)-1)}
 
 /* ---------- Darstellung ---------- */
+function view(){return S.view==="notes"||S.view==="tab"?S.view:"both"}
+var EXSVG=false;
 function render(){
   var sg=sig(),st=sg.steps,ns=nstr(),bars=song().bars,sus={};
   for(var b=0;b<bars.length;b++){
@@ -606,7 +623,8 @@ function render(){
   var h=[];
   for(b=0;b<bars.length;b++){
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
-    h.push('<div class="bar'+(inl?' inloop':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(S.showNotes===false&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(S.showNotes!==false?staffSVG(b,NI):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
+    var vw=view();
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
     for(s=0;s<ns;s++){
       h.push('<div class="sl">'+SNAME[ns][s]+'</div>');
       for(t=0;t<st;t++){
@@ -684,6 +702,7 @@ function staffSVG(b,NI){
     var kp=(kn<0?FLAT_POS:SHARP_POS)[ki];
     o.push('<text x="'+r(20+ki*7)+'" y="'+(Y(kp)+4.5)+'" font-size="13">'+(kn<0?"♭":"♯")+'</text>');
   }
+  if(!EXSVG&&view()==="notes"&&b===cursor.bar&&cursor.step<st)o.push('<rect class="stcur" x="'+r(X(cursor.step)-U/2)+'" y="0" width="'+r(U)+'" height="'+r(H)+'"/>');
   /* Ereignisse sammeln */
   var evs={},times=[],any=false;
   for(var key in bar.n){
@@ -820,7 +839,8 @@ function moveCursor(b,s,t,noScroll){
   var old=cellEl(cursor);if(old)old.classList.remove("cur");
   cursor.bar=b;cursor.str=s;cursor.step=t;
   var el=cellEl(cursor);
-  if(el){el.classList.add("cur");if(!noScroll)el.scrollIntoView({block:"nearest"});}
+  if(view()==="notes"){var sc=$("score").scrollTop;render();$("score").scrollTop=sc;var sw=document.querySelector('.stwrap[data-b="'+b+'"]');if(sw&&!noScroll)sw.scrollIntoView({block:"nearest"});}
+  else if(el){el.classList.add("cur");if(!noScroll)el.scrollIntoView({block:"nearest"});}
   var n=noteAt(b,s,t);
   if(n){setLen(n.len,true);}
   status();
@@ -1250,7 +1270,7 @@ function draw(){
     if(ev.ci){status((P&&P.rec?"Aufnahme – einzählen: ":"Einzählen: ")+ev.ci);if(P&&P.rec)recBeat("Einzählen "+ev.ci);}
     else if(ev.rec){recBeat("Takt "+(ev.b+1)+" · Schlag "+(Math.floor(ev.s/sig().beat)+1));}
     else{
-      var g=document.querySelector('.grid[data-b="'+ev.b+'"]');
+      var g=document.querySelector((view()==="notes"?'.stwrap':'.grid')+'[data-b="'+ev.b+'"]');
       if(g){
         if(!ph){ph=document.createElement("div");ph.className="ph";}
         if(ph.parentNode!==g)g.appendChild(ph);
@@ -1371,7 +1391,9 @@ function loadSong(){
 }
 $("keySel").onchange=function(){song().key=+this.value;render();save()};
 $("accMode").onchange=function(){song().acc=this.value;render();save()};
-$("showNotes").onchange=function(){S.showNotes=this.checked;render();save()};
+function setView(v){S.view=v;$("viewSel").value=view();Array.prototype.forEach.call(document.querySelectorAll("[data-view]"),function(b){b.classList.toggle("on",b.dataset.view===view())});render();save();}
+$("viewSel").onchange=function(){setView(this.value)};
+document.addEventListener("click",function(e){var b=e.target.closest("[data-view]");if(b)setView(b.dataset.view);});
 $("sig").onchange=function(){if(P)stop();song().sig=this.value;cursor.step=0;render();save()};
 $("strings").onchange=function(){if(P)stop();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
 
@@ -2131,8 +2153,9 @@ function exStaff(nl,opt){
   (nl||[]).forEach(function(x){var n={f:x[2],len:x[3]};if(x[4]==="h")n.h=1;if(x[4]==="a")n.a=1;bar.n[x[0]+"_"+x[1]]=n;});
   if(opt.rs)bar.rs=1;if(opt.re)bar.re=1;if(opt.v)bar.v=opt.v;
   var keep=S.cur,tmp={id:"ex",name:"ex",bpm:80,sig:opt.sig||"4/4",strings:4,key:opt.key||0,acc:"b",bars:[bar]},svg="";
-  S.songs.push(tmp);S.cur=S.songs.length-1;
+  S.songs.push(tmp);S.cur=S.songs.length-1;EXSVG=true;
   try{svg=staffSVG(0,noteInfo())}catch(e){svg=""}
+  EXSVG=false;
   S.songs.pop();S.cur=keep;
   return '<div class="ex">'+svg+'</div>';
 }
@@ -2164,9 +2187,11 @@ var HELP=[
 {t:"e",h:"Griffbrett-Eingabe",b:"<p>Oben im Eingabebereich <b>Griffbrett</b> wählen: Statt der Zahlentasten erscheint ein großes Griffbrett (Bund 0–24). <b>Wischen</b> zeigt weitere Bünde, <b>Antippen</b> setzt die Note auf dieser Saite mit der gewählten Länge. Die Noten am Cursor sind dunkel, der restliche Takt blass.</p>",k:"griffbrett eingabe tippen"},
 {t:"e",h:"Takte… (mehrere Takte bearbeiten)",b:"<p>Von Takt … bis … wählen, dann: <b>Kopieren</b>, <b>Ausschneiden</b>, <b>Leeren</b>, <b>Löschen</b>, <b>Als Schleife</b>. Aus der Ablage <b>einfügen</b> – hinter dem Cursor-Takt oder ab dem Cursor-Takt ersetzend (die Ablage bleibt auch beim Wechsel in ein anderes Stück). <b>Transponieren</b> um Halbtöne oder Oktaven und <b>Greifen ab Bund</b> für den ganzen Bereich.</p>",k:"auswahl kopieren einfügen transponieren bereich ablage"},
 {t:"e",h:"Techniken und ihre Zeichen in der Tab",b:"<table><tr><td>5·</td><td>Staccato (kurz)</td></tr><tr><td>/5</td><td>Slide hinein</td></tr><tr><td>5\\</td><td>Slide heraus</td></tr><tr><td>5b</td><td>Bend</td></tr><tr><td>5~</td><td>Vibrato</td></tr><tr><td>T5 / P5</td><td>Slap / Pop</td></tr><tr><td>&lt;12&gt;</td><td>Flageolett</td></tr><tr><td>Bogen</td><td>gebunden (⌒)</td></tr><tr><td>x</td><td>Dead Note</td></tr></table><p>In den Noten stehen die Zeichen über der Note; Flageolett hat einen Rauten-Notenkopf. Die Wiedergabe spielt die Techniken hörbar nach.</p>",k:"technik slide bend vibrato slap pop flageolett staccato zeichen"},
-{t:"e",h:"Takt-Leiste (+ Takt, Kopie, Leeren, Löschen, ‖: Wdh., Takte…, ↶)",b:"<ul><li><b>+ Takt</b> fügt hinter dem Cursor-Takt einen leeren Takt ein.</li><li><b>Kopie</b> setzt eine Kopie des Takts dahinter.</li><li><b>Leeren</b> löscht alle Noten (Wiederholungszeichen bleiben).</li><li><b>Löschen</b> entfernt den Takt.</li><li><b>‖: Wdh.</b> Wiederholungszeichen und Klammern für diesen Takt.</li><li><b>Takte…</b> mehrere Takte kopieren, einfügen, transponieren, umgreifen.</li><li><b>↶</b> nimmt die letzten Schritte zurück (auch Einspielen und Umlegen).</li></ul>",k:"takt kopieren rückgängig undo"},
+{t:"e",h:"Takt-Leiste (+ Takt, Takt ⧉, Takt leeren, − Takt, ‖: Wdh…, Takte…, ↶)",b:"<ul><li><b>+ Takt</b> fügt hinter dem Cursor-Takt einen leeren Takt ein.</li><li><b>Takt ⧉</b> setzt eine Kopie des Takts dahinter.</li><li><b>Takt leeren</b> löscht alle Noten (Wiederholungszeichen bleiben).</li><li><b>− Takt</b> entfernt den Takt am Cursor (mehrere auf einmal: Takte ▸ → Löschen).</li><li><b>‖: Wdh.</b> Wiederholungszeichen und Klammern für diesen Takt.</li><li><b>Takte…</b> mehrere Takte kopieren, einfügen, transponieren, umgreifen.</li><li><b>↶</b> nimmt die letzten Schritte zurück (auch Einspielen und Umlegen).</li></ul>",k:"takt kopieren rückgängig undo"},
+{t:"e",h:"Ansicht: Noten, Tab oder beides",b:"<p>Oben im Menü <b>⋯</b> (und in den Einstellungen) wählst du <b>Noten + Tab</b>, <b>nur Noten</b> oder <b>nur Tab</b>. In der Ansicht „nur Noten“ tippst du in die Notenzeile, um den Cursor zu setzen (gelber Streifen); Saite und Bund legt die App selbst fest und du kannst sie später in der Tab-Ansicht anpassen.</p>",k:"ansicht noten tab beides ausblenden"},
+{t:"e",h:"Knopf-Farben in der Eingabe",b:"<ul><li><b>Weiß</b>: wirkt sofort (z. B. Bund, Länge, −½, − Takt).</li><li><b>Dunkelgrün</b>: Schalter ist an (z. B. 🔊, ♩ Rhythmus, Auto→, gewählte Länge).</li><li><b style='color:#B07400'>Gelblich, gestrichelt, ▸</b>: öffnet erst eine Auswahl (Technik ▸, Akkord ▸, ‖: Wdh ▸, Takte ▸).</li><li><b style='color:var(--warn)'>Orange Schrift</b>: entfernt etwas (− Takt).</li></ul>",k:"farbe knopf legende untermenü"},
 {t:"e",h:"Kopfleiste und Menü ⋯",b:"<ul><li><b>☰</b> Meine Stücke: Liste, Suche, neu, umbenennen, duplizieren, Datei speichern/öffnen, Backup. Auch der Stückname daneben öffnet die Liste.</li><li><b>− 80 +</b> Tempo in bpm; Antippen der Zahl öffnet die Einstellungen mit Tempo-Regler.</li><li><b>▶ / ■</b> Start und Stopp.</li><li><b>⋯</b> Menü mit 🎙 Einspielen, 🎯 Stimmgerät, 🎸 Griffbrett anzeigen, 📷 Vorlage, ⚙ Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück) und ❓ Hilfe.</li><li><b>▾ weg</b> rechts über der Eingabe blendet die Eingabe aus, <b>▴ Tastatur</b> wieder ein.</li></ul>",k:"menü werkzeuge kopf einstellungen tempo"},
-{t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Noten ein/aus.</li></ul>",k:"metronom schleife trainer tonart taktart"},
+{t:"e",h:"Einstellungen (Metronom, Schleife, Tempo-Trainer, Dieses Stück)",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander)</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Noten scannen (Experiment)",b:"<p>Unter <b>⋯ → 📄 Noten scannen</b>: Foto, Bild oder PDF gedruckter Noten im Bassschlüssel wählen. Die App sucht Notenlinien, Notenköpfe und Taktstriche, richtet schiefe Fotos gerade und zeigt das Ergebnis: <span style='color:var(--warn)'>orange Kreise</span> mit Tonnamen = erkannte Noten, <span style='color:#1E5ADC'>blaue Linien</span> = Taktstriche, grüne Fläche = übersprungener Schlüssel/Vorzeichen-Bereich.</p><ul><li><b>Korrigieren</b>: falschen Kreis antippen = entfernen, leere Stelle antippen = Note setzen. Mit „Taktstrich setzen/entfernen“ Taktstriche ergänzen.</li><li><b>Tonart</b> unter „Einstellungen“ wählen – Vorzeichen im Stück erkennt der Scanner nicht (danach mit −½/+½ korrigieren).</li><li><b>Als neues Stück</b>: Rhythmus wird aus den Abständen geschätzt.</li><li><b>Nur Tonhöhen auf Noten ab Cursor</b>: ideal mit „♩ Rhythmus“ – erst Rhythmus tippen, dann Tonhöhen aus dem Scan übernehmen.</li></ul><p>Grenzen: keine Handschrift, keine Tab-Zahlen, keine Vorzeichen im Stück, Rhythmus nur geschätzt. Für PDFs wird einmalig eine Bibliothek aus dem Internet geladen.</p>",k:"scan scannen foto pdf erkennung omr"},
@@ -2741,7 +2766,8 @@ $("scApply").onclick=function(){
 if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
 $("metMode").value=S.metMode;$("metAcc").checked=!!S.metAcc;$("countIn").checked=!!S.countIn;
 $("metVol").value=S.metVol;$("bassVol").value=S.bassVol;$("octUp").checked=!!S.octUp;
-$("showNotes").checked=S.showNotes!==false;
+if(!S.view)S.view=S.showNotes===false?"tab":"both";
+$("viewSel").value=view();Array.prototype.forEach.call(document.querySelectorAll("[data-view]"),function(b){b.classList.toggle("on",b.dataset.view===view())});
 if(!S.trainer)S.trainer={on:false,from:60,to:100,step:5,every:2};
 if(typeof S.recLat!=="number")S.recLat=60;
 trainerUI();fbShow();
