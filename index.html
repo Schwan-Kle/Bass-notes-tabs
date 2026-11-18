@@ -939,7 +939,7 @@ function sigStrAt(b){var bars=song().bars;if(b===undefined||b===null||isNaN(b))r
 function sigAt(b){return sigOf(sigStrAt(b));}
 function tempoAt(b){var bars=song().bars;if(b===undefined||b===null||isNaN(b))return song().bpm;for(var i=Math.min(b,bars.length-1);i>=0;i--)if(bars[i]&&bars[i].bpm)return bars[i].bpm;return song().bpm;}
 function anySig(){return song().bars.some(function(x){return x.sig});}
-function showSig(b){var bar=song().bars[b];return !!(bar&&(bar.sig||(b===0&&anySig())));}
+function showSig(b){var bar=song().bars[b];return !!(bar&&(bar.sig||b===0));}
 function GUTb(b){return GUT()+(showSig(b)?1.0:0);}
 function nstr(){return song().strings===5?5:4}
 function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
@@ -1424,7 +1424,9 @@ function setFret(f){
   if(isTrip(cursor.bar,cursor.step)){len=curLen>=4?2:1;len=Math.min(len,3-cursor.step%4);}
   var n={f:f,len:len};
   if(armLeg)n.h=1;if(armAcc)n.a=1;
+  var oe=oldEndAt(cursor.bar,cursor.step);
   bar.n[cursor.str+"_"+cursor.step]=n;
+  fitFollowing(cursor.bar,cursor.step,cursor.step+len,oe);
   last={bar:cursor.bar,str:cursor.str,step:cursor.step};
   armLeg=false;armAcc=false;flagButtons();
   render();save();hearNote(n,cursor.str);
@@ -1515,13 +1517,30 @@ function del(){
   if(bar.n[key]){pushUndo();delete bar.n[key];render();save();}
   else advance(-1);
 }
+function fitFollowing(b,t,newEnd,oldEnd){
+  var bar=song().bars[b];if(!bar||(bar.tb&&Object.keys(bar.tb).length))return 0;
+  var st=sigAt(b).steps,next=1e9,k;
+  for(k in bar.n){var tt=+k.split("_")[1];if(tt>t&&tt<next)next=tt;}
+  if(next===1e9)return 0;
+  var shift=0;
+  if(next<newEnd)shift=newEnd-next;
+  else if(oldEnd!=null&&newEnd<oldEnd&&next===oldEnd)shift=newEnd-oldEnd;
+  if(!shift)return 0;
+  var nn={},lost=0;
+  for(k in bar.n){var q=k.split("_"),t2=+q[1];if(t2>t){t2+=shift;if(t2>=st){lost++;continue;}}nn[q[0]+"_"+t2]=bar.n[k];}
+  bar.n=nn;
+  if(bar.r){var nr={};for(var rk in bar.r){var rt=+rk;if(rt>t){rt+=shift;if(rt>=st)continue;}nr[rt]=bar.r[rk];}bar.r=nr;}
+  if(lost)setTimeout(function(){status(lost+" Note(n) passten nicht mehr in Takt "+(b+1)+" und wurden entfernt – ↶ Zurück holt sie wieder.");},30);
+  return lost;
+}
+function oldEndAt(b,t){var bar=song().bars[b],m=0;for(var q=0;q<nstr();q++){var n=bar.n[q+"_"+t];if(n&&n.len>m)m=n.len;}return m?t+m:null;}
 function setLen(l,silent){
   curLen=l;
   var bs=$("lenKeys").children;
   for(var i=0;i<bs.length;i++)bs[i].classList.toggle("on",+bs[i].dataset.len===l);
   if(silent)return;
   var n=noteAt(cursor.bar,cursor.str,cursor.step);
-  if(n&&n.len!==l){pushUndo();n.len=l;render();save();}
+  if(n&&n.len!==l){pushUndo();var oe=cursor.step+n.len;n.len=l;fitFollowing(cursor.bar,cursor.step,cursor.step+l,oe);render();save();}
 }
 function toggleFlag(which){
   var n=noteAt(cursor.bar,cursor.str,cursor.step);
@@ -3035,8 +3054,10 @@ function placeRhythm(l){
   if(last){var ln=noteAt(last.bar,last.str,last.step);if(ln&&typeof ln.f==="number"){s=last.str;f=ln.f;}}
   var len=l;if(isTrip(cursor.bar,cursor.step)){len=l>=4?2:1;len=Math.min(len,3-cursor.step%4);}
   pushUndo();
+  var oe=oldEndAt(cursor.bar,cursor.step);
   for(var q=0;q<nstr();q++)delete bar.n[q+"_"+cursor.step];
   var n={f:f,len:len,ph:1};bar.n[s+"_"+cursor.step]=n;
+  fitFollowing(cursor.bar,cursor.step,cursor.step+len,oe);
   cursor.str=s;last={bar:cursor.bar,str:s,step:cursor.step};
   render();save();
   if(S.hear&&!P&&audioReady())playNote({f:"x"},s,ctx.currentTime+0.02,0.1);
