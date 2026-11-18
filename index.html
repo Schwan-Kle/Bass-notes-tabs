@@ -47,7 +47,7 @@ header{background:var(--surface);border-bottom:1px solid var(--line);padding:6px
 .hbar button{min-height:40px}
 #menuBtn,#moreBtn{min-width:42px;font-size:20px;font-weight:700;color:var(--main);padding:0}
 .bpmv{min-width:46px;font-weight:700;font-variant-numeric:tabular-nums;border:none;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:0 2px}
-.bpmv::after{content:"bpm";font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
+.bpmv::after{content:attr(data-sub);font-size:10px;font-weight:400;color:var(--muted);margin-top:2px}
 .menuov{position:fixed;inset:0;display:none;z-index:9;background:rgba(0,0,0,.25)}
 .menuov.open{display:block}
 .mpanel{position:absolute;right:8px;top:54px;width:min(330px,calc(100vw - 16px));background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;flex-direction:column;padding:6px;gap:4px}
@@ -94,7 +94,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .staff .op{fill:var(--surface);stroke:currentColor;stroke-width:1.5}
 .staff text{fill:currentColor;font-family:var(--font)}
 .staff .ac{fill:var(--warn)}
-.ph{position:absolute;top:0;bottom:0;background:var(--second);opacity:.35;pointer-events:none;border-radius:3px}
+.ph{position:absolute;top:3px;bottom:3px;background:rgba(8,145,178,.14);border:2.5px solid #0891B2;box-shadow:0 0 0 3px rgba(8,145,178,.15);pointer-events:none;border-radius:999px;box-sizing:border-box;transition:left .07s linear;z-index:2}
 #pad{background:var(--surface);border-top:1px solid var(--line);padding:6px 10px 10px;display:flex;flex-direction:column;gap:5px}
 .modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
 .modes button{min-height:30px;font-size:13px}
@@ -460,6 +460,10 @@ button{border-width:1.5px}
 .staff .fl{stroke-linejoin:round}
 .staff ellipse.fl{stroke:currentColor;stroke-width:.35}
 .staff ellipse.nG{stroke:var(--sG)}.staff ellipse.nD{stroke:var(--sD)}.staff ellipse.nA{stroke:var(--sA)}.staff ellipse.nE{stroke:var(--sE)}.staff ellipse.nH{stroke:var(--sH)}
+.bar .no{font-size:11px;line-height:1.1;min-height:12px}
+.bar .no .bn{display:inline-block;min-width:16px;color:#6E7F79;font-weight:700;font-variant-numeric:tabular-nums}
+.bpmv.slow{color:#0891B2}
+.staff path.ac{stroke:var(--warn);fill:none}
 </style>
 </head>
 <body>
@@ -493,7 +497,7 @@ button{border-width:1.5px}
   <div class="box setbox">
     <div class="dhead"><h2 id="setT">Einstellungen</h2><button id="setClose" aria-label="Einstellungen schließen">✕</button></div>
     <div class="opts">
-      <div class="row"><h2>Tempo</h2><input type="range" id="bpm" min="30" max="220" step="1" aria-label="Tempo"></div>
+      <div class="row"><h2>Tempo</h2><input type="range" id="bpm" min="30" max="220" step="1" aria-label="Tempo"><label>Übe-Tempo <select id="spdSel"><option value="50">50 %</option><option value="60">60 %</option><option value="70">70 %</option><option value="80">80 %</option><option value="90">90 %</option><option value="100">100 %</option></select></label></div>
 
       <div class="row">
         <h2>Metronom</h2>
@@ -993,7 +997,7 @@ function render(){song().bars.forEach(cleanRests);if(S.mode==="line"&&typeof lin
   for(b=0;b<bars.length;b++){
     var inl=loopOn&&b>=loopA-1&&b<=loopB-1;
     var vw=view();
-    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no">Takt '+(b+1)+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+(S.count?countRow(b,st,sg):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
+    h.push('<div class="bar'+(inl?' inloop':'')+(vw==="notes"?' notab':'')+'"><div class="no"><span class="bn">'+(b+1)+'</span>'+repLabel(bars[b])+(vw==="tab"&&bars[b].ch?' <span class="chl">'+Object.keys(bars[b].ch).sort(function(x,y){return x-y}).map(function(k){return esc(bars[b].ch[k])}).join(" · ")+'</span>':'')+'</div>'+(vw!=="tab"?'<div class="stwrap" data-b="'+b+'">'+staffSVG(b,NI)+'</div>':'')+(S.count?countRow(b,st,sg):'')+'<div class="grid" data-b="'+b+'" style="grid-template-columns:'+GUT()+'fr repeat('+st+',1fr)">');
     for(s=0;s<ns;s++){
       h.push('<div class="sl s'+SNAME[ns][s]+'">'+SNAME[ns][s]+'</div>');
       for(t=0;t<st;t++){
@@ -1181,10 +1185,11 @@ function staffSVG(b,NI){
       var x0=i>0?X(L[i-1].t):x-16,ya=e.up?Y(e.lo)+8:Y(e.hi)-8,bend=e.up?7:-7;
       o.push('<path class="fl" d="M'+r(x0+2)+' '+ya+' Q'+r((x0+x)/2)+' '+(ya+bend*1.25)+' '+r(x-2)+' '+ya+' Q'+r((x0+x)/2)+' '+(ya+bend*0.8)+' '+r(x0+2)+' '+ya+'Z"/>');
     }
-    if(e.a)o.push('<text class="ac" x="'+r(x)+'" y="'+(e.up?Y(e.lo)+19:Y(e.hi)-10)+'" font-size="12" font-weight="700" text-anchor="middle">&gt;</text>');
-    if(e.st)o.push('<circle class="fl" cx="'+r(x)+'" cy="'+(e.up?Y(e.lo)+(e.a?26:9):Y(e.hi)-(e.a?20:9))+'" r="1.6"/>');
+    var artY=Math.min(Y(8),e.up?e.end:Y(e.hi))-7;
+    if(e.st){o.push('<circle class="fl" cx="'+r(x)+'" cy="'+r(artY)+'" r="1.7"/>');artY-=7;}
+    if(e.a){o.push('<path class="ac" d="M'+r(x-4.5)+' '+r(artY-6)+' L'+r(x+4.5)+' '+r(artY-3)+' L'+r(x-4.5)+' '+r(artY)+'" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>');artY-=10;}
     var mk=(e.sl?"T":"")+(e.pp?"P":"")+(e.si?"/":"")+(e.so?"\\":"")+(e.bd?"b":"")+(e.vb?"~":"")+(e.hm?"◇":"");
-    if(mk)o.push('<text x="'+r(x)+'" y="'+r(Math.min(e.up?e.end:Y(e.hi),Y(8))-5)+'" font-size="10" font-weight="700" text-anchor="middle">'+mk+'</text>');
+    if(mk)o.push('<text x="'+r(x)+'" y="'+r(artY+1)+'" font-size="10" font-weight="700" text-anchor="middle">'+mk+'</text>');
     any=true;
   }
   /* Pausen */
@@ -1766,8 +1771,9 @@ function playOrder(){
   }
   return seq.length?seq:[0];
 }
+function effBpm(){return song().bpm*(S.speed||100)/100}
 function scheduleStep(t){
-  var sg=sig(),st=sg.steps,sd=60/song().bpm/4;
+  var sg=sig(),st=sg.steps,sd=60/effBpm()/4;
   if(P.ci>0){
     var rel=st-P.ci;
     if(rel%sg.beat===0){click(t,rel===0?"hi":"mid");vq.push({t:t,ci:rel/sg.beat+1});}
@@ -1794,7 +1800,7 @@ function scheduleStep(t){
 function tick(){
   if(!P)return;
   while(!P.done&&P.next<ctx.currentTime+0.12){
-    var sdx=60/song().bpm/4;
+    var sdx=60/effBpm()/4;
     if(P.ci<=0&&!P.rec){var bq=P.seq[P.k];if(isTrip(bq,P.t))sdx=(P.t%4===3)?0:sdx*4/3;}
     scheduleStep(P.next);
     P.next+=sdx;
@@ -1885,7 +1891,7 @@ $("trNow").onclick=function(){$("trFrom").value=song().bpm;trainerRead();};
 /* ---------- Einstellungen ---------- */
 function setBpm(v){
   v=Math.max(30,Math.min(220,Math.round(v)));
-  song().bpm=v;$("bpm").value=v;$("bpmOut").textContent=v;save();
+  song().bpm=v;$("bpm").value=v;bpmLabel();save();
 }
 $("bpm").oninput=function(){setBpm(+this.value)};
 $("bpmDown").onclick=function(){setBpm(song().bpm-5)};
@@ -2725,6 +2731,7 @@ var HELP=[
 {t:"e",h:"Notenlängen",b:"<table><tr><th>Knopf</th><th>Name</th><th>Sechzehntel</th></tr><tr><td>1/16</td><td>Sechzehntel</td><td>1</td></tr><tr><td>1/8</td><td>Achtel</td><td>2</td></tr><tr><td>1/8.</td><td>punktierte Achtel</td><td>3</td></tr><tr><td>1/4</td><td>Viertel</td><td>4</td></tr><tr><td>1/4.</td><td>punktierte Viertel</td><td>6</td></tr><tr><td>1/2</td><td>Halbe</td><td>8</td></tr><tr><td>1/1</td><td>Ganze</td><td>16</td></tr></table><p>Steht der Cursor auf einer Note, ändert ein Längen-Knopf deren Länge. Ein grüner Balken hinter einer Zahl zeigt, wie lange die Note klingt. In einem Triolen-Schlag gilt: 1/8 oder kürzer = eine Triolenachtel, 1/4 = zwei.</p>",k:"länge dauer punktiert"},
 {t:"e",h:"Tab-Eingabe (Bund-Zahlen)",b:"<p><b>0–24</b> setzt den Bund auf der Cursor-Saite (0 = leere Saite). <b>x</b> = Dead Note (gedämpfter, perkussiver Ton ohne Tonhöhe). <b>⌫</b> löscht die Note am Cursor; ist dort keine, geht der Cursor einen Schritt zurück.</p>"+exTab([[3,0,"0"],[3,4,"3"],[2,8,"x"],[2,10,"2"],[1,12,"0"]])+"<p>Oben ist die G-Saite, unten die E-Saite – wie beim Blick von oben auf den Bass.</p>",k:"bund tab dead note löschen"},
 {t:"e",h:"Rhythmus unter der Tabulatur",b:"<p>In der Ansicht <b>nur Tab</b> steht unter jeder Tab-Zeile automatisch der Rhythmus: <b>Hälse</b> unter jeder Zahl, <b>ein Balken</b> = Achtel, <b>zwei Balken</b> = Sechzehntel, Fähnchen bei einzelnen Achteln/Sechzehnteln, kurzer Hals mit Kreis = Halbe, Kreis = Ganze, Punkt = punktiert. Pausen erscheinen als kleine Pausenzeichen. In „Noten + Tab“ entfällt die Zeile, weil die Noten den Rhythmus schon zeigen.</p>",k:"rhythmus tab hälse balken nur tab"},
+{t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>Okt ↑/↓</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
@@ -2785,7 +2792,7 @@ var HGROUPS={
  e:[["Erste Schritte",["Schnellstart","So funktioniert","Kopfleiste","Knopf-Farben","Ansicht","Tonart, Taktart"]],
     ["Noten eingeben",["Notenlängen","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
-    ["Üben und Abspielen",["Metronom, Schleife","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
+    ["Üben und Abspielen",["Metronom, Schleife","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
@@ -3060,6 +3067,10 @@ $("moreMenu").addEventListener("click",function(e){if(e.target===$("moreMenu")||
 function openSettings(){$("setDlg").classList.add("open");}
 $("setBtn").onclick=openSettings;
 $("bpmOut").onclick=openSettings;
+function bpmLabel(){var sp=S.speed||100,o=$("bpmOut");o.textContent=song().bpm;o.setAttribute("data-sub",sp===100?"bpm":"bpm · "+sp+" %");o.classList.toggle("slow",sp!==100);}
+$("spdSel").value=String(S.speed||100);
+$("spdSel").onchange=function(){S.speed=+this.value;bpmLabel();save();status(S.speed===100?"Übe-Tempo 100 % – Originaltempo":"Übe-Tempo "+S.speed+" % = "+Math.round(effBpm())+" bpm (Stück bleibt auf "+song().bpm+")");};
+bpmLabel();
 $("setClose").onclick=function(){$("setDlg").classList.remove("open");};
 $("setDlg").addEventListener("click",function(e){if(e.target===$("setDlg"))$("setDlg").classList.remove("open");});
 /* ---------- Noten scannen (Experiment) ---------- */
@@ -3797,7 +3808,7 @@ function openSelPick(sel){
   $("spL").onclick=function(e){var b=e.target.closest("button");if(!b)return;sel.value=b.dataset.v;sel.dispatchEvent(new Event("change",{bubbles:true}));$("selPick").classList.remove("open");syncSegs();};
 }
 $("spClose").onclick=function(){$("selPick").classList.remove("open")};
-["metMode","viewSel","sig","strings","keySel","accMode","rtSel","vSel","trAcc","trCount","trLo","trHi"].forEach(function(id){enhanceSelect($(id))});
+["spdSel","metMode","viewSel","sig","strings","keySel","accMode","rtSel","vSel","trAcc","trCount","trLo","trHi"].forEach(function(id){enhanceSelect($(id))});
 /* Werte, die das Programm direkt setzt, nachziehen */
 document.addEventListener("click",function(){setTimeout(syncSegs,0);},true);
 /* Start */
