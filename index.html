@@ -429,7 +429,7 @@ button{border-width:1.5px}
 #lineView svg{display:block;width:100%;height:auto}
 .linepick .tG{fill:var(--sG)}.linepick .tD{fill:var(--sD)}.linepick .tA{fill:var(--sA)}.linepick .tE{fill:var(--sE)}.linepick .tH{fill:var(--sH)}
 .modes{grid-template-columns:repeat(5,1fr)!important}.modes button{font-size:13px;padding:0 2px}
-#lineInfo{min-height:32px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--muted);border-radius:8px;margin-bottom:3px;padding:2px 8px;text-align:center}
+#lineInfo{height:44px;overflow:hidden;line-height:1.15;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--muted);border-radius:8px;margin-bottom:3px;padding:2px 8px;text-align:center}
 #lineInfo.on{font-size:15px;font-weight:700;color:#fff;background:var(--a-in)}
 #lineInfo.on b{font-size:22px}
 #lineInfo.sG{background:var(--sG)}#lineInfo.sD{background:var(--sD)}#lineInfo.sA{background:var(--sA)}#lineInfo.sE{background:var(--sE)}#lineInfo.sH{background:var(--sH)}
@@ -602,6 +602,10 @@ body.voice .lyrow span:not(.on):not(.lyl){border-bottom:1px dotted #C9D5D1}
 #lySyl{flex:1;min-height:42px;font-size:17px}#lyLine{width:100%;font:inherit;font-size:15px;padding:6px;border:1px solid var(--line);border-radius:6px}
 .lyhint{font-size:12.5px;color:var(--muted);margin:2px 0}
 @media print{#printArea .lyrow span{font-size:9pt;border:none!important}#printArea .lyrow .lyl{visibility:hidden}}
+/* Akkord-Eingabe */
+#navKeys #restBtn.hot{background:#F6A924!important;color:#1A1A1A!important;border-color:#B07400!important;font-weight:800}
+#lineInfo.del{background:#FDE8E8;color:#B91C1C;border-color:#B91C1C}
+#lineInfo.chord{background:color-mix(in srgb,var(--a-in) 10%,#fff);color:var(--a-in);font-size:13px;font-weight:600}#lineInfo.chord b{font-size:17px}#lineInfo.del b{font-size:18px}
 /* Spuren */
 .partbar{flex:1 1 100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center;position:sticky;top:-10px;z-index:6;background:var(--bg);padding:6px 0 4px;margin:-4px 0 0}
 .pch{display:inline-flex;border:2px solid var(--pc);border-radius:8px;overflow:hidden;background:var(--surface)}
@@ -779,7 +783,7 @@ body.voice .lyrow span:not(.on):not(.lyl){border-bottom:1px dotted #C9D5D1}
     <button id="delBtn2" class="ic" aria-label="Note löschen"><i>⌫</i><small>Löschen</small></button>
   </div>
   <div class="hint nk">Oktave wählt die App automatisch – mit ⇩/⇧ Oktave ändern.</div>
-  <div class="keys k8 small" id="navKeys">
+  <div class="keys k9 small" id="navKeys">
     <button data-nav="l" class="ic" aria-label="Schritt zurück"><i>←</i><small>zurück</small></button>
     <button data-nav="r" class="ic" aria-label="Schritt vor"><i>→</i><small>vor</small></button>
     <button data-nav="u" class="ic" aria-label="Saite höher"><i>↑</i><small>Saite</small></button>
@@ -788,6 +792,7 @@ body.voice .lyrow span:not(.on):not(.lyl){border-bottom:1px dotted #C9D5D1}
     <button id="legBtn" class="ic" title="Gebunden: Hammer-on, Pull-off, Slide, Haltebogen"><i>⌒</i><small>Bogen</small></button>
     <button id="accBtn" class="ic" title="Akzent"><i>&gt;</i><small>Akzent</small></button>
     <button id="autoBtn" class="ic" title="Nach jeder Note automatisch weiterspringen"><i>⏩</i><small>Auto</small></button>
+    <button id="chordBtn" class="ic" title="Akkord: mehrere Töne gleichzeitig – Cursor bleibt stehen, vorhandenen Ton antippen = weg"><i>♫</i><small>Akkord</small></button>
   </div>
   <div class="keys k8 small" id="toolKeys">
     <button id="semDn" class="ic" title="Note am Cursor einen Halbton tiefer"><i>−½</i><small>Halbton</small></button>
@@ -1659,7 +1664,7 @@ function status(msg){
   updateAlts();
 }
 function updateAlts(){
-  if(isKeys()){$("altNote").hidden=true;return;}
+  if(isKeys()||(S.mode==="line"&&chordOn())){$("altNote").hidden=true;return;}
   var ns=nstr(),n=noteAt(cursor.bar,cursor.str,cursor.step),h='<span class="lbl">Diese Note:</span>';
   if(n&&typeof n.f==="number"){
     var m=OPEN[ns][cursor.str]+n.f,bar=song().bars[cursor.bar];
@@ -1725,6 +1730,7 @@ function setFret(f){
   pushUndo();
   var len=curLen;
   if(isTrip(cursor.bar,cursor.step)){len=curLen>=4?2:1;len=Math.min(len,3-cursor.step%4);}
+  var cho=chordOn();if(cho){var oth=stepNotes().filter(function(x){return x.s!==cursor.str});if(oth.length)len=oth[0].n.len;}
   var n={f:f,len:len};
   if(armLeg)n.h=1;if(armAcc)n.a=1;
   var oe=oldEndAt(cursor.bar,cursor.step);
@@ -1733,7 +1739,7 @@ function setFret(f){
   last={bar:cursor.bar,str:cursor.str,step:cursor.step};
   armLeg=false;armAcc=false;flagButtons();
   render();save();hearNote(n,cursor.str);
-  if(S.auto)advance(len);
+  if(S.auto&&!cho)advance(len);
 }
 function candidates(m){
   if(isKeys())return (m>=21&&m<=108)?[{s:pIdx(m),f:0}]:[];
@@ -1868,6 +1874,21 @@ function flagButtons(){
   $("legBtn").classList.toggle("on",!!(armLeg||(n&&n.h)));
   $("accBtn").classList.toggle("on",!!(armAcc||(n&&n.a)));
   $("autoBtn").classList.toggle("on",!!S.auto);
+  var co=chordOn();$("chordBtn").classList.toggle("on",co);
+  $("restBtn").classList.toggle("hot",co);$("restBtn").innerHTML=co?'<i>➜</i><small>weiter</small>':'<i>⇥</i><small>Sprung</small>';
+}
+function chordOn(){return !!(S.chordI&&S.chordI[instOf()]);}
+function stepNotes(){var bar=song().bars[cursor.bar],res=[],ns=nstr();if(!bar)return res;for(var s0=0;s0<ns;s0++){var n=bar.n[s0+"_"+cursor.step];if(n)res.push({s:s0,n:n,m:OPEN[ns][s0]+(n.f==="x"?0:n.f)});}return res;}
+function chordLen(){var sn=stepNotes();return sn.length?sn[0].n.len:null;}
+function chordNames(){return stepNotes().sort(function(a,c){return a.m-c.m}).map(function(x){var sp=spell(x.m),q={m:x.m,L:sp.L,a:sp.acc};return spName(q)+spOct(q);}).join(" · ");}
+function chordToggleM(m){/* Akkord-Modus: Ton hinzufügen oder (wenn schon da) entfernen */
+  var sn=stepNotes(),hit=null;sn.forEach(function(x){if(x.m===m&&x.n.f!=="x")hit=x;});
+  var bar=song().bars[cursor.bar];
+  if(hit){pushUndo();delete bar.n[hit.s+"_"+cursor.step];render();save();flagButtons();var q=spell(m);status("✕ "+spName({m:m,L:q.L,a:q.acc})+spOct({m:m,L:q.L,a:q.acc})+" entfernt"+(stepNotes().length?" · Akkord: "+chordNames():""));return;}
+  var c=candidates(m).filter(function(p){return !bar.n[p.s+"_"+cursor.step];});
+  if(!c.length){status(isKeys()?"Dieser Ton liegt außerhalb des Bereichs.":"Für diesen Ton ist keine Saite mehr frei.");return;}
+  var ref=lastFret(),best=c[0],bs=1e9;c.forEach(function(p){var sc=Math.abs(p.f-ref)+(p.f>12?0.5:0);if(sc<bs){bs=sc;best=p;}});
+  cursor.str=best.s;setFret(best.f);status("♫ Akkord: "+chordNames()+" – weitere Töne antippen, ➜ weiter = nächster Schlag");
 }
 function nav(d){
   if(d==="l")advance(-1);
@@ -1938,7 +1959,8 @@ function pkRender(){
 $("pkDn").onclick=function(){PK.lo=Math.max(24,PK.lo-12);pkRender();};
 $("pkUp").onclick=function(){PK.lo=Math.min(84,PK.lo+12);pkRender();};
 $("pk").addEventListener("click",function(e){var b=e.target.closest("[data-pm]");if(!b)return;var m=+b.dataset.pm;
-  if(audioReady())playPiano({},pIdx(m),ctx.currentTime+0.01,0.4);
+  if(audioReady())toneM(m,ctx.currentTime+0.01,0.4);
+  if(chordOn()){chordToggleM(m);pkRender();return;}
   cursor.str=pIdx(m);setFret(0);pkRender();});
 function instUI(){
   var P=isKeys();document.body.classList.toggle("voice",isVoice());
@@ -1949,6 +1971,7 @@ function instUI(){
   if($("instSel"))$("instSel").value=instOf();
   document.body.classList.toggle("guitar",isGuitar());
   if(typeof syncSegs==="function")syncSegs();
+  if(typeof flagButtons==="function")flagButtons();
 }
 function instOf(){return isPiano()?"piano":isVoice()?"voice":isGuitar()?"guitar":"bass"}
 function convertInst(to){
@@ -2149,7 +2172,16 @@ function lineRender(ghost){
   var kx=Math.abs(kn)?44+Math.abs(kn)*9+6:46,gx=kx+34,zx=W*0.55;
   o.push('<rect x="'+zx+'" y="2" width="'+(W-zx-2)+'" height="'+(H-4)+'" rx="8" fill="#004C3A" opacity=".06"/>');
   o.push('<text x="'+((zx+W)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="11" fill="#45524D" font-weight="700">☝ hier tippen &amp; schieben</text>');
-  var info=$("lineInfo");
+  var info=$("lineInfo"),CH=chordOn()?stepNotes():[],onHit=false;
+  CH.forEach(function(x){if(x.n.f==="x")return;var sp2=spellM2(x.m),py=Y(sp2.pos),sn2=isKeys()?"":SNAME[nstr()][x.s];
+    if(ghost&&sp2.pos===ghost.pos)onHit=true;
+    for(var lq=-2;lq>=sp2.pos;lq-=2)o.push('<line class="st" stroke-width="1.4" x1="'+(gx-15)+'" x2="'+(gx+15)+'" y1="'+Y(lq)+'" y2="'+Y(lq)+'"/>');
+    if(!PI)for(lq=10;lq<=sp2.pos;lq+=2)o.push('<line class="st" stroke-width="1.4" x1="'+(gx-15)+'" x2="'+(gx+15)+'" y1="'+Y(lq)+'" y2="'+Y(lq)+'"/>');
+    o.push('<ellipse class="fl chn'+(sn2?" n"+sn2:"")+'" cx="'+gx+'" cy="'+py+'" rx="8.5" ry="6" transform="rotate(-20 '+gx+' '+py+')"/>');
+    if(sp2.acc)o.push('<g transform="translate('+(gx-19)+' '+py+') scale(1.2) translate('+(-(gx-19))+' '+(-py)+')">'+accSVG(sp2.acc,gx-19,py)+'</g>');});
+  if(ghost&&onHit){var gy0=Y(ghost.pos);o.push('<rect x="0" y="'+(gy0-U/2+1)+'" width="'+W+'" height="'+(U-2)+'" fill="#B91C1C" opacity=".22"/><path d="M'+(gx-9)+' '+(gy0-9)+' l18 18 M'+(gx-9)+' '+(gy0+9)+' l18 -18" stroke="#B91C1C" stroke-width="3.2" stroke-linecap="round"/>');
+    if(info){var pmH=posMidi(ghost.pos);info.className="on del";info.innerHTML='<b>✕ '+spName({m:pmH.m,L:pmH.L,a:pmH.a})+spOct({m:pmH.m,L:pmH.L,a:pmH.a})+'</b> loslassen = aus dem Akkord entfernen';}
+    o.push('</svg>');el.innerHTML=o.join("");return;}
   if(ghost){
     var gy=Y(ghost.pos),pm=posMidi(ghost.pos),pp=bestPos(pm.m);
     o.push('<rect x="0" y="'+(gy-U/2+1)+'" width="'+W+'" height="'+(U-2)+'" fill="#F6A924" opacity=".3"/>');
@@ -2162,7 +2194,8 @@ function lineRender(ghost){
     if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate('+(gx-21)+' '+gy+') scale(1.5) translate('+(-(gx-21))+' '+(-gy)+')">'+accSVG(pm.a,gx-21,gy)+'</g>');
     var lab=spName({m:pm.m,L:pm.L,a:pm.a})+spOct({m:pm.m,L:pm.L,a:pm.a});
     if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(PI?(pm.m>=60?'rechte Hand':'linke Hand'):(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – ⇩/⇧ Oktave</span>'));}
-  }else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – oder einen Notenwert/eine Pause hierher ziehen";}
+  }else if(info&&chordOn()){info.className="on chord";info.innerHTML=CH.length?'<b>♫ '+esc(chordNames())+'</b><span>+ Ton antippen · vorhandenen = weg</span>':'<b>♫ Akkord</b><span>Töne nacheinander antippen · ➜ weiter</span>';}
+  else if(info){info.className="";info.textContent="Rechts auf die Zeile tippen und schieben – oder einen Notenwert/eine Pause hierher ziehen";}
   o.push('</svg>');el.innerHTML=o.join("");
 }
 (function(){
@@ -2182,7 +2215,8 @@ function lineRender(ghost){
   }
   window.linePlace=function(p){
     var pm=posMidi(p);armAccN=null;accButtons();
-    if(!bestPos(pm.m)){status("Dieser Ton liegt außerhalb des Griffbretts – mit ⇩/⇧ Oktave verschieben.");return;}
+    if(!candidates(pm.m).length){status("Dieser Ton liegt außerhalb des Griffbretts – mit ⇩/⇧ Oktave verschieben.");return;}
+    if(chordOn()){chordToggleM(pm.m);lineRender();return;}
     var bar=song().bars[cursor.bar];
     for(var q=0;q<nstr();q++)if(bar.n[q+"_"+cursor.step]){pushUndo();delete bar.n[q+"_"+cursor.step];}
     placeMidi(pm.m);
@@ -2197,10 +2231,12 @@ $("fretKeys").addEventListener("click",function(e){
   if(f==="del")del();else setFret(f==="x"?"x":+f);
 });
 $("navKeys").addEventListener("click",function(e){var b=e.target.closest("button[data-nav]");if(b)nav(b.dataset.nav)});
-$("restBtn").onclick=function(){advance(isTrip(cursor.bar,cursor.step)?(curLen>=4?2:1):curLen)};
+$("restBtn").onclick=function(){var cl=chordOn()?chordLen():null;advance(cl||(isTrip(cursor.bar,cursor.step)?(curLen>=4?2:1):curLen));if(chordOn()&&S.mode==="line")lineRender();};
 $("legBtn").onclick=function(){toggleFlag("h")};
 $("accBtn").onclick=function(){toggleFlag("a")};
 $("autoBtn").onclick=function(){S.auto=!S.auto;flagButtons();save()};
+$("chordBtn").onclick=function(){S.chordI=S.chordI||{};var k=instOf();S.chordI[k]=!S.chordI[k];flagButtons();save();if(S.mode==="line")lineRender();if(isKeys())pkRender();
+  status(S.chordI[k]?"♫ Akkord an: Töne stapeln sich am Cursor. Vorhandenen Ton antippen = entfernen. ➜ weiter = nächster Schlag.":"Akkord aus: jede Note springt wieder weiter.");};
 $("score").addEventListener("click",function(e){
   var pc=e.target.closest("[data-pi],[data-pmute],[data-padd],[data-pdelc],.opart");
   if(pc){e.stopPropagation();var sg=song();
@@ -3401,6 +3437,7 @@ var HELP=[
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
+{t:"e",h:"Akkorde eingeben (mehrere Töne gleichzeitig)",b:"<p>In der unteren Navigationsreihe <b>♫ Akkord</b> einschalten (dunkel = an). Die App merkt sich das je Instrument.</p><ul><li><b>🎼 Zeile</b> oder <b>🎹 Tasten</b>: Töne nacheinander antippen – sie stapeln sich am Cursor, der Cursor bleibt stehen. Die Töne des Akkords stehen groß in der Zeile und in der Leiste darüber.</li><li><b>Einen Ton entfernen:</b> genau diesen Ton noch einmal antippen. In der Zeile wird er beim Drüberfahren rot mit ✕ markiert – loslassen entfernt nur ihn.</li><li><b>➜ weiter</b> (orange) springt um die Länge des Akkords zum nächsten Schlag.</li><li>Gitarre: jeder Ton bekommt automatisch eine freie Saite. Im Tab kannst du wie gewohnt Saite für Saite eintippen.</li><li>Alle Töne eines Akkords haben dieselbe Länge; vorher die Länge wählen.</li><li>Akkord wieder aus: Eingabe springt nach jeder Note weiter (Melodie).</li></ul>"},
 {t:"e",h:"Spuren: mehrere Instrumente",b:"<p>Ein Stück kann mehrere Spuren haben, z. B. Bass + Gitarre + Gesang. <b>⚙ Einstellungen → 🎵 Stück → Spuren → ＋ Spur</b>. Alle Spuren spielen zusammen.</p><ul><li><b>Wechseln:</b> oben über den Takten die farbigen Knöpfe antippen. Eingegeben wird immer in der hervorgehobenen Spur.</li><li><b>🔊/🔇</b> neben dem Namen schaltet eine Spur stumm.</li><li><b>Handy:</b> nur die aktive Spur wird gezeigt. <b>Tablet und PC:</b> alle Spuren untereinander, jede mit eigener Farbe am Rand; eine andere Spur antippen wechselt dorthin.</li><li>Taktart, Tempo, Abschnitte, Wiederholungen, Akkordsymbole und Triolen gelten für alle Spuren gemeinsam.</li><li>In den Einstellungen: umbenennen, mit ↑↓ sortieren, ✕ löschen (↶ Zurück holt sie).</li><li><b>PDF:</b> alle Spuren als Partitur – oder Haken bei „nur aktive Spur“ für eine Einzelstimme.</li></ul>"},
 {t:"e",h:"Gitarren-Akkorde und Schlagmuster",b:"<p>In der Gitarrenspur: Cursor setzen, <b>C7 Akkord</b> antippen.</p><ul><li><b>Vorschläge</b> (★) passen zur Tonart und zum tiefsten Ton, der dort klingt – auch aus der Bassspur.</li><li>Das <b>Griffbild</b> erscheint im Dialog; <b>＋ Griff in Tab</b> trägt den Griff mit der gewählten Länge ein.</li><li>Über den Gitarrennoten stehen die Griffbilder automatisch.</li><li><b>🥁 Schlagmuster …</b>: Muster wählen (z. B. Pop ↓ ↓↑ ↑↓↑) und Takte von/bis – die App trägt die Akkorde als Anschläge ein, mit ↓/↑ über dem Tab. Ersetzt die Gitarrennoten in diesen Takten.</li><li>Griffe stammen aus einer Liste gängiger Griffe, sonst sucht die App einen spielbaren Griff – bei seltenen Akkorden bitte prüfen.</li></ul>"},
 {t:"e",h:"Gesang und Liedtext",b:"<p>Spur „Gesang“ anlegen: Melodie im Violinschlüssel, Eingabe über 🎹 Tasten, Namen oder Zeile.</p><ul><li><b>🎤 Text</b> (Werkzeug-Leiste): Silbe für die Note eintippen, <b>Enter</b> = weiter zur nächsten Note. Ein „-“ am Ende verbindet zur nächsten Silbe (Hal- lo).</li><li><b>Ganze Zeile verteilen:</b> Text eintippen oder <b>🎙 Einsprechen</b>, mit <b>✂ Silben trennen</b> automatisch trennen lassen, dann <b>⤵ Ab dieser Note verteilen</b>.</li><li>Einsprechen nutzt die Spracherkennung von Chrome (Android/PC): braucht Internet, die Aufnahme geht an Google. Die automatische Silbentrennung ist eine Näherung – bitte prüfen.</li><li>Eine Silbe unter den Noten antippen öffnet sie zum Ändern.</li></ul>"},
@@ -3463,7 +3500,7 @@ var HELP=[
 var helpTab="e";
 var HGROUPS={
  e:[["Erste Schritte",["Schnellstart","So funktioniert","Kopfleiste","Knopf-Farben","Ansicht","Tonart, Taktart"]],
-    ["Noten eingeben",["Notenlängen","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
+    ["Noten eingeben",["Notenlängen","Akkorde eingeben","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Mehrere Instrumente",["Spuren","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
     ["Üben und Abspielen",["Metronom, Schleife","Abschnitte","Taktart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
