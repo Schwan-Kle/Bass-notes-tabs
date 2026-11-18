@@ -1241,9 +1241,9 @@ function staffSVG(b,NI){
     var xs=x+(e.up?hx:-hx);
     if(e.base<16){
       o.push('<line class="st stem" x1="'+r(xs)+'" x2="'+r(xs)+'" y1="'+Y(e.up?e.lo:e.hi)+'" y2="'+r(e.beamed?e.end+(e.up?0.9:-0.9):e.end)+'"/>');
-      if(e.beamed){var yc=e.up?e.end+3.1:e.end-3.1,dv2=e.up?1:-1;
-        var fl2=e.bF?xs:xs-2.4,fr2=e.bL?xs:xs+2.4;
-        o.push('<path class="fl" d="M'+r(fl2)+' '+r(yc)+(e.bF?' L'+r(xs-0.6)+' '+r(yc):' Q'+r(xs-0.6)+' '+r(yc)+' '+r(xs-0.6)+' '+r(yc+dv2*2.6))+' L'+r(xs-0.6)+' '+r(yc+dv2*2.6)+' L'+r(xs+0.6)+' '+r(yc+dv2*2.6)+(e.bL?' L'+r(xs+0.6)+' '+r(yc):' Q'+r(xs+0.6)+' '+r(yc)+' '+r(fr2)+' '+r(yc))+'Z"/>');}
+      if(e.beamed&&(e.bF||e.bL)){var yc=e.up?e.end+3.1:e.end-3.1,dv2=e.up?1:-1;
+        if(e.bF)o.push('<path class="fl" d="M'+r(xs+0.6)+' '+r(yc)+' L'+r(xs+0.6)+' '+r(yc+dv2*2.6)+' Q'+r(xs+0.6)+' '+r(yc)+' '+r(xs+2.6)+' '+r(yc)+'Z"/>');
+        else o.push('<path class="fl" d="M'+r(xs-0.6)+' '+r(yc)+' L'+r(xs-0.6)+' '+r(yc+dv2*2.6)+' Q'+r(xs-0.6)+' '+r(yc)+' '+r(xs-2.6)+' '+r(yc)+'Z"/>');}
       if(!e.beamed&&e.base<4){
         var nf=e.base===1?2:1;
         for(var f=0;f<nf;f++){
