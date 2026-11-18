@@ -1039,8 +1039,9 @@ function tabRhythmSVG(b){
       o.push('<rect class="bm" x="'+r(xa)+'" y="'+(bot-3)+'" width="'+r(xb-xa)+'" height="3"/>');
       for(var kk=i2;kk<=j;kk++){
         if(L[kk].base!==1)continue;var xk=X(L[kk].t);
-        if(kk<j&&L[kk+1].base===1)o.push('<rect class="bm" x="'+r(xk)+'" y="'+(bot-8)+'" width="'+r(X(L[kk+1].t)-xk)+'" height="3"/>');
-        else if(kk>i2&&L[kk-1].base===1){}
+        var aN=kk<j&&L[kk+1].base===1&&L[kk+1].t===L[kk].t+L[kk].len,aP=kk>i2&&L[kk-1].base===1&&L[kk].t===L[kk-1].t+L[kk-1].len;
+        if(aN)o.push('<rect class="bm" x="'+r(xk)+'" y="'+(bot-8)+'" width="'+r(X(L[kk+1].t)-xk)+'" height="3"/>');
+        else if(aP){}
         else o.push('<rect class="bm" x="'+r(kk>i2?xk-7:xk)+'" y="'+(bot-8)+'" width="7" height="3"/>');
       }
       for(kk=i2;kk<=j;kk++)L[kk].beamed=1;
@@ -1257,8 +1258,9 @@ function staffSVG(b,NI){
       for(k=i;k<=j;k++){
         if(L[k].base!==1)continue;
         var xk=X(L[k].t)+sx;
-        if(k<j&&L[k+1].base===1)o.push(beamP(xk,X(L[k+1].t)+sx,5));
-        else if(k>i&&L[k-1].base===1){}
+        var adjN=k<j&&L[k+1].base===1&&L[k+1].t===L[k].t+L[k].len,adjP=k>i&&L[k-1].base===1&&L[k].t===L[k-1].t+L[k-1].len;
+        if(adjN)o.push(beamP(xk,X(L[k+1].t)+sx,5));
+        else if(adjP){}
         else o.push(beamP(k>i?xk-7:xk,k>i?xk:xk+7,5));
       }
     }
