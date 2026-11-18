@@ -1237,6 +1237,16 @@ function staffSVG(b,NI){
       var BY=function(xx){return ya+(xx-x0)*kq;},sh=0;
       for(k=i;k<=j;k++){var xq=X(L[k].t)+sx,need=up?BY(xq)-(Y(L[k].hi)-2.6*sp):(Y(L[k].lo)+2.6*sp)-BY(xq);if(need>sh)sh=need;}
       ya+=up?-sh:sh;
+      /* Pausen unter dem Balken freihalten */
+      var has16=false;for(k=i;k<=j;k++)if(L[k].base===1)has16=true;
+      var inner=has16?8.1:3.1,ymR=Y(4),clr=0,ob2=NI.off?NI.off[b]:b*st;
+      for(var tq=(ext?bsE:L[i].t);tq<L[j].t;tq++){
+        if(NI.occ[ob2+tq])continue;
+        var by3=BY(X(tq)+sx-sx);
+        if(up){var d4=(by3+inner)-(ymR-11);if(d4>clr)clr=d4;}
+        else{var d5=(ymR+11)-(by3-inner);if(d5>clr)clr=d5;}
+      }
+      ya+=up?-clr:clr;
       for(k=i;k<=j;k++){L[k].up=up;L[k].end=BY(X(L[k].t)+sx);L[k].beamed=1;}
       var xa=x0,xb=x1,bs0=Math.floor(L[i].t/beat)*beat,TH=3.1;
       if(L[i].t>bs0&&!(bar.tb&&beat===4&&bar.tb[bs0/4]))xa=X(bs0)+sx;
