@@ -1047,7 +1047,8 @@ function staffSVG(b,NI){
       var up=sum/(j-i+1)<4,by=up?1e9:-1e9;
       for(k=i;k<=j;k++){by=up?Math.min(by,Y(L[k].hi)-3*sp):Math.max(by,Y(L[k].lo)+3*sp);}
       for(k=i;k<=j;k++){L[k].up=up;L[k].end=by;L[k].beamed=1;}
-      var xa=X(L[i].t)+(up?hx:-hx),xb=X(L[j].t)+(up?hx:-hx);
+      var xa=X(L[i].t)+(up?hx:-hx),xb=X(L[j].t)+(up?hx:-hx),bs0=Math.floor(L[i].t/beat)*beat;
+      if(L[i].t>bs0&&!(bar.tb&&beat===4&&bar.tb[bs0/4]))xa=X(bs0)+(up?hx:-hx);
       o.push('<rect class="fl" x="'+r(xa)+'" y="'+r(up?by:by-3)+'" width="'+r(xb-xa)+'" height="3"/>');
       var y2=up?by+5:by-8;
       for(k=i;k<=j;k++){
