@@ -344,6 +344,17 @@ button.sub::after{content:"▸";font-size:10px;opacity:.75;margin-left:1px}
 #dlg textarea{width:100%;height:180px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:Consolas,monospace;font-size:12px}
 #dlg p{margin:0;font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion: no-preference){ #score{scroll-behavior:smooth} }
+.staff .acc{fill:none;stroke:currentColor;stroke-width:1.1;stroke-linecap:round}.staff .accb{fill:none;stroke:currentColor;stroke-width:2.2}
+#hList>*{flex-shrink:0}
+.hrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.hrow{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;padding:8px 12px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--surface);color:var(--text);font-size:15px;text-align:left;font-weight:600}
+.hrow:last-child{border-bottom:0}.hrow span{flex:1}.hrow b{color:var(--muted);font-size:20px;font-weight:400}
+.hrow small{font-weight:400;color:var(--accent)}
+.hback{align-self:flex-start;min-height:40px;font-weight:700;color:var(--main)}
+.htitle{margin:6px 0 0;font-size:18px;color:var(--main)}
+.hnav{display:flex;justify-content:space-between;gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.hnav button{max-width:48%;min-height:44px;font-size:13px}
+#help.art .htabs,#help.art #hSearch,#help.art #hIdx{display:none}
 </style>
 </head>
 <body>
@@ -806,7 +817,7 @@ function keyAcc(){
   else for(i=0;i<k;i++)a[SHARP_ORD[i]]=1;
   return a;
 }
-function GUT(){return 0.8+0.32*Math.abs(keyN())}
+function GUT(){var k=Math.abs(keyN());return k?1.25+0.34*k:0.8}
 function spell(m){
   var pc=((m%12)+12)%12,ka=keyAcc(),L=-1,a=0,i;
   for(i=0;i<7;i++)if(((NAT[i]+ka[i])%12+12)%12===pc){L=i;a=ka[i];break;}
@@ -835,6 +846,12 @@ function noteInfo(){
   return {occ:occ,pMin:pMin,pMax:pMax};
 }
 function baseLen(l){return l>=16?16:l>=8?8:l>=4?4:l>=2?2:1}
+function accSVG(a,x,y){
+  function r(v){return Math.round(v*10)/10}
+  if(a<0)return '<path class="acc" d="M'+r(x-2.6)+' '+r(y-12)+'V'+r(y+3.5)+'C'+r(x+1)+' '+r(y+1)+' '+r(x+4.6)+' '+r(y-1.5)+' '+r(x+3.6)+' '+r(y-3.8)+'C'+r(x+2.6)+' '+r(y-5.6)+' '+r(x-0.6)+' '+r(y-4)+' '+r(x-2.6)+' '+r(y-1.6)+'"/>';
+  if(a>0)return '<path class="acc" d="M'+r(x-1.6)+' '+r(y-8.5)+'V'+r(y+9.5)+'M'+r(x+1.6)+' '+r(y-9.5)+'V'+r(y+8.5)+'"/><path class="accb" d="M'+r(x-3.6)+' '+r(y-1.6)+'L'+r(x+3.6)+' '+r(y-3.8)+'M'+r(x-3.6)+' '+r(y+3.8)+'L'+r(x+3.6)+' '+r(y+1.6)+'"/>';
+  return '<path class="acc" d="M'+r(x-2)+' '+r(y-9.5)+'V'+r(y+3.4)+'M'+r(x+2)+' '+r(y-3.4)+'V'+r(y+9.5)+'"/><path class="accb" d="M'+r(x-2)+' '+r(y-1.6)+'L'+r(x+2)+' '+r(y-3.4)+'M'+r(x-2)+' '+r(y+3.4)+'L'+r(x+2)+' '+r(y+1.6)+'"/>';
+}
 function staffSVG(b,NI){
   var sg=sig(),st=sg.steps,beat=sg.beat,ns=nstr(),bar=song().bars[b];
   var U=22,sp=8,G=GUT()*U,W=(st+GUT())*U,padT=3*sp+10,H=padT+(NI.pMax-NI.pMin)*sp/2+3*sp+10,hx=4.7;
@@ -849,7 +866,7 @@ function staffSVG(b,NI){
   var kn=keyN(),ki;
   for(ki=0;ki<Math.abs(kn);ki++){
     var kp=(kn<0?FLAT_POS:SHARP_POS)[ki];
-    o.push('<text x="'+r(20+ki*7)+'" y="'+(Y(kp)+4.5)+'" font-size="13">'+(kn<0?"♭":"♯")+'</text>');
+    o.push(accSVG(kn<0?-1:1,24+ki*7.4,Y(kp)));
   }
   if(!EXSVG&&view()==="notes"&&b===cursor.bar&&cursor.step<st)o.push('<rect class="stcur" x="'+r(X(cursor.step)-U/2)+'" y="0" width="'+r(U)+'" height="'+r(H)+'"/>');
   /* Ereignisse sammeln */
@@ -924,7 +941,7 @@ function staffSVG(b,NI){
       }else{
         if(accOf(nn.pos)!==nn.acc){
           accState[nn.pos]=nn.acc;
-          o.push('<text x="'+r(x-10.5)+'" y="'+(y+4.5)+'" font-size="13" text-anchor="middle">'+(nn.acc<0?"♭":nn.acc>0?"♯":"♮")+'</text>');
+          o.push(accSVG(nn.acc,x-11,y));
         }
         if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
         else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.4:5)+'" ry="'+(e.base>=8?3:3.6)+'" transform="rotate(-20 '+r(x)+' '+y+')"/>');
@@ -2390,7 +2407,7 @@ var HGROUPS={
     ["Noten eingeben",["Notenlängen","Tab-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Üben und Abspielen",["Metronom, Schleife","Einspielen","Notenlese-Training"]],
-    ["Speichern und Importieren",["Speichern","Noten scannen"]]],
+    ["Speichern und Importieren",["Speichern"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
     ["Tonhöhe",["Vorzeichen","Tonart-Vorzeichen"]],
@@ -2401,11 +2418,21 @@ var HGROUPS={
     ["Rhythmus und Spiel",["Rhythmus zählen","Tempo","Die Rolle des Basses","Spieltechniken","Glossar"]]]
 };
 function helpGroup(x){var gs=HGROUPS[x.t]||[];for(var g=0;g<gs.length;g++)for(var k=0;k<gs[g][1].length;k++)if(x.h.indexOf(gs[g][1][k])===0)return g;return gs.length;}
-function helpItem(x,open,withTab){
-  if(!x.html)x.html=x.b;
-  return '<details class="hitem"'+(open?' open':'')+'><summary>'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+esc(x.h)+'</summary><div class="hbody">'+x.html+'</div></details>';
+var helpCur=-1,helpSeq=[];
+function helpRow(x,withTab){
+  return '<button class="hrow" data-hi="'+HELP.indexOf(x)+'">'+(withTab?'<small>'+({e:"Eingabe",z:"Musikzeichen",w:"Wiki"})[x.t]+'</small> ':'')+'<span>'+esc(x.h)+'</span><b aria-hidden="true">›</b></button>';
 }
+function showArticle(i){
+  helpCur=i;var x=HELP[i];if(!x.html)x.html=x.b;
+  var k=helpSeq.indexOf(i),pv=k>0?helpSeq[k-1]:-1,nx=k>=0&&k<helpSeq.length-1?helpSeq[k+1]:-1;
+  $("help").classList.add("art");
+  $("hList").innerHTML='<button class="hback" id="hBack">‹ Zurück zur Übersicht</button><h3 class="htitle">'+esc(x.h)+'</h3><div class="hbody">'+x.html+'</div>'+
+    '<div class="hnav">'+(pv>=0?'<button data-hi="'+pv+'">‹ '+esc(HELP[pv].h)+'</button>':'<span></span>')+(nx>=0?'<button data-hi="'+nx+'">'+esc(HELP[nx].h)+' ›</button>':'')+'</div>';
+  $("hList").scrollTop=0;
+}
+var helpScroll=0;
 function renderHelp(){
+  helpCur=-1;$("help").classList.remove("art");
   var q=$("hSearch").value.trim().toLowerCase(),h="";
   ["e","z","w"].forEach(function(t){$("htab-"+t).classList.toggle("on",!q&&t===helpTab)});
   if(q){
@@ -2413,18 +2440,20 @@ function renderHelp(){
     var score=function(x){var tt=(x.h+" "+x.k).toLowerCase(),all=(tt+" "+x.b.replace(/<[^>]+>/g," ")).toLowerCase(),sc=0;
       for(var i=0;i<ws.length;i++){if(all.indexOf(ws[i])<0)return 0;sc+=tt.indexOf(ws[i])>=0?3:1;}return sc;};
     var hits=HELP.filter(function(x){x._s=score(x);return x._s>0;}).sort(function(a,b){return b._s-a._s});
+    helpSeq=hits.map(function(x){return HELP.indexOf(x)});
     $("hIdx").innerHTML='<span class="lbl">'+hits.length+' Treffer</span>';
-    h=hits.map(function(x,i){return helpItem(x,i<2&&hits.length<=4,true)}).join("");
-    $("hList").innerHTML=h||'<p class="empty">Nichts gefunden. Probiere ein anderes Wort, z. B. „Terz“, „Pause“ oder „Bund“.</p>';
+    h=hits.map(function(x){return helpRow(x,true)}).join("");
+    $("hList").innerHTML=h?'<div class="hrows">'+h+'</div>':'<p class="empty">Nichts gefunden. Probiere ein anderes Wort, z. B. „Terz“, „Pause“ oder „Bund“.</p>';
     return;
   }
   var gs=HGROUPS[helpTab]||[],items=HELP.filter(function(x){return x.t===helpTab});
   var by={};items.forEach(function(x){var g=helpGroup(x);(by[g]=by[g]||[]).push(x);});
   $("hIdx").innerHTML=gs.map(function(g,k){return by[k]?'<button data-hg="'+k+'">'+esc(g[0])+'</button>':''}).join("");
+  helpSeq=[];
   gs.concat([["Weiteres",[]]]).forEach(function(g,k){
     if(!by[k])return;
-    h+='<h3 class="hgrp" id="hg-'+k+'">'+esc(g[0])+'</h3>';
-    h+=by[k].map(function(x){return helpItem(x,x.h.indexOf("Schnellstart")===0,false)}).join("");
+    h+='<h3 class="hgrp" id="hg-'+k+'">'+esc(g[0])+'</h3><div class="hrows">';
+    h+=by[k].map(function(x){helpSeq.push(HELP.indexOf(x));return helpRow(x,false)}).join("")+'</div>';
   });
   $("hList").innerHTML=h;
 }
@@ -2433,7 +2462,11 @@ $("helpBtn").onclick=function(){$("help").classList.add("open");renderHelp();};
 $("hClose").onclick=function(){$("help").classList.remove("open")};
 $("hSearch").oninput=renderHelp;
 ["e","z","w"].forEach(function(t){$("htab-"+t).onclick=function(){helpTab=t;$("hSearch").value="";renderHelp();$("hList").scrollTop=0;}});
-$("hList").addEventListener("click",function(e){var b=e.target.closest(".hplay");if(b)playSeq(b.dataset.seq);});
+$("hList").addEventListener("click",function(e){
+  var b=e.target.closest(".hplay");if(b){playSeq(b.dataset.seq);return;}
+  if(e.target.closest("#hBack")){renderHelp();$("hList").scrollTop=helpScroll;return;}
+  var r=e.target.closest("[data-hi]");if(r){if(helpCur<0)helpScroll=$("hList").scrollTop;showArticle(+r.dataset.hi);}
+});
 
 /* ---------- Eingabe-Erweiterungen ---------- */
 function isTrip(b,t){var bar=song().bars[b];return !!(bar&&bar.tb&&sig().beat===4&&bar.tb[Math.floor(t/4)]);}
