@@ -821,7 +821,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     <button data-acc="1" class="ic big" title="Nächste Note erhöhen"><i>♯</i><small>erhöhen</small></button>
     <button id="octDn" class="ic" title="Note am Cursor eine Oktave tiefer"><i>⇩</i><small>Oktave</small></button>
     <button id="octUp2" class="ic" title="Note am Cursor eine Oktave höher"><i>⇧</i><small>Oktave</small></button>
-    <button id="posBtn" class="ic" title="Gleiche Note auf anderer Saite greifen"><i>⇄</i><small>Lage</small></button>
+    <button id="posBtn" class="ic" title="Gleiche Note auf anderer Saite greifen – im Akkord: ganzen Akkord in andere Lage"><i>⇄</i><small>Lage</small></button>
     <button id="deadBtn" class="ic" title="Dead Note"><i>✕</i><small>Dead</small></button>
     <button id="delBtn2" class="ic" aria-label="Note löschen"><i>⌫</i><small>Löschen</small></button>
   </div>
@@ -1901,8 +1901,41 @@ function shiftOct(d){
   cs.sort(function(a,b){return Math.abs(a.f-c.n.f)-Math.abs(b.f-c.n.f)});
   pushUndo();moveNote(c,cs[0].s,cs[0].f);
 }
+/* Akkord: alle Griffmöglichkeiten derselben Töne durchschalten */
+function chordVoicings(bar,t){
+  var ns=nstr(),notes=[];
+  for(var s=0;s<ns;s++){var n=bar.n[s+"_"+t];if(n&&typeof n.f==="number")notes.push({s:s,n:n,m:OPEN[ns][s]+n.f});}
+  if(notes.length<2)return null;
+  var res=[],used={},asg=[];
+  (function rec(i){
+    if(res.length>2000)return;
+    if(i===notes.length){
+      var fs=asg.map(function(a){return a.f}),pf=fs.filter(function(f){return f>0}),lo=pf.length?Math.min.apply(null,pf):0,hi=pf.length?Math.max.apply(null,pf):0;
+      if(hi-lo<=4)res.push({a:asg.slice(),lo:lo,sum:fs.reduce(function(x,y){return x+y},0)});return;
+    }
+    for(var s=0;s<ns;s++){if(used[s])continue;var f=notes[i].m-OPEN[ns][s];if(f<0||f>24)continue;used[s]=1;asg.push({s:s,f:f});rec(i+1);asg.pop();used[s]=0;}
+  })(0);
+  res.sort(function(x,y){return x.lo-y.lo||x.sum-y.sum});
+  return {notes:notes,res:res};
+}
+function chordPos(c,dir){
+  var bar=song().bars[c.b],v=chordVoicings(bar,c.t);if(!v)return false;
+  var cur=-1;v.res.forEach(function(r,k){if(cur<0&&r.a.every(function(a,i){return a.s===v.notes[i].s}))cur=k;});
+  if(v.res.length<2||(v.res.length===1&&cur===0)){status("Diesen Akkord gibt es nur in dieser Lage.");return true;}
+  var nx=v.res[((cur<0?-1:cur)+(dir||1)+v.res.length)%v.res.length],cs=c.s;
+  pushUndo();
+  v.notes.forEach(function(q){delete bar.n[q.s+"_"+c.t];});
+  v.notes.forEach(function(q,i){q.n.f=nx.a[i].f;bar.n[nx.a[i].s+"_"+c.t]=q.n;if(q.s===cs)cursor.str=nx.a[i].s;});
+  last={bar:c.b,str:cursor.str,step:c.t};
+  var k=v.res.indexOf(nx);
+  render();save();
+  status("⇄ Akkord "+(nx.lo?"ab Bund "+nx.lo:"mit leeren Saiten")+" · Griff "+(k+1)+" von "+v.res.length+" (nochmal tippen = nächster)");
+  if(typeof hearNote==="function")v.notes.forEach(function(q,i){hearNote(q.n,nx.a[i].s);});
+  return true;
+}
 function nextPos(){
   var c=cursorNote();if(!c){status("Keine Note am Cursor.");return;}
+  if(!isKeys()&&!isDrums()&&chordPos(c,1))return;
   var m=OPEN[nstr()][c.s]+c.n.f,cs=candidates(m),bar=song().bars[c.b];
   cs=cs.filter(function(p){return p.s===c.s||!bar.n[p.s+"_"+c.t]});
   if(cs.length<2){status("Diesen Ton gibt es nur an dieser Stelle.");return;}
@@ -3653,7 +3686,7 @@ var HELP=[
 {t:"e",h:"Zeilen-Eingabe (ohne Tonnamen)",b:"<p>Für das Abschreiben, wenn du den Namen der Note nicht weißt: unten <b>🎼 Zeile</b> wählen. Es erscheint eine große Notenzeile.</p><ol><li>Takt-Stelle antippen (oder Cursor steht schon richtig), Länge wählen.</li><li>Im <b>rechten, grau hinterlegten Bereich</b> den Finger auf die <b>Linie oder den Zwischenraum</b> legen, auf dem die Note in deiner Vorlage steht.</li><li>Links erscheint die Note, oben über der Zeile groß Name, Saite und Bund – nichts davon liegt unter deinem Finger. Gelber Balken und Name zeigen, welcher Ton das ist – du hörst ihn auch. Mit dem Finger <b>hoch/runter schieben</b> zum Korrigieren.</li><li><b>Loslassen</b> = Note wird gesetzt, der Cursor springt weiter.</li></ol><p><b>Noch schneller:</b> Einen Notenwert (oder eine Pause) aus den Reihen darüber <b>auf die Zeile ziehen</b> und auf der richtigen Linie loslassen – Länge und Tonhöhe in einem Zug. Antippen der Knöpfe funktioniert weiter wie gewohnt.</p><p>Die Tonart wird automatisch berücksichtigt. Steht in der Vorlage ein ♭ ♮ ♯ direkt vor der Note, vorher den Knopf darunter antippen. Bei Noten weit über/unter der Zeile: <b>⇩/⇧ Oktave</b>. Eine vorhandene Note an dieser Stelle wird ersetzt.</p>",k:"zeile notenzeile abschreiben linie zwischenraum ohne namen tippen"},
 {t:"e",h:"Noten-Eingabe (Tonnamen)",b:"<p><b>C D E F G A H</b> setzt den Ton; die App nimmt automatisch die Oktave, die der vorigen Note am nächsten liegt, und wählt Saite und Bund. Die eingestellte <b>Tonart</b> wird berücksichtigt (in f-Moll wird aus A automatisch As).</p><ul><li><b>♭ ♮ ♯</b> gelten nur für die <i>nächste</i> Note (♮ = gegen die Tonart).</li><li><b>Okt ↓ / Okt ↑</b> verschiebt die Note am Cursor um eine Oktave.</li><li><b>Lage ⇄</b> legt denselben Ton auf eine andere Saite.</li><li><b>x</b> Dead Note, <b>⌫</b> löschen.</li></ul>",k:"tonname oktave vorzeichen lage"},
 {t:"e",h:"Navigation, Sprung, Bindung, Akzent",b:"<ul><li><b>← →</b> einen Sechzehntel zurück/vor, <b>↑ ↓</b> Saite höher/tiefer.</li><li><b>⇥ Sprung</b> springt um die gewählte Länge weiter, ohne Note – leere Stellen werden in den Noten automatisch als Pausen gezeichnet.</li><li><b>⌒</b> bindet die Note an die vorige (Hammer-on, Pull-off, Slide oder Haltebogen). Vorher drücken = gilt für die nächste Note; auf einer Note = ein/aus.</li><li><b>&gt;</b> Akzent (lauter). Die Zahl wird orange.</li><li><b>Auto→</b> an/aus: Cursor springt nach jeder Note weiter.</li></ul>",k:"pfeile pause bindung akzent hammer"},
-{t:"e",h:"Diese Note / Greifen ab Bund",b:"<p><b>Diese Note</b> erscheint, wenn der Cursor auf einer Note steht: alle Stellen, an denen der Ton spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Greifen ab Bund</b> findest du unter <b>Takte…</b>: verteilt einen oder mehrere Takte so, dass sie möglichst in dieser Lage (etwa 5 Bünde breit) liegen.</p>",k:"lage saite umlegen fingersatz"},
+{t:"e",h:"Diese Note / Greifen ab Bund",b:"<p><b>⇄ Lage im Akkord</b>: Steht der Cursor auf einem Akkord, schaltet ⇄ Lage den <b>ganzen Akkord</b> durch alle Griffmöglichkeiten derselben Töne (jede Note auf eigener Saite, Spannweite höchstens 5 Bünde), von tief nach hoch. Nochmal tippen = nächster Griff, ↶ Zurück holt den vorigen. Längen und Techniken wandern mit.</p><p><b>Diese Note</b> erscheint, wenn der Cursor auf einer Note steht: alle Stellen, an denen der Ton spielbar ist (z. B. „A-Saite 5 · E-Saite 10“). Antippen legt ihn dorthin. <b>Greifen ab Bund</b> findest du unter <b>Takte…</b>: verteilt einen oder mehrere Takte so, dass sie möglichst in dieser Lage (etwa 5 Bünde breit) liegen.</p>",k:"lage saite umlegen fingersatz"},
 {t:"e",h:"Werkzeug-Leiste (−½ +½ 🔊 …)",b:"<ul><li><b>−½ / +½</b>: Note am Cursor einen Halbton tiefer/höher (bleibt möglichst auf der Saite).</li><li><b>🔊 Mithören</b>: Noten erklingen beim Eingeben und Antippen.</li><li><b>Rhythmus</b>: erst nur Notenlängen tippen (siehe unten).</li><li><b>♪ Töne</b>: Tonhöhen vorhandener Noten nacheinander neu vergeben.</li><li><b>³ Triole</b>: macht den Schlag am Cursor zur Achteltriole (3 statt 4 Positionen). Nochmal tippen = zurück.</li><li><b>Technik</b>: Staccato, Slides, Bend, Vibrato, Slap, Pop, Flageolett für die Note am Cursor.</li><li><b>Akkord</b>: Akkordsymbol (z. B. Fm7) an dieser Stelle über die Noten setzen.</li></ul>",k:"werkzeug halbton hören triole technik akkord"},
 {t:"e",h:"Erst Rhythmus, dann Töne",b:"<p>Schnell bei Linien mit klarem Rhythmus: <b>Rhythmus</b> einschalten und nur die Notenlängen tippen (Pausen mit „Pause“). Es entstehen Platzhalter-Noten mit <b>?</b>. Dann <b>♪ Töne</b> einschalten: Der Cursor springt zur ersten Note, und jeder Bund, Ton (C–H) oder Griffbrett-Tipp ändert nur die Tonhöhe und springt zur nächsten Note. Das klappt auch mit kopierten Takten: gleichen Rhythmus kopieren, dann mit ♪ Töne neu belegen.</p>",k:"rhythmus zuerst töne neu platzhalter repitch"},
 {t:"e",h:"Griffbrett-Eingabe",b:"<p>Oben im Eingabebereich <b>Griffbrett</b> wählen: Statt der Zahlentasten erscheint ein großes Griffbrett (Bund 0–24). <b>Wischen</b> zeigt weitere Bünde, <b>Antippen</b> setzt die Note auf dieser Saite mit der gewählten Länge. Die Noten am Cursor sind dunkel, der restliche Takt blass.</p>",k:"griffbrett eingabe tippen"},
