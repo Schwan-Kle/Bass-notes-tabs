@@ -447,6 +447,16 @@ button{border-width:1.5px}
 .staff .nG{fill:var(--sG)}.staff .nD{fill:var(--sD)}.staff .nA{fill:var(--sA)}.staff .nE{fill:var(--sE)}.staff .nH{fill:var(--sH)}
 .staff .op.nG{fill:var(--surface);stroke:var(--sG)}.staff .op.nD{fill:var(--surface);stroke:var(--sD)}.staff .op.nA{fill:var(--surface);stroke:var(--sA)}.staff .op.nE{fill:var(--surface);stroke:var(--sE)}.staff .op.nH{fill:var(--surface);stroke:var(--sH)}
 .staff .ln{stroke:#6E7F79;opacity:1}
+/* Lesehilfe Linie/Zwischenraum (S.lsh) */
+.staff .sps{display:none}
+body.lsh .staff .sps{display:inline;fill:#F6A924;opacity:.16}
+body.lsh .staff .ln:not(.bl){stroke:#1565C0}
+body.lsh .staff .fl.lnN,body.lsh .staff ellipse.fl.lnN{fill:#1565C0;stroke:#1565C0}
+body.lsh .staff .fl.spN,body.lsh .staff ellipse.fl.spN{fill:#E65100;stroke:#E65100}
+body.lsh .staff .op.lnN{fill:var(--surface);stroke:#1565C0;stroke-width:1.8}
+body.lsh .staff .op.spN{fill:var(--surface);stroke:#E65100;stroke-width:1.8}
+#printArea .sps{display:none!important}
+#lshBtn .lshL{color:#1565C0}#lshBtn .lshR{color:#E65100}#lshBtn.on .lshL{color:#90CAF9}#lshBtn.on .lshR{color:#FFB74D}
 /* Hilfe-Kapitel in Bereichsfarbe */
 #hList .hgrp{color:var(--ac,var(--main));border-top-color:var(--ac,var(--main))}
 #hList .hsh{color:var(--ac,var(--main))}
@@ -737,7 +747,7 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
 <div id="moreMenu" class="menuov" aria-hidden="true">
   <div class="mpanel" role="menu" aria-label="Werkzeuge">
     <div class="viewrow"><span>Ansicht</span><button data-view="both">Noten + Tab</button><button data-view="notes">Noten</button><button data-view="tab">Tab</button></div>
-    <div class="viewrow"><span>Zusatz</span><button id="cntBtn" title="Zählzeiten 1 e + e unter den Noten anzeigen">🔢 Zählzeiten</button></div>
+    <div class="viewrow"><span>Zusatz</span><button id="cntBtn" title="Zählzeiten 1 e + e unter den Noten anzeigen">🔢 Zählzeiten</button><button id="lshBtn" title="Lesehilfe: Noten auf der Linie blau, im Zwischenraum orange; Zwischenräume leicht orange hinterlegt"><span style="display:inline;white-space:nowrap">🎨 <b class="lshL">Linie</b>/<b class="lshR">Raum</b></span></button></div>
     <button id="recBtn" class="a-play" role="menuitem">🎙 Einspielen <small>mit dem Bass, App notiert mit</small></button>
     <button id="tunerBtn" class="a-play" role="menuitem">🎯 Stimmgerät</button>
     <button id="fbBtn" class="a-play" role="menuitem">🎸 Griffbrett anzeigen <small>beim Abspielen mitlesen</small></button>
@@ -1559,6 +1569,7 @@ function grandSVG(b){
   STAFF.clef="bass";out+=staffSVG(b,noteInfo());
   STAFF.clef=null;return '<div class="gstaff">'+out+'</div>';
 }
+function lsC(pos){return ((pos%2)+2)%2===0?" lnN":" spN";}
 function staffSVG(b,NI){var k0=KEYB;KEYB=b;try{return staffSVG0(b,NI);}finally{KEYB=k0;}}
 function staffSVG0(b,NI){
   var sg=sigAt(b),st=sg.steps,beat=sg.beat,ns=nstr(),bar=song().bars[b];
@@ -1567,7 +1578,8 @@ function staffSVG0(b,NI){
   function X(t){return G+(t+0.5)*U}
   function r(v){return Math.round(v*10)/10}
   var o=['<svg class="staff" viewBox="0 0 '+r(W)+' '+r(H)+'" role="img" aria-label="Noten Takt '+(b+1)+'" data-b="'+b+'" data-g="'+GUTb(b)+'" data-st="'+st+'">'];
-  for(var p=0;p<=8;p+=2)o.push('<line class="ln" x1="0" x2="'+r(W)+'" y1="'+Y(p)+'" y2="'+Y(p)+'"/>');
+  for(var p=1;p<=7;p+=2)o.push('<rect class="sps" x="0" y="'+r(Y(p+1))+'" width="'+r(W)+'" height="'+r(sp)+'"/>');
+  for(p=0;p<=8;p+=2)o.push('<line class="ln" x1="0" x2="'+r(W)+'" y1="'+Y(p)+'" y2="'+Y(p)+'"/>');
   o.push('<line class="ln bl" x1="'+r(W-0.5)+'" x2="'+r(W-0.5)+'" y1="'+Y(8)+'" y2="'+Y(0)+'"/>');
   if(PRN.on&&PRN.starts[b])o.push('<line class="ln bl" x1="0.6" x2="0.6" y1="'+Y(8)+'" y2="'+Y(0)+'"/>');
   var yF=Y(6);
@@ -1694,8 +1706,8 @@ function staffSVG0(b,NI){
           accState[nn.pos]=nn.acc;
           o.push(accSVG(nn.acc,xC-11-(anyShf&&!e.up?2*hx:0),y));
         }
-        if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+(EXSVG?"":" n"+nn.sn)+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
-        else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+(EXSVG?"":" n"+nn.sn)+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.6:5.3)+'" ry="'+(e.base>=8?3.1:3.75)+'" transform="rotate(-22 '+r(x)+' '+y+')"/>');
+        if(nn.hm)o.push('<path class="'+(e.base>=8?"op":"fl")+(EXSVG?"":" n"+nn.sn)+lsC(nn.pos)+'" d="M'+r(x-5)+' '+y+' L'+r(x)+' '+(y-4.5)+' L'+r(x+5)+' '+y+' L'+r(x)+' '+(y+4.5)+' Z"/>');
+        else o.push('<ellipse class="'+(e.base>=8?"op":"fl")+(nn.ph?" phh":"")+(EXSVG?"":" n"+nn.sn)+lsC(nn.pos)+'" cx="'+r(x)+'" cy="'+y+'" rx="'+(e.base>=8?4.6:5.3)+'" ry="'+(e.base>=8?3.1:3.75)+'" transform="rotate(-22 '+r(x)+' '+y+')"/>');
       }
       if(e.dot)o.push('<circle class="fl" cx="'+r(xC+8.5+(anyShf&&e.up?2*hx:0))+'" cy="'+(nn.pos%2===0?y-sp/4:y)+'" r="1.4"/>');
     });
@@ -2364,6 +2376,7 @@ function lineRender(ghost){
   var o=['<svg class="staff linepick" viewBox="0 0 '+W+' '+H+'" data-lo="'+R.lo+'" data-hi="'+R.hi+'">'];
   var PI=isPiano(),onSt=function(p){return (p>=0&&p<=8)||(PI&&p>=12&&p<=20);};
   for(var p=R.lo;p<=R.hi;p++){if(p%2===0&&!onSt(p))o.push('<line x1="70" x2="'+(W-90)+'" y1="'+Y(p)+'" y2="'+Y(p)+'" stroke="#9DB3AC" stroke-dasharray="4 5" stroke-width="1"/>');}
+  for(p=R.lo;p<=R.hi;p++)if(p%2!==0&&onSt(p-1)&&onSt(p+1))o.push('<rect class="sps" x="0" y="'+Y(p+1)+'" width="'+W+'" height="'+U+'"/>');
   for(p=0;p<=(PI?20:8);p+=2)if(onSt(p))o.push('<line class="ln" x1="0" x2="'+W+'" y1="'+Y(p)+'" y2="'+Y(p)+'" style="stroke-width:1.6"/>');
   if(PI)o.push(trebleSVG(4,Y(14),U*1.05));
   var yF=Y(6),sc=1.9;
@@ -2378,7 +2391,7 @@ function lineRender(ghost){
     if(ghost&&sp2.pos===ghost.pos)onHit=true;
     for(var lq=-2;lq>=sp2.pos;lq-=2)o.push('<line class="st" stroke-width="1.4" x1="'+(gx-15)+'" x2="'+(gx+15)+'" y1="'+Y(lq)+'" y2="'+Y(lq)+'"/>');
     if(!PI)for(lq=10;lq<=sp2.pos;lq+=2)o.push('<line class="st" stroke-width="1.4" x1="'+(gx-15)+'" x2="'+(gx+15)+'" y1="'+Y(lq)+'" y2="'+Y(lq)+'"/>');
-    o.push('<ellipse class="fl chn'+(sn2?" n"+sn2:"")+'" cx="'+gx+'" cy="'+py+'" rx="8.5" ry="6" transform="rotate(-20 '+gx+' '+py+')"/>');
+    o.push('<ellipse class="fl chn'+(sn2?" n"+sn2:"")+lsC(sp2.pos)+'" cx="'+gx+'" cy="'+py+'" rx="8.5" ry="6" transform="rotate(-20 '+gx+' '+py+')"/>');
     if(sp2.acc)o.push('<g transform="translate('+(gx-19)+' '+py+') scale(1.2) translate('+(-(gx-19))+' '+(-py)+')">'+accSVG(sp2.acc,gx-19,py)+'</g>');});
   if(ghost&&onHit){var gy0=Y(ghost.pos);o.push('<rect x="0" y="'+(gy0-U/2+1)+'" width="'+W+'" height="'+(U-2)+'" fill="#B91C1C" opacity=".22"/><path d="M'+(gx-9)+' '+(gy0-9)+' l18 18 M'+(gx-9)+' '+(gy0+9)+' l18 -18" stroke="#B91C1C" stroke-width="3.2" stroke-linecap="round"/>');
     if(info){var pmH=posMidi(ghost.pos);info.className="on del";info.innerHTML='<b>✕ '+spName({m:pmH.m,L:pmH.L,a:pmH.a})+spOct({m:pmH.m,L:pmH.L,a:pmH.a})+'</b> loslassen = aus dem Akkord entfernen';}
@@ -2391,7 +2404,7 @@ function lineRender(ghost){
     if(PI){if(ghost.pos>=10&&ghost.pos<=11)LL(10);if(ghost.pos>20)for(lp=22;lp<=ghost.pos;lp+=2)LL(lp);}
     else if(ghost.pos>8)for(lp=10;lp<=ghost.pos;lp+=2)LL(lp);
     var sn=pp&&!PI?SNAME[nstr()][pp.s]:"";
-    o.push('<ellipse class="fl'+(sn?" n"+sn:"")+'" cx="'+gx+'" cy="'+gy+'" rx="9" ry="6.5" transform="rotate(-20 '+gx+' '+gy+')"/>');
+    o.push('<ellipse class="fl'+(sn?" n"+sn:"")+lsC(ghost.pos)+'" cx="'+gx+'" cy="'+gy+'" rx="9" ry="6.5" transform="rotate(-20 '+gx+' '+gy+')"/>');
     if(pm.a!==keyAcc()[pm.L])o.push('<g transform="translate('+(gx-21)+' '+gy+') scale(1.5) translate('+(-(gx-21))+' '+(-gy)+')">'+accSVG(pm.a,gx-21,gy)+'</g>');
     var lab=spName({m:pm.m,L:pm.L,a:pm.a})+spOct({m:pm.m,L:pm.L,a:pm.a});
     if(info){info.className="on"+(sn?" s"+sn:"");info.innerHTML='<b>'+lab+'</b> '+(PI?(pm.m>=60?'rechte Hand':'linke Hand'):(pp?sn+'-Saite · Bund '+pp.f:'<span class="bad">nicht greifbar – ⇩/⇧ Oktave</span>'));}
@@ -2904,6 +2917,9 @@ $("viewSel").onchange=function(){setView(this.value)};
 document.addEventListener("click",function(e){var b=e.target.closest("[data-view]");if(b)setView(b.dataset.view);});
 $("cntBtn").onclick=function(){S.count=!S.count;cntState();render();save();status(S.count?"Zählzeiten an: fett = hier beginnt eine Note, grau unterstrichen = Pause":"Zählzeiten aus");};
 cntState();
+function lshState(){document.body.classList.toggle("lsh",!!S.lsh);$("lshBtn").classList.toggle("on",!!S.lsh);}
+$("lshBtn").onclick=function(){S.lsh=!S.lsh;lshState();save();status(S.lsh?"Lesehilfe an: Note auf der Linie = blau, im Zwischenraum = orange (Zwischenräume orange hinterlegt)":"Lesehilfe aus");};
+lshState();
 $("sig").onchange=function(){if(P)stop();song().sig=this.value;cursor.step=0;render();save()};
 $("instSel").onchange=function(){if(P)stop();convertInst(this.value);};
 $("strings").onchange=function(){if(P)stop();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
@@ -3789,6 +3805,7 @@ var HELP=[
 {t:"e",h:"Taktart-, Tonart- und Tempowechsel",b:"<p>Cursor in den Takt setzen, ab dem sich etwas ändert, dann <b>📍 Abschn.</b> → <b>⏱ Taktart, Tonart &amp; Tempo ab diesem Takt</b>. Taktart antippen (z. B. 6/4) und/oder ein neues Tempo eintragen. Das gilt ab diesem Takt bis zur nächsten Änderung.</p><p><b>Tonartwechsel</b> genauso: im selben Fenster die neue Tonart antippen. Am Wechsel stehen ein Doppelstrich, nötige Auflösungszeichen ♮ und die neuen Vorzeichen, neben der Taktnummer der Name der Tonart. Noten-Eingabe, passende Töne und Akkord-Vorschläge richten sich nach der Tonart am Cursor. Im 1. Takt ändert die Auswahl die Tonart des ganzen Stücks.</p><ul><li>Die neue Taktart steht als Zahlen am Anfang der Notenzeile und als blaues Kästchen neben der Taktnummer, ein Tempowechsel als „120 bpm“.</li><li>Abspielen, Metronom, Zählzeiten und Cursor richten sich danach.</li><li><b>wie vorher</b> nimmt die Änderung wieder zurück.</li><li>Die Taktart oben („Takt 4/4“) ist die Grundtaktart des Stücks.</li></ul><p>Einspielen mit Mikrofon nimmt die Taktart des Start-Takts für die ganze Aufnahme.</p>",k:"taktart wechsel 6/4 5/4 tempo wechsel bpm tonart tonartwechsel modulation vorzeichen"},
 {t:"e",h:"Abschnitte markieren",b:"<p>Cursor in den ersten Takt eines Teils setzen, dann <b>📍 Abschn.</b> (untere Reihe). Oben einen Namen antippen (A, B, Intro, Strophe, Refrain …) oder eigenen eintippen. Der Name steht dann als violettes Kästchen über dem Takt.</p><p><b>🔁 Schleife auf diesen Abschnitt</b> übt genau diesen Teil – bis zum Takt vor der nächsten Marke. Im selben Fenster stellst du auch Wiederholungen und Klammern ein.</p>",k:"abschnitt marke teil strophe refrain intro schleife"},
 {t:"e",h:"Übe-Tempo in Prozent",b:"<p>Unter <b>⚙ Einstellungen → Tempo</b> gibt es <b>Übe-Tempo</b>: 50 % bis 100 %. Damit spielst du das Stück langsamer, ohne dass sich das eingestellte Tempo des Stücks ändert. Oben unter der bpm-Zahl steht dann z. B. „bpm · 70 %“ (türkis).</p>",k:"tempo prozent langsam üben geschwindigkeit"},
+{t:"e",h:"Lesehilfe Linie oder Zwischenraum",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🎨 Linie/Raum</b> antippen (nochmal = aus). Dann gilt überall im Notenbild, in der Zeilen-Eingabe und im Notenlese-Training:</p><ul><li><b style=\"color:#1565C0\">Blau</b> = die Note liegt <b>auf einer Linie</b> (die Linie geht durch die Mitte des Notenkopfs). Die Notenlinien sind ebenfalls blau.</li><li><b style=\"color:#E65100\">Orange</b> = die Note liegt <b>im Zwischenraum</b>. Die Zwischenräume sind leicht orange hinterlegt.</li><li>Gilt auch für Hilfslinien ober- und unterhalb.</li></ul><p>Die Saitenfarben der Notenköpfe sind solange ausgeschaltet; im Tab bleiben sie. Ins PDF kommt die Lesehilfe nicht.</p>"},
 {t:"e",h:"Zählzeiten anzeigen",b:"<p>Im Menü <b>⋯</b> unter <b>Zusatz</b> den Knopf <b>🔢 Zählzeiten</b> antippen. Unter den Noten erscheint eine Zeile <b>1 e + e 2 e + e …</b> (bei 6/8: 1 + 2 + 3 + …, bei Triolen: 1 tri ol).</p><ul><li><b>Fett hinterlegt</b> = hier beginnt eine Note – das zählst bzw. spielst du.</li><li><i>Unterstrichen</i> = hier beginnt eine eingegebene Pause.</li><li>Grau = Zählzeit ohne neuen Ton.</li></ul><p>Die Zeile steht genau über den Tab-Spalten und unter den Noten, in allen Ansichten.</p>",k:"zählen zählzeiten 1 e und rhythmus zählweise"},
 {t:"e",h:"Pausen setzen und entfernen",b:"<p><b>Setzen:</b> Unter den Notenlängen liegt eine eigene <b>Pausenreihe</b> mit den Pausenzeichen (1/16 bis ganze Pause). Antippen setzt die Pause am Cursor, der Cursor springt weiter. Eine Note an dieser Stelle wird entfernt, eine hineinklingende Note davor gekürzt. Deine Pausen werden <b>gespeichert und genau so gezeichnet</b>, wie du sie eingibst – auch im leeren Takt. Nur Stellen ohne Note und ohne eingegebene Pause füllt die App automatisch mit Pausen auf. Setzt du später eine Note auf eine Pause, ersetzt die Note sie.</p><p><b>Wegbekommen oder ändern:</b> Im Notenblatt direkt auf das <b>Pausenzeichen tippen</b>. Dann wählen:</p><ul><li><b>⇥ Vorige Noten nach hinten rücken</b> – die Noten davor rücken um die Pausenlänge nach rechts, ihre Längen bleiben gleich; die Pause steht dann vorn im Takt und wird mit anderen Pausen dort zusammengefasst.</li><li><b>⟵ Vorige Note verlängern</b> – die Note davor klingt durch und füllt die Pause.</li><li><b>⇤ Folgende Noten nachrücken</b> – alles dahinter im Takt rückt nach vorn, die Pause wandert ans Taktende (z. B. wenn du eine Note gelöscht hast).</li><li><b>Hier eine Note eingeben</b> – der Cursor steht an der Pause, einfach Note setzen.</li></ul><p><b>⇥ Sprung</b> springt nur weiter, ohne etwas zu ändern.</p>",k:"pause pausen rest lücke verschieben nachrücken verlängern entfernen"},
 {t:"e",h:"Akkorde eingeben (mehrere Töne gleichzeitig)",b:"<p>In der unteren Navigationsreihe <b>♫ Akkord</b> einschalten (dunkel = an). Die App merkt sich das je Instrument.</p><ul><li><b>🎼 Zeile</b> oder <b>🎹 Tasten</b>: Töne nacheinander antippen – sie stapeln sich am Cursor, der Cursor bleibt stehen. Die Töne des Akkords stehen groß in der Zeile und in der Leiste darüber.</li><li><b>Einen Ton entfernen:</b> genau diesen Ton noch einmal antippen. In der Zeile wird er beim Drüberfahren rot mit ✕ markiert – loslassen entfernt nur ihn.</li><li><b>➜ weiter</b> (orange) springt um die Länge des Akkords zum nächsten Schlag.</li><li>Gitarre: jeder Ton bekommt automatisch eine freie Saite. Im Tab kannst du wie gewohnt Saite für Saite eintippen.</li><li>Alle Töne eines Akkords haben dieselbe Länge; vorher die Länge wählen.</li><li>Akkord wieder aus: Eingabe springt nach jeder Note weiter (Melodie).</li></ul>"},
@@ -3865,7 +3882,7 @@ var HGROUPS={
     ["Noten eingeben",["Notenlängen","Akkorde eingeben","Klavier","Pausen setzen","Tab-Eingabe","Zeilen-Eingabe","Noten-Eingabe","Griffbrett-Eingabe","Erst Rhythmus","Navigation","Tastatur am Rechner"]],
     ["Ändern und bearbeiten",["Werkzeug-Leiste","Diese Note","Takt-Leiste","Takte…","Techniken","Farben und Markierungen"]],
     ["Mehrere Instrumente",["Spuren","Komponieren","Ablauf","Passende Töne","Schlagzeug","Gitarren-Akkorde","Gesang und Liedtext","Textblöcke"]],
-    ["Üben und Abspielen",["Übe-Ansicht","Metronom, Schleife","Abschnitte","Taktart-, Tonart- und Tempowechsel","Übe-Tempo","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
+    ["Üben und Abspielen",["Übe-Ansicht","Metronom, Schleife","Abschnitte","Taktart-, Tonart- und Tempowechsel","Übe-Tempo","Lesehilfe","Zählzeiten","Rhythmus unter","Einspielen","Notenlese-Training"]],
     ["Speichern und Importieren",["Speichern","Als PDF"]]],
  z:[["Grundlagen",["Notensystem","Tabulatur lesen","Taktart","Hilfslinien"]],
     ["Rhythmus",["Notenwerte","Punktierung","Pausen","Haltebogen"]],
