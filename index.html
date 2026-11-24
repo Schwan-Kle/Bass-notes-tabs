@@ -5289,12 +5289,17 @@ function trFretNext(){
 }
 /* Griffbrett -> Note */
 function trFnameNext(){
-  var F=trFmax(3),m=trPick(),ps=tbPos(m,F),p=ps[Math.floor(Math.random()*ps.length)]||posOf(m);
+  /* nur gegriffene Töne (Bund 1+): eine leere Saite wäre schon am Saitennamen ablesbar */
+  var L=trLevel(),F=Math.max(4,trFmax(3)),cand=[],st=trStats(),s0,f0;
+  for(s0=0;s0<4;s0++)for(f0=1;f0<=F;f0++){var mm=OPEN[4][s0]+f0;if(!L.chrom&&!isNat(mm))continue;if(!L.open&&(mm<L.lo||mm>L.hi))continue;cand.push({s:s0,f:f0,m:mm});}
+  var w=cand.map(function(c){var x=st[c.m]||{n:0,ok:0},err=x.n?(x.n-x.ok)/x.n:0.5;return (1+4*err+(x.n<3?1:0))*(TR.run.prev===c.m?0.15:1);}),tot=w.reduce(function(a,c){return a+c},0),rr=Math.random()*tot,p=cand[cand.length-1];
+  for(var i=0;i<cand.length;i++){rr-=w[i];if(rr<=0){p=cand[i];break;}}
+  var m=p.m;
   TR.run.prev=m;TR.run.cur=spellM(m,trPref());TR.run.pos=p;TR.run.acc=null;TR.run.done=false;
   trBoardDraw(F);tbMark(p.s,p.f,"dot","");
   $("trStaff").innerHTML='<div class="trbig2">?</div>';
   $("trNameAcc").hidden=!trLevel().chrom;trKeysReset();
-  trFb("Welcher Ton ist das? <small>"+SNAME[4][p.s]+"-Saite, Bund "+p.f+"</small>","");trProg();
+  trFb("Welcher Ton liegt am markierten Bund?","");trProg();
 }
 function trFnameAnswer(b){
   var r=TR.run,sp=r.cur,L=+b.dataset.l,a=r.acc||0,ok=((NAT[L]+a)%12+12)%12===((sp.m%12)+12)%12;
