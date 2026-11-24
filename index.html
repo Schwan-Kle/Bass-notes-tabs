@@ -2572,9 +2572,17 @@ function initAudio(){
   if(ctx)return;
   var AC=window.AudioContext||window.webkitAudioContext;
   ctx=new AC();
-  master=ctx.createDynamicsCompressor();
-  master.connect(ctx.destination);
+  /* Ausgang: Vorabsenkung (Headroom) -> sanfter Kompressor (langsamer Attack, verzerrt tiefe Töne nicht) -> weicher Begrenzer (nie über 0 dBFS) */
+  master=ctx.createGain();master.gain.value=0.6;
+  var cp=ctx.createDynamicsCompressor();cp.threshold.value=-10;cp.knee.value=8;cp.ratio.value=4;cp.attack.value=0.02;cp.release.value=0.25;
+  var ws=ctx.createWaveShaper(),N=2048,cv=new Float32Array(N);
+  for(var i=0;i<N;i++){var x=i/(N-1)*2-1,a=Math.abs(x);cv[i]=a<0.7?x:Math.sign(x)*(0.7+0.28*Math.tanh((a-0.7)/0.28));}
+  ws.curve=cv;master.connect(cp);cp.connect(ws);ws.connect(ctx.destination);
 }
+/* Ziel für Klänge: beim Abspielen eigener Bus (wird bei Stop ausgeblendet), sonst Hauptausgang */
+function OUT(){return (P&&P.bus)||master||ctx.destination;}
+/* Knoten nach dem Ausklingen trennen, damit der Audio-Thread nicht mit der Zeit überlastet */
+function fin(src,nodes){src.onended=function(){nodes.forEach(function(x){try{x.disconnect()}catch(e){}});};}
 function click(t,kind){
   var v=S.metVol/100;if(v<=0)return;
   var o=ctx.createOscillator(),g=ctx.createGain();
@@ -2583,17 +2591,17 @@ function click(t,kind){
   var pk=(kind==="hi"?0.5:kind==="mid"?0.34:0.16)*v;
   g.gain.setValueAtTime(pk,t);
   g.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
-  o.connect(g);g.connect(master);o.start(t);o.stop(t+0.05);
+  o.connect(g);g.connect(OUT());o.start(t);o.stop(t+0.05);fin(o,[o,g]);
 }
 function toneM(m,t,dur){if(isVoice()&&m>=21&&m<=108)return playVoice({},pIdx(m),t,dur);if(isPiano()&&m>=21&&m<=108)return playPiano({},pIdx(m),t,dur);if(isGuitar()&&m>=40&&m<=88){var gs=0;for(var z=0;z<6;z++)if(m>=OPEN[6][z]){gs=z;break;}return playGuitar({f:m-OPEN[6][gs]},gs,t,dur);}return playNote({f:m-28},3,t,dur);}
 var NOISE=null;
 function noiseBuf(){if(NOISE)return NOISE;var L=ctx.sampleRate,b=ctx.createBuffer(1,L,L),d=b.getChannelData(0);for(var i=0;i<L;i++)d[i]=Math.random()*2-1;NOISE=b;return b;}
 function playDrum(n,s,t){
-  var v=S.bassVol/100*DYN*(n.a?1.35:1);if(v<=0)return;var out=master||ctx.destination;
+  var v=S.bassVol/100*DYN*(n.a?1.35:1);if(v<=0)return;var out=OUT();
   function nz(dur,type,fq,q,pk,dec){var src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=noiseBuf();f.type=type;f.frequency.value=fq;f.Q.value=q||0.7;
-    g.gain.setValueAtTime(pk*v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dec);src.connect(f);f.connect(g);g.connect(out);src.start(t);src.stop(t+dur);}
+    g.gain.setValueAtTime(pk*v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dec);src.connect(f);f.connect(g);g.connect(out);src.start(t);src.stop(t+dur);fin(src,[src,f,g]);}
   function tone(f0,f1,dec,pk,type){var o=ctx.createOscillator(),g=ctx.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dec*0.6);
-    g.gain.setValueAtTime(pk*v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dec);o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+0.02);}
+    g.gain.setValueAtTime(pk*v,t);g.gain.exponentialRampToValueAtTime(0.0008,t+dec);o.connect(g);g.connect(out);o.start(t);o.stop(t+dec+0.02);fin(o,[o,g]);}
   switch(s){
     case 0:nz(1.6,"highpass",5000,0.5,0.35,1.5);break;
     case 1:nz(0.7,"bandpass",7500,2,0.18,0.6);tone(540,520,0.5,0.05,"square");break;
@@ -2611,8 +2619,8 @@ function playVoice(n,s,t,dur){
   o1.frequency.setValueAtTime(f,t);o2.frequency.setValueAtTime(f,t);
   lfo.frequency.value=5.2;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*0.011,t+Math.min(0.4,dur*0.6));lfo.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);
   var pk=0.32*v*(n.a?1.3:1);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(pk,t+0.06);g.gain.setTargetAtTime(pk*0.85,t+0.06,0.2);g.gain.setTargetAtTime(0,end-0.04,0.04);
-  o1.connect(lp);o2.connect(og2);og2.connect(bp);bp.connect(lp);lp.connect(g);g.connect(master||ctx.destination);
-  [o1,o2,lfo].forEach(function(o){o.start(t);o.stop(end+0.3);});
+  o1.connect(lp);o2.connect(og2);og2.connect(bp);bp.connect(lp);lp.connect(g);g.connect(OUT());
+  [o1,o2,lfo].forEach(function(o){o.start(t);o.stop(end+0.3);});fin(o1,[o1,o2,lfo,lg,og2,bp,lp,g]);
 }
 function playPiano(n,s,t,dur){
   var v=S.bassVol/100*DYN;if(v<=0||n.f==="x")return;
@@ -2623,8 +2631,8 @@ function playPiano(n,s,t,dur){
   g.gain.exponentialRampToValueAtTime(pk*0.45,t+0.12);g.gain.exponentialRampToValueAtTime(0.0008,t+(n.st?0.25:rel));
   [[1,"triangle",1],[2,"sine",0.35],[3,"sine",0.12],[1.003,"sine",0.25]].forEach(function(h){
     var o=ctx.createOscillator(),og=ctx.createGain();o.type=h[1];o.frequency.setValueAtTime(f*h[0],t);og.gain.value=h[2];
-    o.connect(og);og.connect(fl);o.start(t);o.stop(t+(n.st?0.3:rel)+0.05);});
-  fl.connect(g);g.connect(master||ctx.destination);
+    o.connect(og);og.connect(fl);o.start(t);o.stop(t+(n.st?0.3:rel)+0.05);fin(o,[o,og]);});
+  fl.connect(g);g.connect(OUT());var dk=ctx.createConstantSource?ctx.createConstantSource():null;if(dk){dk.offset.value=0;dk.connect(g);dk.start(t);dk.stop(t+(n.st?0.3:rel)+0.1);fin(dk,[dk,fl,g]);}
 }
 function playGuitar(n,s,t,dur){
   var v=S.bassVol/100*DYN;if(v<=0)return;if(n.sd){var dl=(n.sd==="u"?s:5-s)*0.012;t+=dl;dur=Math.max(0.05,dur-dl);}
@@ -2633,8 +2641,8 @@ function playGuitar(n,s,t,dur){
   fl.frequency.setValueAtTime(dead?900:Math.min(8000,f*9),t);fl.frequency.exponentialRampToValueAtTime(Math.max(250,f*1.5),t+(dead?0.05:0.5));
   var pk=0.3*v*(n.a?1.4:1),rel=dead?0.06:Math.max(0.3,Math.min(2.2,dur*1.1+0.4));
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(pk,t+0.004);g.gain.exponentialRampToValueAtTime(pk*0.35,t+0.15);g.gain.exponentialRampToValueAtTime(0.0008,t+(n.st||n.pm?0.18:rel));
-  [[1,"sawtooth",0.6],[2,"triangle",0.25],[1.004,"square",0.08]].forEach(function(h){var o=ctx.createOscillator(),og=ctx.createGain();o.type=h[1];o.frequency.setValueAtTime(f*h[0],t);og.gain.value=h[2];o.connect(og);og.connect(fl);o.start(t);o.stop(t+rel+0.05);});
-  fl.connect(g);g.connect(master||ctx.destination);
+  [[1,"sawtooth",0.6],[2,"triangle",0.25],[1.004,"square",0.08]].forEach(function(h){var o=ctx.createOscillator(),og=ctx.createGain();o.type=h[1];o.frequency.setValueAtTime(f*h[0],t);og.gain.value=h[2];o.connect(og);og.connect(fl);o.start(t);o.stop(t+rel+0.05);fin(o,[o,og]);});
+  fl.connect(g);g.connect(OUT());var dk=ctx.createConstantSource?ctx.createConstantSource():null;if(dk){dk.offset.value=0;dk.connect(g);dk.start(t);dk.stop(t+rel+0.1);fin(dk,[dk,fl,g]);}
 }
 function playNote(n,s,t,dur){
   if(isPiano())return playPiano(n,s,t,dur);
@@ -2664,13 +2672,13 @@ function playNote(n,s,t,dur){
     if(n.bd&&!dead){fq.setValueAtTime(f,t+Math.max(0.03,(end-t)*0.15));fq.linearRampToValueAtTime(f*Math.pow(2,1/12),t+(end-t)*0.5);}
     if(n.so&&!dead&&end-t>0.15){var fe=n.bd?f*Math.pow(2,1/12):f;fq.setValueAtTime(fe,end-0.13);fq.exponentialRampToValueAtTime(fe*Math.pow(2,-7/12),end);}
   });
-  if(n.vb&&!dead){var lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=5.5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*0.012,t+0.15);lfo.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);lfo.start(t);lfo.stop(end+0.15);}
+  if(n.vb&&!dead){var lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=5.5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*0.012,t+0.15);lfo.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);lfo.start(t);lfo.stop(end+0.15);fin(lfo,[lfo,lg]);}
   g.gain.setValueAtTime(0.0001,t);
   g.gain.linearRampToValueAtTime(pk,t+att);
   g.gain.setTargetAtTime(pk*0.6,t+att,0.09);
   g.gain.setTargetAtTime(0,end,0.015);
-  o1.connect(fl);o2.connect(fl);fl.connect(g);g.connect(master);
-  o1.start(t);o2.start(t);o1.stop(end+0.15);o2.stop(end+0.15);
+  o1.connect(fl);o2.connect(fl);fl.connect(g);g.connect(OUT());
+  o1.start(t);o2.start(t);o1.stop(end+0.15);o2.stop(end+0.15);fin(o1,[o1,o2,fl,g]);
 }
 function playOther(pt,nm,tt,t,sd){
   var sg=song(),ki=sg.inst,ks=sg.strings;if(!pt.inst||pt.inst==="bass")delete sg.inst;else sg.inst=pt.inst;sg.strings=pt.strings||4;
@@ -2756,13 +2764,13 @@ function scheduleStep(t){
 }
 function tick(){
   if(!P)return;
-  while(!P.done&&P.next<ctx.currentTime+0.12){
+  while(!P.done&&P.next<ctx.currentTime+0.2){
     var bq=P.rec?P.recStart+P.k:P.seq[P.k],sdx=60/effBpm(bq)/4;
     if(P.ci<=0&&!P.rec){if(isTrip(bq,P.t))sdx=(P.t%4===3)?0:sdx*4/3;}
     scheduleStep(P.next);
     P.next+=sdx;
   }
-  if(P.done){clearInterval(timer);timer=null;setTimeout(stop,Math.max(0,(P.next-ctx.currentTime)*1000)+60);}
+  if(P.done){clearInterval(timer);timer=null;setTimeout(function(){stop(true)},Math.max(0,(P.next-ctx.currentTime)*1000)+60);}
 }
 function draw(){
   if(!P){return;}
@@ -2805,13 +2813,15 @@ function play(opt){
   if(!opt.rec&&tr.on)setBpm(tr.from);
   P={seq:seq,k:k0,k0:opt.rec?0:(loopOn?0:k0),t:0,pass:1,loop:!opt.rec&&(loopOn||!!tr.on),rec:!!opt.rec,recStart:opt.recStart||0,
      ci:(S.countIn||opt.rec)?sigAt(opt.rec?(opt.recStart||0):seq[k0]).steps:0,t0:null,next:ctx.currentTime+0.1,done:false};
+  P.bus=ctx.createGain();P.bus.connect(master);
   vq=[];phBar=-1;
   timer=setInterval(tick,25);tick();
   raf=requestAnimationFrame(draw);
   $("play").textContent="■";$("pbPlay").textContent="■";
 }
-function stop(){
+function stop(soft){
   if(timer){clearInterval(timer);timer=null;}
+  if(P&&P.bus){var bus=P.bus;if(soft!==true){try{bus.gain.setTargetAtTime(0,ctx.currentTime,0.02);}catch(e){}}setTimeout(function(){try{bus.disconnect()}catch(e){}},soft===true?3000:300);}
   if(typeof TKS!=="undefined"){TKS.forEach(function(x){try{x.stop()}catch(e){}});TKS=[];TKWARN=false;}
   P=null;vq=[];cancelAnimationFrame(raf);
   if(ph&&ph.parentNode)ph.parentNode.removeChild(ph);
@@ -4469,7 +4479,7 @@ function scheduleTakes(b,t){
   keys.forEach(function(pk){var tk=takeAt(b,pk);if(!tk)return;if(!takeTempoOk(tk)){if(!TKWARN){TKWARN=true;status("🎙 Die Aufnahme läuft nur im Aufnahme-Tempo ("+tk.bpm+" bpm, "+tk.spd+" %) – jetzt erklingen stattdessen die Noten.");}return;}
     var buf=TAKEBUF[tk.id];if(!buf){loadTake(tk);return;}
     var off=takeOff(tk,b),d=barSec(b,tk);if(off>=buf.duration)return;
-    var src=ctx.createBufferSource(),g=ctx.createGain();src.buffer=buf;g.gain.value=Math.max(0.05,S.bassVol/100)*1.4;src.connect(g);g.connect(master||ctx.destination);
+    var src=ctx.createBufferSource(),g=ctx.createGain();src.buffer=buf;g.gain.value=Math.max(0.05,S.bassVol/100)*1.4;src.connect(g);g.connect(OUT());fin(src,[src,g]);
     src.start(Math.max(t,ctx.currentTime),off,Math.min(d,buf.duration-off)+0.01);TKS.push(src);if(TKS.length>64)TKS.shift();});
 }
 function takeCovers(b,pk){var tk=takeAt(b,pk);return !!(tk&&takeTempoOk(tk));}
