@@ -549,7 +549,10 @@ body.lsh .staff .op.spN{fill:var(--surface);stroke:#E65100;stroke-width:1.8}
 .cntrow span.on{color:#1A1A1A;font-weight:800;font-size:13px;background:color-mix(in srgb,var(--a-play) 12%,#fff);border-radius:4px}
 .cntrow span.rs{color:#5E6B67;text-decoration:underline;font-style:italic}
 .cntrow .cl{font-size:11px}
-.cntrow.hasnn{align-items:end}.cntrow .nn{display:block;font-style:normal;font-size:10px;line-height:11px;font-weight:600;color:#3D4744;text-decoration:none;padding-top:2px}
+.cntrow.hasnn{align-items:end}.cntrow .nn{display:block;font-style:normal;font-size:10px;line-height:11px;font-weight:600;color:#3D4744;text-decoration:none;padding-top:2px;white-space:nowrap}
+.cntrow .nn .cs{font-weight:800;color:var(--a-in)}
+.cntrow span.cu{color:var(--a-in);font-weight:800;box-shadow:inset 0 -3px 0 var(--a-in)}
+.cntrow span.pl{color:#fff;background:var(--a-play);font-weight:800}.cntrow span.pl .nn,.cntrow span.pl .nn .cs{color:#fff}
 .staff.tabr{margin-top:-2px}
 .staff{shape-rendering:geometricPrecision}
 .staff .bm{fill:currentColor;stroke:currentColor;stroke-width:.5;stroke-linejoin:round}
@@ -1439,6 +1442,41 @@ function countLabel(t,sg,bar){
   if(sg.beat===6||sg.beat===2)return t%2===0?String(t/2+1):"+";
   return String(t+1);
 }
+/* Tonnamen über der Zählzeile: höchstens 2 Zeilen.
+   1 Ton = Name · 2 Töne = beide · ab 3 Tönen Akkordsymbol (+ Fremdtöne, /Basston) oder tiefster Ton + Anzahl */
+var NNQ=[["maj7",[0,4,7,11]],["m7♭5",[0,3,6,10]],["m7",[0,3,7,10]],["7",[0,4,7,10]],["6",[0,4,7,9]],["m6",[0,3,7,9]],["°7",[0,3,6,9]],["",[0,4,7]],["m",[0,3,7]],["°",[0,3,6]],["+",[0,4,8]],["sus4",[0,5,7]],["sus2",[0,2,7]],["5",[0,7]]];
+function nnChord(list){
+  var lo=list.slice().sort(function(x,y){return x.m-y.m}),pcs={},pn={},k;
+  lo.forEach(function(o){var pc=((o.m%12)+12)%12;if(!(pc in pcs)){pcs[pc]=1;pn[pc]=o.x;}});
+  var ks=Object.keys(pcs).map(Number),bass=((lo[0].m%12)+12)%12,best=null;
+  ks.forEach(function(r){NNQ.forEach(function(q){
+    if(q[1].length<3&&ks.length>2)return;
+    if(!q[1].every(function(iv){return pcs[(r+iv)%12]}))return;
+    var sc=q[1].length*10+(r===bass?3:0);
+    if(!best||sc>best.sc)best={sc:sc,r:r,q:q};});});
+  if(!best)return null;
+  var inC={};best.q[1].forEach(function(iv){inC[(best.r+iv)%12]=1;});
+  var ext=ks.filter(function(pc){return !inC[pc]}).map(function(pc){return pn[pc]});
+  return {sym:pn[best.r]+best.q[0],bass:bass!==best.r?pn[bass]:"",ext:ext};
+}
+function nnLabel(list){
+  var u=[],seen={};list.slice().sort(function(x,y){return y.m-x.m}).forEach(function(o){if(!seen[o.m]){seen[o.m]=1;u.push(o)}});
+  if(u.length===1)return u[0].x+"<br>&nbsp;";
+  if(u.length===2)return u[0].x+"<br>"+u[1].x;
+  var c=nnChord(u),low=u[u.length-1];
+  if(c){var l2=(c.bass?"/"+c.bass:"")+(c.ext.length?(c.ext.length>1?" +"+c.ext.length:" +"+c.ext[0]):"");return '<b class="cs">'+esc(c.sym)+'</b><br>'+(l2?esc(l2.trim()):"&nbsp;");}
+  return low.x+"<br>+"+(u.length-1);
+}
+/* Zählzeit unter dem Cursor hervorheben (ohne neu zu zeichnen) */
+function markCountCursor(){
+  var o=document.querySelectorAll(".cntrow span.cu");for(var i=0;i<o.length;i++)o[i].classList.remove("cu");
+  var r=document.querySelector('.cntrow[data-b="'+cursor.bar+'"] span[data-t="'+cursor.step+'"]');if(r)r.classList.add("cu");
+}
+var CNTPL=null;
+function markCountPlay(b,t){
+  if(CNTPL)CNTPL.classList.remove("pl");CNTPL=null;if(b<0)return;
+  var r=document.querySelector('.cntrow[data-b="'+b+'"] span[data-t="'+t+'"]');if(r){r.classList.add("pl");CNTPL=r;}
+}
 function countRow(b,st,sg){
   var bar=song().bars[b],on={},k;
   for(k in bar.n)on[+k.split("_")[1]]=1;
@@ -1446,10 +1484,10 @@ function countRow(b,st,sg){
   var nm={},any=false,ns=nstr(),k0=KEYB;
   if(!isDrums()){KEYB=b;try{for(k in bar.n){var q=k.split("_"),s0=+q[0],t0=+q[1],n=bar.n[k];if(s0>=ns||typeof n.f!=="number")continue;
     (nm[t0]=nm[t0]||[]).push({m:OPEN[ns][s0]+n.f,x:noteName(OPEN[ns][s0]+n.f).replace(/-?\d+$/,"")});any=true;}}finally{KEYB=k0;}}
-  var h='<div class="cntrow'+(any?' hasnn':'')+'" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)"><span class="cl" title="Zählzeiten">🔢</span>';
+  var h='<div class="cntrow'+(any?' hasnn':'')+'" data-b="'+b+'" style="grid-template-columns:'+GUTb(b)+'fr repeat('+st+',1fr)"><span class="cl" title="Zählzeiten">🔢</span>';
   for(var t=0;t<st;t++){var l=countLabel(t,sg,bar),main=/^\d/.test(l),nn="";
-    if(any)nn='<i class="nn">'+(nm[t]?nm[t].sort(function(x,y){return y.m-x.m}).map(function(o){return o.x}).join("<br>"):"&nbsp;")+'</i>';
-    h+='<span class="'+(main?"m ":"")+(on[t]===1?"on":on[t]===2?"rs":"")+'">'+nn+l+'</span>';}
+    if(any)nn='<i class="nn">'+(nm[t]?nnLabel(nm[t]):"&nbsp;<br>&nbsp;")+'</i>';
+    h+='<span data-t="'+t+'" class="'+(main?"m ":"")+(on[t]===1?"on":on[t]===2?"rs":"")+(b===cursor.bar&&t===cursor.step?" cu":"")+'">'+nn+l+'</span>';}
   return h+'</div>';
 }
 function tabRhythmSVG(b){
@@ -1931,7 +1969,9 @@ function status(msg){
     else t+=" · Bund "+n.f+" = "+noteName(OPEN[ns][cursor.str]+n.f);
     t+=" · Länge "+lenLabel(n.len);
   }
+  if(!isDrums()&&typeof stepNotes==="function"){var sn0=stepNotes();if(sn0.length>2)t+=" · Töne: "+chordNames();}
   $("status").textContent=t;
+  if(S.count)markCountCursor();
   updateAlts();
 }
 function updateAlts(){
@@ -2895,6 +2935,7 @@ function draw(){
         if(ev.b!==phBar){phBar=ev.b;playScroll(g);status("Spielt Takt "+(ev.b+1)+(S.trainer&&S.trainer.on?" · Tempo-Trainer "+song().bpm+" bpm (Ziel "+S.trainer.to+")":""));}
       }
       updateFB(ev.b,ev.s,true);
+      if(S.count)markCountPlay(ev.b,ev.s);
     }
   }
   raf=requestAnimationFrame(draw);
@@ -2952,7 +2993,7 @@ function play(opt){
   raf=requestAnimationFrame(draw);
   $("play").textContent="■";$("pbPlay").textContent="■";
 }
-function stop(soft){
+function stop(soft){if(typeof markCountPlay==="function")markCountPlay(-1);
   if(timer){clearInterval(timer);timer=null;}
   if(P&&P.bus){var bus=P.bus;if(soft!==true){try{bus.gain.setTargetAtTime(0,ctx.currentTime,0.02);}catch(e){}}setTimeout(function(){try{bus.disconnect()}catch(e){}},soft===true?3000:300);}
   if(typeof TKS!=="undefined"){TKS.forEach(function(x){try{x.stop()}catch(e){}});TKS=[];TKWARN=false;}
