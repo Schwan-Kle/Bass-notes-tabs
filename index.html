@@ -524,7 +524,8 @@ body.lsh .staff .op.spN{fill:var(--surface);stroke:#E65100;stroke-width:1.8}
 .cntrow.hasnn{align-items:end}.cntrow .nn{display:block;font-style:normal;font-size:10px;line-height:11px;font-weight:600;color:#3D4744;text-decoration:none;padding-top:2px;white-space:nowrap}
 .cntrow .nn .cs{font-weight:800;color:var(--a-in)}
 .cntrow span.cu{color:var(--a-in);font-weight:800;box-shadow:inset 0 -3px 0 var(--a-in)}
-.cntrow span.pl{color:#fff;background:var(--a-play);font-weight:800}.cntrow span.pl .nn,.cntrow span.pl .nn .cs{color:#fff}
+.cntrow span,.cntrow .nn,.cntrow .nn .cs{-webkit-text-stroke:.7px transparent;transition-property:color,-webkit-text-stroke-color;transition-timing-function:ease-out;transition-duration:var(--cfade,.6s)}
+.cntrow span.pl,.cntrow span.pl .nn,.cntrow span.pl .nn .cs{color:var(--a-play);-webkit-text-stroke-color:var(--a-play);transition-duration:0s}
 .staff.tabr{margin-top:-2px}
 .staff{shape-rendering:geometricPrecision}
 .staff .bm{fill:currentColor;stroke:currentColor;stroke-width:.5;stroke-linejoin:round}
@@ -1529,10 +1530,15 @@ function markCountCursor(){
   var o=document.querySelectorAll(".cntrow span.cu");for(var i=0;i<o.length;i++)o[i].classList.remove("cu");
   var r=document.querySelector('.cntrow[data-b="'+cursor.bar+'"] span[data-t="'+cursor.step+'"]');if(r)r.classList.add("cu");
 }
+/* Abspielen: Zählzeit wird fett, sobald die Haarlinie sie erreicht, und dimmt danach über einen Schlag (Länge des Schweifs) ab */
 var CNTPL=null;
 function markCountPlay(b,t){
-  if(CNTPL)CNTPL.classList.remove("pl");CNTPL=null;if(b<0)return;
-  var r=document.querySelector('.cntrow[data-b="'+b+'"] span[data-t="'+t+'"]');if(r){r.classList.add("pl");CNTPL=r;}
+  var r=b<0?null:document.querySelector('.cntrow[data-b="'+b+'"] span[data-t="'+t+'"]');
+  if(r===CNTPL)return;
+  if(CNTPL){var fd=CNTPL.dataset.fd||"0.6";CNTPL.style.setProperty("--cfade",fd+"s");CNTPL.classList.remove("pl");}
+  CNTPL=r;if(!r)return;
+  r.dataset.fd=String(Math.max(0.15,Math.min(1.5,60/effBpm(b)))).slice(0,5);
+  r.classList.add("pl");
 }
 function countRow(b,st,sg){
   var bar=song().bars[b],on={},k;
