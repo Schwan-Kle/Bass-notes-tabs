@@ -154,6 +154,13 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .sacts .ren input{flex:1;min-width:0}
 .sacts button{flex:1 1 auto}
 button.danger{color:var(--warn);border-color:var(--warn)}
+.stds{width:100%;display:flex;flex-direction:column;gap:4px;margin-top:4px;padding-top:6px;border-top:1px dashed var(--line)}
+.stds .srow2,.dtrash .srow2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.stds .srow2 span,.dtrash .srow2 span{flex:1 1 140px;font-size:13px}
+.stds small,.dtrash small{color:var(--mut,#666)}
+#dTrash{margin-top:6px}
+#dTrash>button{width:100%}
+.dtrash{display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--shade);margin-top:4px}
 .empty{color:var(--muted);padding:8px}
 .dfoot{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:8px}
 .dfoot p{margin:0;font-size:12px;color:var(--muted)}
@@ -970,10 +977,11 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
     </div>
     <input type="search" id="dSearch" placeholder="Stück suchen" aria-label="Stück suchen">
     <ul id="dList"></ul>
+    <div id="dTrash"></div>
     <div class="dfoot">
       <button id="dBackup">Alle Stücke sichern (Backup-Datei)</button>
       <button id="dPaste">Text einfügen</button>
-      <p>Fotos als Vorlage (📷) bleiben nur auf diesem Gerät und sind nicht im Backup enthalten.</p>
+      <p>Fotos als Vorlage (📷), Aufnahmen und frühere Stände (🕘) bleiben nur auf diesem Gerät und sind nicht im Backup enthalten. 🔒 = geschützt: Beim Bearbeiten entsteht automatisch eine Kopie.</p>
       <p>„Datei öffnen“ lädt eigene Stücke und Backups (.json) sowie Noten als MusicXML (.musicxml, .xml, .mxl), z. B. aus MuseScore oder einer Notenscanner-App. Alles wird automatisch auf diesem Gerät gespeichert.</p>
     </div>
   </div>
@@ -1290,7 +1298,7 @@ function exampleSong(){
   var b={n:{}};
   b.n["3_0"]={f:5,len:2};b.n["3_3"]={f:5,len:1};b.n["1_4"]={f:7,len:2};b.n["1_6"]={f:5,len:2};
   b.n["2_8"]={f:7,len:2};b.n["2_10"]={f:"x",len:1};b.n["2_11"]={f:5,len:1};b.n["2_12"]={f:7,len:2,h:1};b.n["3_14"]={f:8,len:2,a:1};
-  return {id:uid(),name:"Beispiel (zum Überschreiben)",bpm:80,sig:"4/4",strings:4,bars:[b,emptyBar()]};
+  return {id:uid(),name:"Beispiel",tpl:1,bpm:80,sig:"4/4",strings:4,bars:[b,emptyBar()]};
 }
 var S={songs:[exampleSong()],cur:0,metMode:"beat",metAcc:true,countIn:true,metVol:60,bassVol:85,octUp:false,auto:true,padOpen:true};
 try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.songs&&o.songs.length){for(var k in o)S[k]=o[k];}}}catch(e){}
@@ -1326,13 +1334,27 @@ function pIdx(m){return 108-m}
 function inHand(s){if(!isPiano()||!STAFF.clef)return true;var m=OPEN[88][s];return STAFF.clef==="treble"?m>=60:m<60;}
 function posM(m){var sp0=isKeys()?spell(m):spell(m+12);return effClef()==="treble"?sp0.pos-12:sp0.pos;}
 function spellM2(m){var x=isKeys()?spell(m):spell(m+12);if(effClef()==="treble")x={pos:x.pos-12,acc:x.acc,L:x.L,oct:x.oct};return x;}
-function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},300)}
+function save(){try{song().mod=Date.now()}catch(e){}clearTimeout(saveT);saveT=setTimeout(saveNow,300)}
+var SFULL={on:false,t:0};
+function saveNow(){
+  saveT=null;
+  try{localStorage.setItem(KEY,JSON.stringify(S));if(SFULL.on){SFULL.on=false;status("✓ Speichern klappt wieder.");}}
+  catch(e){
+    SFULL.on=true;status("⚠ Nicht gespeichert – der Speicher der App ist voll.");
+    if(Date.now()-SFULL.t>120000){SFULL.t=Date.now();setTimeout(function(){alert("Achtung: Die letzte Änderung konnte nicht gespeichert werden, weil der Speicher der App voll ist.\n\nBitte jetzt sichern: ☰ → „Alle Stücke sichern“.\nDanach Platz schaffen: Papierkorb leeren (☰ ganz unten) oder nicht mehr gebrauchte Stücke löschen.");},0);}
+  }
+}
+window.addEventListener("pagehide",function(){if(saveT){clearTimeout(saveT);saveNow();}});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"&&saveT){clearTimeout(saveT);saveNow();}});
 var REDO=[];
-function snapU(){var sg=song();return JSON.stringify({b:sg.bars,i:sg.inst||null,s:sg.strings,pa:sg.pa||0,ps:sg.parts||null,fm:sg.form||null});}
-function pushUndo(){undo.push(snapU());if(undo.length>60)undo.shift();REDO=[];undoUI();}
+function snapU(){var sg=song();return JSON.stringify({b:sg.bars,i:sg.inst||null,s:sg.strings,pa:sg.pa||0,ps:sg.parts||null,fm:sg.form||null,nm:sg.name,bpm:sg.bpm,k:sg.key||0,ac:sg.acc||"b",sg:sg.sig});}
+var UTAG={t:"",at:0};
+/* Für Regler/wiederholte Eingaben: nur ein Undo-Schritt pro Serie (1,5 s) */
+function pushUndoTag(tag){var n=Date.now();if(UTAG.t===tag&&n-UTAG.at<1500){UTAG.at=n;return;}pushUndo();UTAG.t=tag;UTAG.at=n;}
+function pushUndo(){UTAG.t="";if(typeof tplGuard==="function")tplGuard();if(typeof autoStand==="function")autoStand();undo.push(snapU());if(undo.length>60)undo.shift();REDO=[];undoUI();}
 function undoUI(){var u=document.getElementById("undoBtn"),r=document.getElementById("redoBtn");if(u)u.disabled=!undo.length;if(r)r.disabled=!REDO.length;}
 function popUndo(){restoreU(undo.pop());}
-function restoreU(str){var o=JSON.parse(str),sg=song();if(Array.isArray(o)){sg.bars=o;return;}sg.bars=o.b;if(o.i)sg.inst=o.i;else delete sg.inst;sg.strings=o.s;if(o.ps){sg.parts=o.ps;sg.pa=o.pa;}else{delete sg.parts;delete sg.pa;}if(o.fm)sg.form=o.fm;else delete sg.form;if(cursor.str>=nstr())cursor.str=nstr()-1;if(typeof instUI==="function")instUI();}
+function restoreU(str){var o=JSON.parse(str),sg=song();if(Array.isArray(o)){sg.bars=o;return;}sg.bars=o.b;if(o.i)sg.inst=o.i;else delete sg.inst;sg.strings=o.s;if(o.ps){sg.parts=o.ps;sg.pa=o.pa;}else{delete sg.parts;delete sg.pa;}if(o.fm)sg.form=o.fm;else delete sg.form;if(o.nm!==undefined){sg.name=o.nm;sg.bpm=o.bpm;sg.key=o.k;sg.acc=o.ac;sg.sig=validSig(o.sg);if(typeof metaUI==="function")metaUI();}if(cursor.str>=nstr())cursor.str=nstr()-1;if(typeof instUI==="function")instUI();}
 /* ---------- Passende Töne markieren ---------- */
 function harmCtx(){
   var k=keyN(),ton=((k*7)%12+12)%12,scale={};[0,2,4,5,7,9,11].forEach(function(d){scale[(ton+d)%12]=1;});
@@ -2961,9 +2983,9 @@ function setBpm(v){
   v=Math.max(30,Math.min(220,Math.round(v)));
   song().bpm=v;$("bpm").value=v;bpmLabel();save();
 }
-$("bpm").oninput=function(){setBpm(+this.value)};
-$("bpmDown").onclick=function(){setBpm(song().bpm-5)};
-$("bpmUp").onclick=function(){setBpm(song().bpm+5)};
+$("bpm").oninput=function(){if(+this.value!==song().bpm)pushUndoTag("bpm");setBpm(+this.value)};
+$("bpmDown").onclick=function(){pushUndoTag("bpm");setBpm(song().bpm-5)};
+$("bpmUp").onclick=function(){pushUndoTag("bpm");setBpm(song().bpm+5)};
 $("metMode").onchange=function(){S.metMode=this.value;save()};
 $("metAcc").onchange=function(){S.metAcc=this.checked;save()};
 $("countIn").onchange=function(){S.countIn=this.checked;save()};
@@ -3002,7 +3024,7 @@ $("loopCur").onclick=function(){loopA=loopB=cursor.bar+1;loopOn=true;$("loopOn")
 $("loopAll").onclick=function(){loopA=1;loopB=song().bars.length;clampLoop();render()};
 
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function fillSongs(){$("songTitle").textContent=song().name||"Ohne Namen";if($("drawer").classList.contains("open"))renderList();}
+function fillSongs(){$("songTitle").textContent=(song().tpl?"🔒 ":"")+(song().name||"Ohne Namen");if($("drawer").classList.contains("open"))renderList();}
 function ensureSigOption(v){
   var sel=$("sig");
   for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===v)return;
@@ -3023,8 +3045,10 @@ function loadSong(){
   if(typeof refLoad==="function")refLoad();
   if(typeof instUI==="function")instUI();
 }
-$("keySel").onchange=function(){song().key=+this.value;render();save()};
-$("accMode").onchange=function(){song().acc=this.value;render();save()};
+/* Name, Tempo, Tonart, Takt nach Undo/Redo in die Bedienelemente übernehmen (ohne neuen Undo-Schritt) */
+function metaUI(){var s=song();ensureSigOption(s.sig);$("accMode").value=s.acc==="#"?"#":"b";$("keySel").value=String(baseKey());$("sig").value=s.sig;$("strings").value=String(nstr());$("bpm").value=s.bpm||80;bpmLabel();fillSongs();if(typeof syncSegs==="function")try{syncSegs()}catch(e){}}
+$("keySel").onchange=function(){pushUndo();song().key=+this.value;render();save()};
+$("accMode").onchange=function(){pushUndo();song().acc=this.value;render();save()};
 function cntState(){$("cntBtn").classList.toggle("on",!!S.count);}
 function setView(v){S.view=v;$("viewSel").value=view();Array.prototype.forEach.call(document.querySelectorAll("[data-view]"),function(b){b.classList.toggle("on",b.dataset.view===view())});render();save();}
 $("viewSel").onchange=function(){setView(this.value)};
@@ -3034,12 +3058,12 @@ cntState();
 function lshState(){document.body.classList.toggle("lsh",!!S.lsh);$("lshBtn").classList.toggle("on",!!S.lsh);}
 $("lshBtn").onclick=function(){S.lsh=!S.lsh;lshState();save();status(S.lsh?"Lesehilfe an: Note auf der Linie = blau, im Zwischenraum = orange (Zwischenräume orange hinterlegt)":"Lesehilfe aus");};
 lshState();
-$("sig").onchange=function(){if(P)stop();song().sig=this.value;cursor.step=0;render();save()};
+$("sig").onchange=function(){if(P)stop();pushUndo();song().sig=this.value;cursor.step=0;render();save()};
 $("instSel").onchange=function(){if(P)stop();convertInst(this.value);};
-$("strings").onchange=function(){if(P)stop();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
+$("strings").onchange=function(){if(P)stop();pushUndo();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
 
 /* ---------- Menü „Meine Stücke“ ---------- */
-var openItem=-1,delArmI=-1,delArmT=0;
+var openItem=-1,delArmI=-1,delArmT=0,stdOpen=-1,trOpen=false;
 function newSongObj(name){return {id:uid(),name:name,bpm:80,sig:"4/4",strings:4,key:0,mod:Date.now(),bars:[emptyBar(),emptyBar(),emptyBar(),emptyBar()]}}
 function fmtDate(t){if(!t)return "";var d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."+String(d.getFullYear()).slice(2)}
 function openDrawer(){openItem=-1;$("dSearch").value="";renderList();$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false");setTimeout(function(){$("drawerClose").focus()},50)}
@@ -3051,16 +3075,20 @@ function renderList(){
   var h="";
   idx.forEach(function(i){
     var s=S.songs[i],cur=i===S.cur;
-    h+='<li class="sitem'+(cur?' cur':'')+'"><div class="srow"><button class="sopen" data-open="'+i+'"><span class="sname">'+esc(s.name||"Ohne Namen")+(cur?' <em>geöffnet</em>':'')+'</span><small>'+(s.bars?s.bars.length:0)+' Takte · '+esc(s.sig||"4/4")+' · '+(s.bpm||80)+' bpm'+(s.mod?' · '+fmtDate(s.mod):'')+'</small></button><button class="smore" data-more="'+i+'" aria-label="Optionen für '+esc(s.name)+'" aria-expanded="'+(openItem===i)+'">⋯</button></div>';
+    h+='<li class="sitem'+(cur?' cur':'')+'"><div class="srow"><button class="sopen" data-open="'+i+'"><span class="sname">'+(s.tpl?'🔒 ':'')+esc(s.name||"Ohne Namen")+(cur?' <em>geöffnet</em>':'')+'</span><small>'+(s.bars?s.bars.length:0)+' Takte · '+esc(s.sig||"4/4")+' · '+(s.bpm||80)+' bpm'+(s.mod?' · '+fmtDate(s.mod):'')+'</small></button><button class="smore" data-more="'+i+'" aria-label="Optionen für '+esc(s.name)+'" aria-expanded="'+(openItem===i)+'">⋯</button></div>';
     if(openItem===i){
       h+='<div class="sacts"><div class="ren"><input type="text" id="ren'+i+'" value="'+esc(s.name)+'" maxlength="60" aria-label="Neuer Name"><button data-ren="'+i+'">Umbenennen</button></div>'+
+        '<button data-stand="'+i+'">💾 Stand sichern</button><button data-stds="'+i+'" aria-expanded="'+(stdOpen===i)+'">🕘 Frühere Stände</button>'+
         '<button data-dup="'+i+'">Duplizieren</button><button data-file="'+i+'">Als Datei speichern</button><button data-txt="'+i+'">Als Text</button>'+
-        '<button data-del="'+i+'" class="danger">'+(delArmI===i&&Date.now()-delArmT<4000?'Wirklich löschen?':'Löschen')+'</button></div>';
+        '<button data-tpl="'+i+'">'+(s.tpl?'🔓 Schutz aufheben':'🔒 Schützen')+'</button>'+
+        '<button data-del="'+i+'" class="danger">In den Papierkorb</button>'+
+        (stdOpen===i?stdHTML(s):'')+'</div>';
     }
     h+='</li>';
   });
   if(!idx.length)h='<li class="empty">Kein Stück gefunden.</li>';
   $("dList").innerHTML=h;
+  trashUI();
 }
 $("menuBtn").onclick=openDrawer;
 $("songTitle").onclick=openDrawer;
@@ -3081,22 +3109,118 @@ $("dList").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;
   var d=b.dataset,i;
   if(d.open!==undefined){S.cur=+d.open;loadSong();save();closeDrawer();return;}
-  if(d.more!==undefined){i=+d.more;openItem=openItem===i?-1:i;renderList();return;}
-  if(d.ren!==undefined){i=+d.ren;var v=$("ren"+i).value.trim();if(v){S.songs[i].name=v.slice(0,60);S.songs[i].mod=Date.now();fillSongs();save();}openItem=-1;renderList();return;}
+  if(d.more!==undefined){i=+d.more;openItem=openItem===i?-1:i;stdOpen=-1;renderList();return;}
+  if(listExtra(d))return;
+  if(d.ren!==undefined){i=+d.ren;var v=$("ren"+i).value.trim();if(v&&v!==S.songs[i].name){if(i===S.cur)pushUndo();S.songs[i].name=v.slice(0,60);S.songs[i].mod=Date.now();fillSongs();save();}openItem=-1;renderList();return;}
   if(d.dup!==undefined){i=+d.dup;var c=JSON.parse(JSON.stringify(S.songs[i]));c.id=uid();c.name=(c.name+" (Kopie)").slice(0,60);c.mod=Date.now();S.songs.push(c);openItem=-1;save();renderList();return;}
   if(d.file!==undefined){i=+d.file;saveFile(fileName(S.songs[i].name)+".json",JSON.stringify(S.songs[i]),"„"+S.songs[i].name+"“");return;}
   if(d.txt!==undefined){i=+d.txt;openTextDlg(JSON.stringify(S.songs[i]),false);return;}
   if(d.del!==undefined){
     i=+d.del;
-    if(delArmI!==i||Date.now()-delArmT>4000){delArmI=i;delArmT=Date.now();renderList();setTimeout(function(){if(delArmI===i){delArmI=-1;renderList()}},4000);return;}
-    delArmI=-1;var curId=song().id;
-    delSongPhotos(S.songs[i].id);if(typeof delSongTakes==="function")delSongTakes(S.songs[i].id);
-    S.songs.splice(i,1);
+    var curId=song().id,gone=S.songs[i];
+    S.trash=S.trash||[];S.trash.unshift({t:Date.now(),s:gone});
+    S.songs.splice(i,1);status("„"+gone.name+"“ liegt im Papierkorb (☰ ganz unten) – dort kannst du es zurückholen.");
     if(!S.songs.length)S.songs.push(newSongObj("Neues Stück"));
     var ni=-1;S.songs.forEach(function(s,k){if(s.id===curId)ni=k});
     S.cur=ni>=0?ni:0;openItem=-1;loadSong();save();renderList();
   }
 });
+/* ---------- Schutz, Papierkorb, frühere Stände ---------- */
+function fmtTime(t){var d=new Date(t);return fmtDate(t)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)}
+/* Geschütztes Stück: vor der ersten Änderung bleibt das Original als Vorlage stehen, bearbeitet wird eine Kopie */
+function tplGuard(){
+  var sg=song();if(!sg||!sg.tpl)return;
+  var orig=JSON.parse(JSON.stringify(sg));
+  S.songs.push(orig);
+  delete sg.tpl;sg.id=uid();sg.name=(sg.name+" (Kopie)").slice(0,60);sg.mod=Date.now();
+  fillSongs();save();
+  status("🔒 „"+orig.name+"“ ist geschützt – du bearbeitest jetzt die Kopie „"+sg.name+"“.");
+}
+/* Papierkorb */
+var TRASH_DAYS=30;
+function trashPurge(){
+  if(!S.trash||!S.trash.length)return;var lim=Date.now()-TRASH_DAYS*864e5,keep=[];
+  S.trash.forEach(function(x){if(x.t<lim)dropForever(x.s);else keep.push(x)});
+  if(keep.length!==S.trash.length){S.trash=keep;save();}
+}
+function dropForever(sg){if(!sg)return;if(S.songs.some(function(x){return x.id===sg.id}))return;delSongPhotos(sg.id);if(typeof delSongTakes==="function")delSongTakes(sg.id);stdDelSong(sg.id);}
+function trashUI(){
+  var el=$("dTrash"),t=S.trash||[];if(!el)return;
+  if(!t.length){el.innerHTML="";return;}
+  var h='<button data-trtog="1" aria-expanded="'+trOpen+'">🗑 Papierkorb ('+t.length+')</button>';
+  if(trOpen){
+    h+='<div class="dtrash"><small>Stücke bleiben '+TRASH_DAYS+' Tage im Papierkorb und werden danach endgültig gelöscht.</small>';
+    t.forEach(function(x,k){h+='<div class="srow2"><span>'+esc(x.s.name||"Ohne Namen")+' <small>gelöscht '+fmtTime(x.t)+'</small></span><button data-trback="'+k+'">Zurückholen</button><button data-trdel="'+k+'" class="danger">Endgültig löschen</button></div>';});
+    h+='<button data-trall="1" class="danger">Papierkorb leeren</button></div>';
+  }
+  el.innerHTML=h;
+}
+$("dTrash").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;var d=b.dataset,t=S.trash||[];
+  if(d.trtog){trOpen=!trOpen;trashUI();return;}
+  if(d.trback!==undefined){var x=t.splice(+d.trback,1)[0];if(!x)return;var sg=x.s;if(S.songs.some(function(y){return y.id===sg.id}))sg.id=uid();sg.mod=Date.now();S.songs.push(sg);save();renderList();status("„"+sg.name+"“ ist wieder da.");return;}
+  if(d.trdel!==undefined){var y=t[+d.trdel];if(!y||!confirm("„"+y.s.name+"“ endgültig löschen? Das lässt sich nicht rückgängig machen."))return;t.splice(+d.trdel,1);dropForever(y.s);save();renderList();return;}
+  if(d.trall){if(!confirm("Alle "+t.length+" Stücke im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen."))return;t.forEach(function(z){dropForever(z.s)});S.trash=[];trOpen=false;save();renderList();return;}
+});
+/* Frühere Stände (IndexedDB, eigene Datenbank) */
+var STD={db:null,fail:false,mem:[],cache:{},MAX:30};
+function stdDb(){
+  return new Promise(function(res,rej){
+    if(STD.db)return res(STD.db);if(STD.fail||!window.indexedDB)return rej("aus");
+    try{var r=indexedDB.open("basstab-staende",1);
+      r.onupgradeneeded=function(){r.result.createObjectStore("v",{keyPath:"id"})};
+      r.onsuccess=function(){STD.db=r.result;res(STD.db)};r.onerror=function(){STD.fail=true;rej(r.error)};
+    }catch(e){STD.fail=true;rej(e)}
+  });
+}
+function stdStore(mode){return stdDb().then(function(db){return db.transaction("v",mode).objectStore("v")})}
+function stdAll(){return stdStore("readonly").then(function(st){return reqP(st.getAll())},function(){return STD.mem.slice()})}
+function stdList(sid){return stdAll().then(function(a){return a.filter(function(x){return x.sid===sid}).sort(function(x,y){return y.t-x.t})})}
+function stdDel(id){return stdStore("readwrite").then(function(st){return reqP(st.delete(id))},function(){STD.mem=STD.mem.filter(function(x){return x.id!==id})})}
+function stdDelSong(sid){stdList(sid).then(function(l){l.forEach(function(x){stdDel(x.id)})})}
+function stdPut(sg,auto){
+  var o={id:uid()+uid(),sid:sg.id,t:Date.now(),auto:auto?1:0,name:sg.name,nb:(sg.bars||[]).length,data:JSON.stringify(sg)};
+  return stdStore("readwrite").then(function(st){return reqP(st.put(o))},function(){STD.mem.push(o)}).then(function(){
+    return stdList(sg.id).then(function(l){ /* älteste automatische zuerst entfernen */
+      var over=l.length-STD.MAX;if(over<=0)return;
+      var autos=l.filter(function(x){return x.auto}).reverse(),man=l.filter(function(x){return !x.auto}).reverse(),rm=autos.concat(man).slice(0,over);
+      return Promise.all(rm.map(function(x){return stdDel(x.id)}));
+    });
+  }).then(function(){delete STD.cache[sg.id];});
+}
+/* Automatisch: vor der ersten Änderung eines Tages den alten Stand sichern */
+function autoStand(){
+  var sg=song();if(!sg||sg.tpl)return;var day=new Date().toDateString();
+  S.stdDay=S.stdDay||{};if(S.stdDay[sg.id]===day)return;
+  S.stdDay[sg.id]=day;stdPut(JSON.parse(JSON.stringify(sg)),true);
+}
+function stdHTML(sg){
+  var l=STD.cache[sg.id];
+  if(!l){stdList(sg.id).then(function(x){STD.cache[sg.id]=x;if(stdOpen>=0)renderList();});return '<div class="stds"><small>Lade …</small></div>';}
+  if(!l.length)return '<div class="stds"><small>Noch keine früheren Stände. „💾 Stand sichern“ legt einen an; außerdem sichert die App automatisch einmal am Tag vor der ersten Änderung.</small></div>';
+  return '<div class="stds">'+l.map(function(x){return '<div class="srow2"><span>'+fmtTime(x.t)+' <small>'+(x.auto?'automatisch':'gesichert')+' · '+x.nb+' Takte</small></span><button data-stback="'+x.id+'">Zurückholen</button><button data-stcopy="'+x.id+'">Als Kopie</button><button data-stdel="'+x.id+'" class="danger" aria-label="Stand löschen">✕</button></div>'}).join("")+'</div>';
+}
+function stdFind(id){var r=null;Object.keys(STD.cache).forEach(function(k){STD.cache[k].forEach(function(x){if(x.id===id)r=x})});return r;}
+function listExtra(d){
+  var i;
+  if(d.stand!==undefined){i=+d.stand;var sg=S.songs[i];stdPut(JSON.parse(JSON.stringify(sg)),false).then(function(){stdOpen=i;renderList();status("💾 Stand von „"+sg.name+"“ gesichert.");});return true;}
+  if(d.stds!==undefined){i=+d.stds;stdOpen=stdOpen===i?-1:i;renderList();return true;}
+  if(d.tpl!==undefined){i=+d.tpl;if(S.songs[i].tpl)delete S.songs[i].tpl;else S.songs[i].tpl=1;fillSongs();save();renderList();status(S.songs[i].tpl?"🔒 Geschützt: Beim Bearbeiten entsteht automatisch eine Kopie.":"🔓 Schutz aufgehoben.");return true;}
+  if(d.stdel!==undefined){var x=stdFind(d.stdel);if(!x||!confirm("Diesen Stand ("+fmtTime(x.t)+") löschen?"))return true;stdDel(x.id).then(function(){delete STD.cache[x.sid];renderList();});return true;}
+  if(d.stcopy!==undefined||d.stback!==undefined){
+    var y=stdFind(d.stcopy||d.stback);if(!y)return true;var old;try{old=JSON.parse(y.data)}catch(e){return true}
+    var k=-1;S.songs.forEach(function(s,j){if(s.id===y.sid)k=j});
+    if(d.stcopy!==undefined||k<0){old.id=uid();delete old.tpl;old.name=(old.name+" (Stand "+fmtDate(y.t)+")").slice(0,60);old.mod=Date.now();S.songs.push(old);S.cur=S.songs.length-1;loadSong();save();closeDrawer();status("Stand vom "+fmtTime(y.t)+" als neues Stück geöffnet.");return true;}
+    if(!confirm("„"+S.songs[k].name+"“ auf den Stand vom "+fmtTime(y.t)+" zurücksetzen?\n\nDer jetzige Stand wird vorher automatisch gesichert."))return true;
+    stdPut(JSON.parse(JSON.stringify(S.songs[k])),false).then(function(){
+      old.id=y.sid;old.mod=Date.now();if(S.songs[k].tpl)old.tpl=1;else delete old.tpl;S.songs[k]=old;S.cur=k;loadSong();save();closeDrawer();
+      status("Stand vom "+fmtTime(y.t)+" zurückgeholt. Der vorherige Stand liegt unter 🕘 Frühere Stände.");
+    });
+    return true;
+  }
+  return false;
+}
+setTimeout(trashPurge,2000);
 $("dList").addEventListener("keydown",function(e){
   if(e.key==="Enter"&&e.target.id&&e.target.id.indexOf("ren")===0){var b=e.target.parentNode.querySelector("button");if(b)b.click();}
 });
@@ -3954,7 +4078,7 @@ var HELP=[
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander) – im Modus ♪ Namen/🎼 Zeile und beim Klavier dagegen: 1–7 = Notenlänge</td></tr><tr><td>Umschalt + 1–7</td><td>Notenlänge in jedem Modus: 1 = 1/16, 2 = 1/8, 3 = 1/8., 4 = 1/4, 5 = 1/4., 6 = 1/2, 7 = 1/1 (wie die Knöpfe von links)</td></tr><tr><td>Alt + 1–7</td><td>Pause dieser Länge</td></tr><tr><td>.</td><td>punktiert an/aus (1/8 ↔ 1/8., 1/4 ↔ 1/4.)</td></tr><tr><td>r</td><td>Pause in der gewählten Länge</td></tr><tr><td>Tab-Taste</td><td>⇥ Sprung (weiter ohne Note)</td></tr><tr><td>t / &gt; / k / l</td><td>Bogen / Akzent / Akkord an-aus / Lage wechseln</td></tr><tr><td>+</td><td>Takt einfügen</td></tr><tr><td>Bild ↑ / Bild ↓ · Pos1</td><td>voriger / nächster Takt · Taktanfang</td></tr><tr><td>Strg + Z</td><td>Zurück</td></tr><tr><td>?</td><td>Hilfe</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Dreizehn Übungen:</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Akkord → Grundton</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und den Grundton auf dem Bass antippen; danach siehst du alle Stellen und hörst den Akkord.</li><li><b>Akkordtöne</b>: Der Grundton (lila ●) ist vorgegeben; finde im hellen Bereich alle Töne des Akkords. Gefundene Töne zeigen ihre Stufe (1, 3, ♭3, 5, ♭7 …), danach kommt das Griffmuster vom Grundton aus. Stufen: Dur → Moll → Septakkorde → m7/maj7 mit allen Grundtönen → dim/sus4 → m7♭5/aug.</li><li><b>Gehör: Grundton</b>: Ein Akkord erklingt (ohne Symbol). Tippe Bünde an – du hörst jeden Ton – bis du den Grundton findest, dann „✓ Das ist der Grundton“. „▶ Akkord hören“ spielt ihn erneut.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
 {t:"e",h:"Als PDF speichern oder drucken",b:"<p>Menü <b>⋯ → 📄 Als PDF speichern / drucken</b>. Titel, Untertitel (z. B. Komponist) und eine Bemerkung eintragen, Inhalt wählen (Noten + Tab, nur Noten, nur Tab), optional Zählzeiten und Saitenfarben. Dann <b>PDF erstellen</b> und im Druckfenster <b>„Als PDF speichern“</b> wählen.</p><p>Das PDF zeigt oben groß den Titel, darunter Untertitel, Tempo, Tonart, Taktart und Saitenzahl. Die Takte laufen durchgehend als Notenzeilen wie in einem Notenheft: Schlüssel und Vorzeichen nur am Zeilenanfang, Taktnummer klein über jedem Takt, unten Seitenzahl.</p>",k:"pdf drucken export ausdruck titel"},
-{t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p>",k:"backup speichern import musicxml"},
+{t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p><p><b>Frühere Stände:</b> unter ⋯ „💾 Stand sichern“ legt eine Momentaufnahme an. Zusätzlich sichert die App einmal am Tag automatisch, bevor du ein Stück zum ersten Mal änderst. Unter „🕘 Frühere Stände“ holst du einen Stand zurück (der jetzige wird vorher gesichert) oder öffnest ihn als Kopie. Pro Stück bleiben bis zu 30 Stände.</p><p><b>Schutz 🔒:</b> Geschützte Stücke (z. B. das Beispiel) bleiben unverändert. Sobald du etwas änderst, entsteht automatisch eine Kopie. Schutz an/aus unter ⋯.</p><p><b>Papierkorb:</b> Gelöschte Stücke liegen 30 Tage im Papierkorb (☰ ganz unten) und lassen sich zurückholen. ↶ nimmt jetzt auch Name, Tempo, Tonart und Takt zurück.</p><p>Ist der Speicher voll, warnt die App. Dann gleich ein Backup machen und Platz schaffen.</p>",k:"backup speichern import musicxml papierkorb stand version wiederherstellen schutz vorlage kopie"},
 /* ===== Musikzeichen ===== */
 {t:"z",h:"Notensystem und Bassschlüssel",b:"<p>Fünf Linien bilden das <b>Notensystem</b>. Der <b>Bassschlüssel</b> (F-Schlüssel) markiert mit seinen zwei Punkten die vierte Linie von unten als Ton <b>F</b>. Von unten gelesen: Linien G-H-D-F-A, Zwischenräume A-C-E-G.</p>"+exStaff([[3,0,3,4],[3,4,7,4],[2,8,5,4],[1,12,3,4]])+"<p>Bass-Noten werden eine <b>Oktave höher notiert als sie klingen</b> – sonst bräuchte man sehr viele Hilfslinien. Die App rechnet das automatisch um.</p>",k:"schlüssel f-schlüssel linien"},
 {t:"z",h:"Notenwerte",b:"<p>Ganze (16), Halbe (8), Viertel (4), Achtel (2), Sechzehntel (1) – in Klammern die Anzahl Sechzehntel. Achtel und Sechzehntel haben Fähnchen oder werden pro Schlag mit <b>Balken</b> verbunden. Beispiel: Halbe, Viertel, Achtel, zwei Sechzehntel.</p>"+exStaff([[3,0,5,8],[3,8,5,4],[3,12,5,2],[3,14,5,1],[3,15,5,1]])+ply("33:8 33:4 33:2 33:1 33:1"),k:"ganze halbe viertel achtel sechzehntel balken"},
@@ -5661,9 +5785,9 @@ function openKeyDlg(isNew){
 }
 $("keyDlg").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;var d=b.dataset;
-  if(d.k!==undefined){song().key=+d.k;$("keySel").value=d.k;}
-  else if(d.sg){if(P)stop();song().sig=d.sg;ensureSigOption(d.sg);$("sig").value=d.sg;cursor.step=0;}
-  else if(d.st){if(P)stop();song().strings=+d.st;$("strings").value=d.st;cursor.str=nstr()-1;}
+  if(d.k!==undefined){pushUndo();song().key=+d.k;$("keySel").value=d.k;}
+  else if(d.sg){if(P)stop();pushUndo();song().sig=d.sg;ensureSigOption(d.sg);$("sig").value=d.sg;cursor.step=0;}
+  else if(d.st){if(P)stop();pushUndo();song().strings=+d.st;$("strings").value=d.st;cursor.str=nstr()-1;}
   else if(b.id==="kdOk"){$("keyDlg").classList.remove("open");return;}
   else return;
   render();save();openKeyDlg($("kdT").textContent.indexOf("Neues")===0);
