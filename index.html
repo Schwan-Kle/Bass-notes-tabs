@@ -302,7 +302,12 @@ body.pqon #lenKeys button{min-height:52px;font-size:16px}
 .trpanel{overflow-y:auto}
 #trFreeBox[hidden],#trRun[hidden],#trEnd[hidden],#trHome[hidden]{display:none!important}
 .trh{margin:4px 0 0;font-size:13px;color:var(--muted);font-weight:700}
-.trmodes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.trmodes{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 0 8px 8px;border-left:3px solid var(--ac,var(--main))}
+.trgrp{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;width:100%;padding:8px 10px;margin-top:6px;border:1px solid color-mix(in srgb,var(--ac) 40%,#fff);border-left:5px solid var(--ac);background:#fff;color:var(--ac)}
+.trgrp b{font-size:15px}.trgrp small{grid-column:1;font-size:11px;color:var(--muted);font-weight:400}.trgrp span{grid-row:1/3;grid-column:2;font-size:18px}
+.trgroups .trmodes{margin-top:6px}
+.trgrp.open{background:color-mix(in srgb,var(--ac) 8%,#fff)}
+.trmodes button.on{background:var(--ac,var(--main));border-color:var(--ac,var(--main))}
 .trmodes button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:8px;min-height:60px}
 .trmodes small,.trlevels small{font-size:11px;color:var(--muted)}
 .trmodes button.on small,.trlevels button.on small{color:var(--on-main)}
@@ -1032,8 +1037,8 @@ svg.wavrow{display:block;width:100%;height:28px;margin:1px 0 2px;cursor:pointer;
   <div class="hpanel trpanel">
     <div class="dhead"><h2 id="trT">Notenlese-Training</h2><button id="trClose" aria-label="Training schließen">✕</button></div>
     <div id="trHome">
-      <h3 class="trh">Übung</h3>
-      <div id="trModes" class="trmodes"></div>
+      <h3 class="trh">Übung wählen <small>– Gruppen wie im Wiki</small></h3>
+      <div id="trModes" class="trgroups"></div>
       <p id="trMicNote" class="scmsg" hidden>Hinweis: Diese Übung braucht das Mikrofon und geht nur in der installierten App.</p>
       <h3 class="trh">Stufe</h3>
       <div id="trLevels" class="trlevels"></div>
@@ -3063,7 +3068,7 @@ $("instSel").onchange=function(){if(P)stop();convertInst(this.value);};
 $("strings").onchange=function(){if(P)stop();pushUndo();song().strings=+this.value;cursor.str=nstr()-1;render();save()};
 
 /* ---------- Menü „Meine Stücke“ ---------- */
-var openItem=-1,delArmI=-1,delArmT=0,stdOpen=-1,trOpen=false;
+var openItem=-1,delArmI=-1,delArmT=0,stdOpen=-1,trashOpen=false;
 function newSongObj(name){return {id:uid(),name:name,bpm:80,sig:"4/4",strings:4,key:0,mod:Date.now(),bars:[emptyBar(),emptyBar(),emptyBar(),emptyBar()]}}
 function fmtDate(t){if(!t)return "";var d=new Date(t);return d.getDate()+"."+(d.getMonth()+1)+"."+String(d.getFullYear()).slice(2)}
 function openDrawer(){openItem=-1;$("dSearch").value="";renderList();$("drawer").classList.add("open");$("drawer").setAttribute("aria-hidden","false");setTimeout(function(){$("drawerClose").focus()},50)}
@@ -3147,8 +3152,8 @@ function dropForever(sg){if(!sg)return;if(S.songs.some(function(x){return x.id==
 function trashUI(){
   var el=$("dTrash"),t=S.trash||[];if(!el)return;
   if(!t.length){el.innerHTML="";return;}
-  var h='<button data-trtog="1" aria-expanded="'+trOpen+'">🗑 Papierkorb ('+t.length+')</button>';
-  if(trOpen){
+  var h='<button data-trtog="1" aria-expanded="'+trashOpen+'">🗑 Papierkorb ('+t.length+')</button>';
+  if(trashOpen){
     h+='<div class="dtrash"><small>Stücke bleiben '+TRASH_DAYS+' Tage im Papierkorb und werden danach endgültig gelöscht.</small>';
     t.forEach(function(x,k){h+='<div class="srow2"><span>'+esc(x.s.name||"Ohne Namen")+' <small>gelöscht '+fmtTime(x.t)+'</small></span><button data-trback="'+k+'">Zurückholen</button><button data-trdel="'+k+'" class="danger">Endgültig löschen</button></div>';});
     h+='<button data-trall="1" class="danger">Papierkorb leeren</button></div>';
@@ -3157,10 +3162,10 @@ function trashUI(){
 }
 $("dTrash").addEventListener("click",function(e){
   var b=e.target.closest("button");if(!b)return;var d=b.dataset,t=S.trash||[];
-  if(d.trtog){trOpen=!trOpen;trashUI();return;}
+  if(d.trtog){trashOpen=!trashOpen;trashUI();return;}
   if(d.trback!==undefined){var x=t.splice(+d.trback,1)[0];if(!x)return;var sg=x.s;if(S.songs.some(function(y){return y.id===sg.id}))sg.id=uid();sg.mod=Date.now();S.songs.push(sg);save();renderList();status("„"+sg.name+"“ ist wieder da.");return;}
   if(d.trdel!==undefined){var y=t[+d.trdel];if(!y||!confirm("„"+y.s.name+"“ endgültig löschen? Das lässt sich nicht rückgängig machen."))return;t.splice(+d.trdel,1);dropForever(y.s);save();renderList();return;}
-  if(d.trall){if(!confirm("Alle "+t.length+" Stücke im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen."))return;t.forEach(function(z){dropForever(z.s)});S.trash=[];trOpen=false;save();renderList();return;}
+  if(d.trall){if(!confirm("Alle "+t.length+" Stücke im Papierkorb endgültig löschen? Das lässt sich nicht rückgängig machen."))return;t.forEach(function(z){dropForever(z.s)});S.trash=[];trashOpen=false;save();renderList();return;}
 });
 /* Frühere Stände (IndexedDB, eigene Datenbank) */
 var STD={db:null,fail:false,mem:[],cache:{},MAX:30};
@@ -4076,7 +4081,7 @@ var HELP=[
 {t:"e",h:"Metronom, Schleife, Tempo-Trainer",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander) – im Modus ♪ Namen/🎼 Zeile und beim Klavier dagegen: 1–7 = Notenlänge</td></tr><tr><td>Umschalt + 1–7</td><td>Notenlänge in jedem Modus: 1 = 1/16, 2 = 1/8, 3 = 1/8., 4 = 1/4, 5 = 1/4., 6 = 1/2, 7 = 1/1 (wie die Knöpfe von links)</td></tr><tr><td>Alt + 1–7</td><td>Pause dieser Länge</td></tr><tr><td>.</td><td>punktiert an/aus (1/8 ↔ 1/8., 1/4 ↔ 1/4.)</td></tr><tr><td>r</td><td>Pause in der gewählten Länge</td></tr><tr><td>Tab-Taste</td><td>⇥ Sprung (weiter ohne Note)</td></tr><tr><td>t / &gt; / k / l</td><td>Bogen / Akzent / Akkord an-aus / Lage wechseln</td></tr><tr><td>+</td><td>Takt einfügen</td></tr><tr><td>Bild ↑ / Bild ↓ · Pos1</td><td>voriger / nächster Takt · Taktanfang</td></tr><tr><td>Strg + Z</td><td>Zurück</td></tr><tr><td>?</td><td>Hilfe</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
-{t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Dreizehn Übungen:</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Akkord → Grundton</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und den Grundton auf dem Bass antippen; danach siehst du alle Stellen und hörst den Akkord.</li><li><b>Akkordtöne</b>: Der Grundton (lila ●) ist vorgegeben; finde im hellen Bereich alle Töne des Akkords. Gefundene Töne zeigen ihre Stufe (1, 3, ♭3, 5, ♭7 …), danach kommt das Griffmuster vom Grundton aus. Stufen: Dur → Moll → Septakkorde → m7/maj7 mit allen Grundtönen → dim/sus4 → m7♭5/aug.</li><li><b>Gehör: Grundton</b>: Ein Akkord erklingt (ohne Symbol). Tippe Bünde an – du hörst jeden Ton – bis du den Grundton findest, dann „✓ Das ist der Grundton“. „▶ Akkord hören“ spielt ihn erneut.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
+{t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Dreizehn Übungen in drei Gruppen wie im Wiki: <b>Töne und Griffbrett</b>, <b>Tonleitern und Harmonie</b>, <b>Rhythmus und Spiel</b>. Tippe eine Gruppe an, um ihre Übungen aufzuklappen; 🎤 = braucht das Mikrofon. Die zuletzt gewählte Übung und Stufe bleiben eingestellt.</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Akkord → Grundton</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und den Grundton auf dem Bass antippen; danach siehst du alle Stellen und hörst den Akkord.</li><li><b>Akkordtöne</b>: Der Grundton (lila ●) ist vorgegeben; finde im hellen Bereich alle Töne des Akkords. Gefundene Töne zeigen ihre Stufe (1, 3, ♭3, 5, ♭7 …), danach kommt das Griffmuster vom Grundton aus. Stufen: Dur → Moll → Septakkorde → m7/maj7 mit allen Grundtönen → dim/sus4 → m7♭5/aug.</li><li><b>Gehör: Grundton</b>: Ein Akkord erklingt (ohne Symbol). Tippe Bünde an – du hörst jeden Ton – bis du den Grundton findest, dann „✓ Das ist der Grundton“. „▶ Akkord hören“ spielt ihn erneut.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
 {t:"e",h:"Als PDF speichern oder drucken",b:"<p>Menü <b>⋯ → 📄 Als PDF speichern / drucken</b>. Titel, Untertitel (z. B. Komponist) und eine Bemerkung eintragen, Inhalt wählen (Noten + Tab, nur Noten, nur Tab), optional Zählzeiten und Saitenfarben. Dann <b>PDF erstellen</b> und im Druckfenster <b>„Als PDF speichern“</b> wählen.</p><p>Das PDF zeigt oben groß den Titel, darunter Untertitel, Tempo, Tonart, Taktart und Saitenzahl. Die Takte laufen durchgehend als Notenzeilen wie in einem Notenheft: Schlüssel und Vorzeichen nur am Zeilenanfang, Taktnummer klein über jedem Takt, unten Seitenzahl.</p>",k:"pdf drucken export ausdruck titel"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p><p><b>Frühere Stände:</b> unter ⋯ „💾 Stand sichern“ legt eine Momentaufnahme an. Zusätzlich sichert die App einmal am Tag automatisch, bevor du ein Stück zum ersten Mal änderst. Unter „🕘 Frühere Stände“ holst du einen Stand zurück (der jetzige wird vorher gesichert) oder öffnest ihn als Kopie. Pro Stück bleiben bis zu 30 Stände.</p><p><b>Schutz 🔒:</b> Geschützte Stücke (z. B. das Beispiel) bleiben unverändert. Sobald du etwas änderst, entsteht automatisch eine Kopie. Schutz an/aus unter ⋯.</p><p><b>Papierkorb:</b> Gelöschte Stücke liegen 30 Tage im Papierkorb (☰ ganz unten) und lassen sich zurückholen. ↶ nimmt jetzt auch Name, Tempo, Tonart und Takt zurück.</p><p>Ist der Speicher voll, warnt die App. Dann gleich ein Backup machen und Platz schaffen.</p>",k:"backup speichern import musicxml papierkorb stand version wiederherstellen schutz vorlage kopie"},
 /* ===== Musikzeichen ===== */
@@ -5207,7 +5212,11 @@ function pqPlace(l){
 }
 
 /* ---------- Notenlese-Training ---------- */
-var TR={mode:"name",level:1,run:null};
+var TR={mode:(S.trLast&&S.trLast.m)||"name",level:S.trLast&&S.trLast.l!==undefined?S.trLast.l:1,run:null,grp:-1};
+/* Gruppen wie im Wiki (gleiche Namen und Farben) */
+var TGROUPS=[["Töne und Griffbrett","in",["name","fret","fname","all","mix","play"]],["Tonleitern und Harmonie","train",["root","ctone","ear"]],["Rhythmus und Spiel","play",["rhythm","sight","jam","line"]]];
+var TMIC={play:1,sight:1,jam:1,line:1};
+function trGrpOf(m){for(var g=0;g<TGROUPS.length;g++)if(TGROUPS[g][2].indexOf(m)>=0)return g;return 0;}
 var TLV=[
  {n:"Leere Saiten",d:"E, A, D, G",lo:28,hi:43,chrom:false,open:true,r:[16,8,4]},
  {n:"Erste Lage",d:"Stammtöne bis Bund 3",lo:28,hi:47,chrom:false,r:[16,8,4,2]},
@@ -5284,13 +5293,19 @@ function genLine(nBars){
   return {bars:bars,notes:notes};
 }
 /* Oberfläche */
-function trOpen(){trHome();$("train").classList.add("open");}
+function trOpen(){TR.grp=-1;trHome();$("train").classList.add("open");}
 $("trainBtn").onclick=trOpen;
 $("trClose").onclick=function(){trStop();$("train").classList.remove("open")};
 function trHome(){
   trStop();TR.run=null;if(trChordMode()&&TR.level===0)TR.level=1;
   $("trHome").hidden=false;$("trRun").hidden=true;$("trEnd").hidden=true;
-  $("trModes").innerHTML=TMODES.map(function(m){return '<button data-tm="'+m[0]+'" class="'+(TR.mode===m[0]?'on':'')+'"><b>'+m[1]+'</b><small>'+m[2]+'</small></button>'}).join("");
+  if(TR.grp===-1)TR.grp=trGrpOf(TR.mode);
+  S.trLast={m:TR.mode,l:TR.level};
+  $("trModes").innerHTML=TGROUPS.map(function(g,gi){
+    var open=gi===TR.grp,cnt=g[2].length;
+    var h='<button class="trgrp'+(open?' open':'')+'" data-tg="'+gi+'" aria-expanded="'+open+'" style="--ac:var(--a-'+g[1]+')"><b>'+g[0]+'</b><small>'+cnt+' Übungen'+(open?'':' · '+g[2].map(function(id){return trModeName(id)}).join(', '))+'</small><span aria-hidden="true">'+(open?'▾':'▸')+'</span></button>';
+    if(open)h+='<div class="trmodes" style="--ac:var(--a-'+g[1]+')">'+g[2].map(function(id){var m=trMode(id);return '<button data-tm="'+m[0]+'" class="'+(TR.mode===m[0]?'on':'')+'"><b>'+m[1]+(TMIC[m[0]]?' 🎤':'')+'</b><small>'+m[2]+'</small></button>'}).join("")+'</div>';
+    return h;}).join("");
   var best=S.trBest||{};
   var h=TLV.map(function(l,i){var k=TR.mode+(i+1),bv=best[k];return '<button data-tl="'+(i+1)+'" class="'+(TR.level===i+1?'on':'')+'"><span class="tlno">'+(i+1)+'</span><span><b>'+(trChordMode()?trLvTxt(i)[0]:l.n)+'</b><small>'+(TR.mode==="rhythm"?rhyDesc(i+1):trChordMode()?trLvTxt(i)[1]:l.d)+'</small></span>'+(bv!==undefined?'<span class="tlbest'+(bv>=90?' ok':'')+'">'+(bv>=90?'✓ ':'')+bv+' %</span>':'')+'</button>'}).join("");
   if(!trChordMode())h+='<button data-tl="0" class="'+(TR.level===0?'on':'')+'"><span class="tlno">⚙</span><span><b>Frei</b><small>Tonbereich und Vorzeichen selbst wählen</small></span></button>';
@@ -5304,9 +5319,13 @@ function trHome(){
   $("trMicNote").hidden=!needMic||(mic&&!jl);$("trMicNote").textContent=(mic?"":"Hinweis: Diese Übung braucht das Mikrofon und geht nur in der installierten App. ")+(jl?"Tipp: Mit Kopfhörern hört das Mikrofon nur deinen Bass, nicht die Begleitung.":"");
   if(!$("trMicNote").hidden||TR.mode==="jam"||TR.mode==="line"){$("trMicNote").hidden=false;$("trMicNote").textContent=(mic?"":"Hinweis: Diese Übung braucht das Mikrofon und geht nur in der installierten App. ")+(TR.mode==="jam"||TR.mode==="line"?"Tipp: Mit Kopfhörern hört das Mikrofon nur deinen Bass, nicht die Begleitung.":"");if(mic&&TR.mode!=="jam"&&TR.mode!=="line")$("trMicNote").hidden=true;}
 }
+function trMode(id){for(var i=0;i<TMODES.length;i++)if(TMODES[i][0]===id)return TMODES[i];return [id,id,""];}
+function trModeName(id){return trMode(id)[1];}
 function rhyDesc(l){return ["Ganze, Halbe, Viertel","+ Achtel","+ Pausen","+ punktierte Viertel","+ Sechzehntel, punktierte Achtel","+ Synkopen"][l-1]}
-$("trModes").addEventListener("click",function(e){var b=e.target.closest("[data-tm]");if(!b)return;TR.mode=b.dataset.tm;trHome();});
-$("trLevels").addEventListener("click",function(e){var b=e.target.closest("[data-tl]");if(!b)return;TR.level=+b.dataset.tl;trHome();});
+$("trModes").addEventListener("click",function(e){
+  var g=e.target.closest("[data-tg]");if(g){var gi=+g.dataset.tg;TR.grp=TR.grp===gi?-2:gi;trHome();return;}
+  var b=e.target.closest("[data-tm]");if(!b)return;TR.mode=b.dataset.tm;trHome();save();});
+$("trLevels").addEventListener("click",function(e){var b=e.target.closest("[data-tl]");if(!b)return;TR.level=+b.dataset.tl;trHome();save();});
 ["trLo","trHi","trAcc"].forEach(function(id){$(id).onchange=function(){S.trFree={lo:+$("trLo").value,hi:+$("trHi").value,acc:$("trAcc").value};save();}});
 $("trStart").onclick=function(){
   var n=+$("trCount").value;
