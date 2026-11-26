@@ -1,0 +1,165 @@
+{
+ "version": 1,
+ "pieces": [
+  {
+   "id": "alle-meine-entchen",
+   "title": "Alle meine Entchen",
+   "composer": "Volkslied",
+   "cat": "Lieder",
+   "level": 1,
+   "source": "traditionelles Kinderlied",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "alle-meine-entchen.musicxml"
+  },
+  {
+   "id": "haenschen-klein",
+   "title": "Hänschen klein",
+   "composer": "Volkslied",
+   "cat": "Lieder",
+   "level": 1,
+   "source": "traditionelles Kinderlied (Melodie)",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "haenschen-klein.musicxml"
+  },
+  {
+   "id": "bruder-jakob",
+   "title": "Bruder Jakob",
+   "composer": "Volkslied (Frère Jacques)",
+   "cat": "Lieder",
+   "level": 2,
+   "source": "traditionelles Lied, auch als Kanon",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "bruder-jakob.musicxml"
+  },
+  {
+   "id": "amazing-grace",
+   "title": "Amazing Grace",
+   "composer": "Volksweise „New Britain“ (19. Jh.)",
+   "cat": "Lieder",
+   "level": 2,
+   "source": "traditionelle Melodie, Erstdruck 1829",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "amazing-grace.musicxml"
+  },
+  {
+   "id": "ode-an-die-freude",
+   "title": "Ode an die Freude",
+   "composer": "Ludwig van Beethoven (1770–1827)",
+   "cat": "Klassik",
+   "level": 1,
+   "source": "Thema aus der 9. Sinfonie, 4. Satz",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "ode-an-die-freude.musicxml"
+  },
+  {
+   "id": "kanon-pachelbel-bass",
+   "title": "Kanon in D – Basslinie",
+   "composer": "Johann Pachelbel (1653–1706)",
+   "cat": "Klassik",
+   "level": 1,
+   "source": "Bassmodell des Kanons; zweiter Ton D eine Oktave höher (4-Saiter)",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "kanon-pachelbel-bass.musicxml"
+  },
+  {
+   "id": "cello-suite-1-praeludium",
+   "title": "Cello-Suite Nr. 1 – Präludium (Anfang)",
+   "composer": "Johann Sebastian Bach (1685–1750)",
+   "cat": "Klassik",
+   "level": 3,
+   "source": "BWV 1007, Takte 1–4, eine Oktave tiefer für Bass",
+   "license": "Melodie gemeinfrei; Notensatz für diese App: CC0 (frei nutzbar)",
+   "file": "cello-suite-1-praeludium.musicxml"
+  },
+  {
+   "id": "blues-grundton",
+   "title": "12-Takt-Blues in E – Grundton",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 1,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "blues-grundton.musicxml"
+  },
+  {
+   "id": "blues-boogie",
+   "title": "12-Takt-Blues in E – Boogie",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 2,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "blues-boogie.musicxml"
+  },
+  {
+   "id": "blues-walking",
+   "title": "12-Takt-Blues in E – Walking Bass",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 3,
+   "source": "eigene Übung: Grundton, Terz, Quinte, Annäherung an den nächsten Grundton",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "blues-walking.musicxml"
+  },
+  {
+   "id": "rock-achtel",
+   "title": "Rock-Achtel",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 1,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-achtel.musicxml"
+  },
+  {
+   "id": "reggae",
+   "title": "Reggae-Muster",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 2,
+   "source": "eigene Übung: Schlag 1 frei lassen",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "reggae.musicxml"
+  },
+  {
+   "id": "funk-oktaven",
+   "title": "Funk-Oktaven",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 3,
+   "source": "eigene Übung: Sechzehntel, Grundton und Oktave",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-oktaven.musicxml"
+  },
+  {
+   "id": "country",
+   "title": "Country – Grundton und Quinte",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 1,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "country.musicxml"
+  },
+  {
+   "id": "tonleitern",
+   "title": "Tonleitern: C-Dur, G-Dur, e-Moll",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 1,
+   "source": "eigene Übung: je eine Oktave auf und ab",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "tonleitern.musicxml"
+  },
+  {
+   "id": "arpeggien",
+   "title": "Arpeggien: C, F, G7, Am",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 2,
+   "source": "eigene Übung: Dreiklänge auf und ab",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "arpeggien.musicxml"
+  }
+ ]
+}

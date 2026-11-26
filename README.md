@@ -18,5 +18,12 @@ Web-App zum Eintippen, Abspielen und Üben von Noten und Tabs: Bass, Gitarre, Kl
 ## Dateien
 `index.html` (die ganze App), `manifest.json`, `sw.js` (Offline-Speicher, Cache-Version bei jeder Änderung hochzählen), `icon-192.png`, `icon-512.png`, `.nojekyll`.
 
+## Bibliothek
+☰ → „📚 Bibliothek“: 16 mitgelieferte Stücke (Lieder, Klassik, Übungen) als MusicXML in `lib/`, Liste in `lib/index.json`, dazu Links zu Seiten mit freien MusicXML-Noten.
+Erzeugt werden die Dateien mit `python3 tools/bibliothek.py` (Stücke dort eintragen, dann Cache-Version in `sw.js` hochzählen).
+
 ## Inhalte und Rechte
-Die App liefert keine fremden Stücke mit. Eigene Stücke und importierte Dateien bleiben auf dem Gerät.
+- Lieder und Klassik: nur gemeinfreie Melodien (Komponist über 70 Jahre tot bzw. traditionell), eigener Notensatz ohne Vorlage einer fremden Ausgabe, ohne Liedtexte.
+- Übungen: eigene Muster.
+- Notensatz der Bibliothek: CC0 (frei nutzbar). Quelle und Lizenz stehen je Stück in der App und in `lib/index.json`.
+- Eigene Stücke und importierte Dateien bleiben auf dem Gerät.
