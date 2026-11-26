@@ -890,6 +890,15 @@ button.sub{border-style:solid!important;border-left:3px solid #C98A12!important;
 #pbPlay{background:var(--a-play)!important;color:#fff!important;display:flex;align-items:center;justify-content:center}
 .pbrow .on,.pbseg button.on,#pbCin.on{background:var(--a-play)!important;color:#fff!important}
 .pbl{background:var(--surface);align-self:stretch;display:flex;align-items:center;padding:0 8px}
+.mxrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0 6px 8px;border-left:3px solid var(--a-in,#004C3A);border-bottom:1px solid var(--line,#ddd)}
+.mxrow label.ck{flex:1 1 140px;font-size:15px;min-height:44px}
+.mxrow input[type=checkbox]{width:22px;height:22px}
+.mxin{min-height:44px;padding:4px 10px;border:1px solid var(--line,#ccc);border-left:3px solid #C98A12;background:#fff;font-size:14px}
+.mxin:disabled{border-left-color:var(--a-nav,#37474F);color:var(--text);opacity:1}
+.mxnote{flex-basis:100%;font-size:12px;color:#7A3E00}
+.mxgo{min-height:44px;font-weight:600}
+.mxmsg{margin:0;padding-left:18px;font-size:14px;line-height:1.45}
+.mxmsg li{margin:4px 0}
 </style>
 </head>
 <body>
@@ -3559,7 +3568,7 @@ function unzipMXL(buf){
 
 /* Auswahl-Dialog */
 function pickDialog(title,text,opts,cb){
-  $("pickT").textContent=title;$("pickP").textContent=text;
+  $("pickClose").style.display="";$("pickT").textContent=title;$("pickP").textContent=text;
   var h="";opts.forEach(function(o,i){h+='<button data-pk="'+i+'">'+esc(o)+'</button>'});
   $("pickL").innerHTML=h;$("pick").classList.add("open");
   $("pickL").onclick=function(e){var b=e.target.closest("button");if(!b)return;$("pick").classList.remove("open");cb(+b.dataset.pk)};
@@ -3570,25 +3579,92 @@ $("pickClose").onclick=function(){$("pick").classList.remove("open")};
 function kids(el,name){var r=[];for(var c=el.firstElementChild;c;c=c.nextElementSibling)if(!name||c.nodeName===name)r.push(c);return r}
 function kid(el,name){for(var c=el&&el.firstElementChild;c;c=c.nextElementSibling)if(c.nodeName===name)return c;return null}
 function txtOf(el,name){var k=kid(el,name);return k?k.textContent.trim():""}
+/* MusicXML: Instrument je Spur erkennen */
+var GMDR={35:6,36:6,37:4,38:4,39:4,40:4,41:5,43:5,45:5,47:5,48:5,50:5,42:3,44:3,46:2,49:0,52:0,55:0,57:0,51:1,53:1,59:1};
+var DRPOS={E4:6,F4:6,C5:4,G5:3,A5:0,F5:1,E5:5,D5:5,B4:5,A4:5};
+function mxlInfo(root){
+  var info={},pl=kid(root,"part-list");
+  if(pl)kids(pl,"score-part").forEach(function(sp){
+    var id=sp.getAttribute("id"),o={name:txtOf(sp,"part-name")||txtOf(sp,"part-abbreviation")||"",prog:null,ch:null,unp:{}};
+    kids(sp,"score-instrument").forEach(function(si){var nm=txtOf(si,"instrument-name");if(nm&&!o.iname)o.iname=nm;});
+    kids(sp,"midi-instrument").forEach(function(mi){
+      var p=parseInt(txtOf(mi,"midi-program"),10),c=parseInt(txtOf(mi,"midi-channel"),10),u=parseInt(txtOf(mi,"midi-unpitched"),10);
+      if(p>0&&o.prog===null)o.prog=p;if(c>0&&o.ch===null)o.ch=c;if(u>0)o.unp[mi.getAttribute("id")]=u-1;
+    });
+    info[id]=o;
+  });
+  return info;
+}
+function mxlDetect(o,part){
+  o=o||{name:"",prog:null,unp:{}};
+  var cl=part.getElementsByTagName("clef")[0],sign=cl?txtOf(cl,"sign"):"",lines=0;
+  var sd=part.getElementsByTagName("staff-lines")[0];if(sd)lines=parseInt(sd.textContent,10)||0;
+  var nm=((o.name||"")+" "+(o.iname||"")).toLowerCase();
+  if(sign==="percussion"||o.ch===10||Object.keys(o.unp).length||/drum|schlagzeug|percussion|perkussion|drumset|snare/.test(nm))return {inst:"drums"};
+  if(sign==="TAB")return {inst:lines>=6||/guit|gitar/.test(nm)?"guitar":"bass"};
+  var p=o.prog;
+  if(p){if(p>=33&&p<=40)return {inst:"bass"};if(p>=25&&p<=32)return {inst:"guitar"};if(p>=53&&p<=55||p===86)return {inst:"voice"};if(p<=8)return {inst:"piano"};}
+  if(/fagott|bassoon|klarinette|clarinet|posaune|trombone|tuba|bassethorn/.test(nm))return {inst:"piano",guess:1};
+  if(/bass|baß|kontrabass|contrabass/.test(nm))return {inst:"bass"};
+  if(/guit|gitar/.test(nm))return {inst:"guitar"};
+  if(/piano|klavier|keyboard|flügel|e-piano|rhodes|organ|orgel|cembalo|harpsichord/.test(nm))return {inst:"piano"};
+  if(/voice|vocal|gesang|stimme|sänger|sängerin|sopran|alt\b|alto|tenor|bariton|baritone|melod|lead|singer|chor|choir/.test(nm))return {inst:"voice"};
+  if(p&&p<=24)return {inst:"piano",guess:1};
+  return {inst:"piano",guess:1};
+}
+var PITCHED=["bass","guitar","piano","voice"];
 function importMusicXML(xml,fname){
   var doc;
   try{doc=new DOMParser().parseFromString(xml,"application/xml")}catch(e){doc=null}
   if(!doc||doc.getElementsByTagName("parsererror").length){status("Die MusicXML-Datei ist beschädigt oder unvollständig.");return;}
   var root=doc.documentElement;
   if(root.nodeName!=="score-partwise"){status("Diese MusicXML-Variante (zeitweise geordnet) wird nicht unterstützt. Bitte als normales MusicXML exportieren.");return;}
-  var names={};
-  var pl=kid(root,"part-list");
-  if(pl)kids(pl,"score-part").forEach(function(sp){names[sp.getAttribute("id")]=txtOf(sp,"part-name")||sp.getAttribute("id")});
-  var parts=kids(root,"part");
+  var info=mxlInfo(root),parts=kids(root,"part");
   if(!parts.length){status("In der Datei sind keine Noten.");return;}
   var title=txtOf(kid(root,"work"),"work-title")||txtOf(root,"movement-title")||fname||"MusicXML-Import";
-  function go(i){convertPart(parts[i],parts.length>1?title+" – "+(names[parts[i].getAttribute("id")]||"Stimme "+(i+1)):title)}
-  if(parts.length===1)go(0);
-  else pickDialog("Welche Stimme übernehmen?","Die Datei enthält "+parts.length+" Stimmen. Wähle die Bass-Stimme:",parts.map(function(p,i){return names[p.getAttribute("id")]||"Stimme "+(i+1)}),go);
+  var list=parts.map(function(p,i){var id=p.getAttribute("id"),o=info[id]||{unp:{}},d=mxlDetect(o,p);
+    var has=p.getElementsByTagName("pitch").length+p.getElementsByTagName("unpitched").length>0;
+    return {part:p,o:o,name:(o.name||"Spur "+(i+1)).slice(0,40),inst:d.inst,guess:!!d.guess&&has,on:has,empty:!has};});
+  if(list.length===1){buildMXL(list,title);return;}
+  mxlPick(list,title);
 }
-function convertPart(part,title){
+function mxlPick(list,title){
+  $("pickClose").style.display="";
+  $("pickT").textContent="Welche Instrumente übernehmen?";
+  $("pickP").textContent="Die Datei enthält "+list.length+" Instrumente. Jedes wird eine eigene Spur. Häkchen weg = nicht übernehmen. Instrument antippen = ändern.";
+  function draw(){
+    var h="";
+    list.forEach(function(it,i){
+      h+='<div class="mxrow"><label class="ck"><input type="checkbox" data-mx="'+i+'"'+(it.on?' checked':'')+'> '+esc(it.name)+'</label>'+
+        '<button class="mxin" data-mxi="'+i+'"'+(it.inst==="drums"?' disabled':'')+' aria-label="Instrument für '+esc(it.name)+' ändern">'+IICON[it.inst]+' '+INAME[it.inst]+(it.inst!=="drums"?' ▸':'')+'</button>'+
+        (it.empty?'<span class="mxnote">keine Noten in dieser Spur</span>':it.guess?'<span class="mxnote">kein eigenes Instrument in der App – wird als '+INAME[it.inst]+' übernommen</span>':'')+'</div>';
+    });
+    var n=list.filter(function(x){return x.on}).length;
+    h+='<button data-mxall="1" class="mxgo">Alle übernehmen ('+list.length+')</button>';
+    h+='<button data-mxsel="1" class="mxgo"'+(n?'':' disabled')+'>Auswahl übernehmen ('+n+')</button>';
+    $("pickL").innerHTML=h;
+  }
+  draw();$("pick").classList.add("open");
+  $("pickL").onclick=function(e){
+    var cb=e.target.closest("input[data-mx]");if(cb){list[+cb.dataset.mx].on=cb.checked;draw();return;}
+    var ib=e.target.closest("button[data-mxi]");if(ib){var it=list[+ib.dataset.mxi];var k=PITCHED.indexOf(it.inst);it.inst=PITCHED[(k+1)%PITCHED.length];it.guess=false;draw();return;}
+    var b=e.target.closest("button[data-mxall],button[data-mxsel]");if(!b)return;
+    var sel=b.dataset.mxall?list:list.filter(function(x){return x.on});if(!sel.length)return;
+    $("pick").classList.remove("open");buildMXL(sel,title,list.length);
+  };
+}
+function infoDialog(title,text,lines){
+  $("pickT").textContent=title;$("pickP").textContent=text;
+  $("pickL").innerHTML='<ul class="mxmsg">'+lines.map(function(l){return '<li>'+l+'</li>'}).join("")+'</ul><button data-pk="0" class="mxgo">OK</button>';
+  $("pickClose").style.display="none";$("pick").classList.add("open");
+  $("pickL").onclick=function(e){if(!e.target.closest("button"))return;$("pick").classList.remove("open");$("pickClose").style.display="";};
+}
+function parsePart(part,inst,o){
+  o=o||{unp:{}};
+  var isK=inst==="piano"||inst==="voice",isD=inst==="drums",multi=inst==="piano"||inst==="guitar"||isD;
   var div=1,beats=4,btype=4,fifths=null,curKey=null,tempo=0,trans=null,sigStr=null,curSig=null,warn={},maxString=0;
-  var evs=[],restEvs=[],measures=kids(part,"measure"),mInfo={},openEnding=0;
+  var evs=[],restEvs=[],measures=kids(part,"measure"),mInfo={},openEnding=0,unmapped=0,lyr=0;
+  var oneUnp=null,uk=Object.keys(o.unp);if(uk.length===1)oneUnp=o.unp[uk[0]];
   measures.forEach(function(m,mi){
     var t=0,lastStart=0,voice1=null;
     if(openEnding){mInfo[mi]=mInfo[mi]||{};mInfo[mi].v=openEnding;}
@@ -3630,19 +3706,29 @@ function convertPart(part,title){
         var start=chord?lastStart:t;
         if(!chord){t+=dur;lastStart=start;}
         if(voice1===null)voice1=voice;
-        if(voice!==voice1){warn.voices=1;return;}
+        var other=voice!==voice1;
+        if(other&&!multi){warn.voices=1;return;}
+        if(kid(c,"lyric"))lyr=1;
         var tmod=kid(c,"time-modification"),isTr=false;
         if(tmod){if(txtOf(tmod,"actual-notes")==="3"&&txtOf(tmod,"normal-notes")==="2"&&btype===4&&dur>0&&dur<=div*2/3+0.01)isTr=true;else warn.tuplet=1;}
-        if(kid(c,"rest")){if(!isTr&&dur>0)restEvs.push({bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div))});return;}
+        if(kid(c,"rest")){if(!other&&!isTr&&dur>0)restEvs.push({bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div))});return;}
         var ev={bar:mi,pos:Math.round(start*4/div),len:Math.max(1,Math.round(dur*4/div)),midi:null,s:null,f:null};
         if(isTr){var bIx=Math.floor(start/div+1e-6),cl=Math.min(2,Math.round((start-bIx*div)/div*3));ev.pos=bIx*4+cl;ev.len=Math.max(1,Math.min(3-cl,Math.round(dur*3/div)));ev.trip=bIx;mInfo[mi]=mInfo[mi]||{};mInfo[mi].tb=mInfo[mi].tb||{};mInfo[mi].tb[bIx]=1;}
-        var pt=kid(c,"pitch");
+        var pt=kid(c,"pitch"),up=kid(c,"unpitched");
+        if(isD){
+          var ins=kid(c,"instrument"),gm=ins&&o.unp[ins.getAttribute("id")]!==undefined?o.unp[ins.getAttribute("id")]:oneUnp,dr;
+          if(gm!==null&&gm!==undefined)dr=GMDR[gm];
+          else if(up)dr=DRPOS[txtOf(up,"display-step")+txtOf(up,"display-octave")];
+          else if(pt){var gp=(parseInt(txtOf(pt,"octave"),10)+1)*12+[0,2,4,5,7,9,11]["CDEFGAB".indexOf(txtOf(pt,"step"))];dr=GMDR[gp];}
+          if(dr===undefined){unmapped++;return;}
+          ev.dr=dr;evs.push(ev);return;
+        }
         if(pt){
           var stp="CDEFGAB".indexOf(txtOf(pt,"step"));
           var w=(parseInt(txtOf(pt,"octave"),10)+1)*12+[0,2,4,5,7,9,11][stp]+Math.round(parseFloat(txtOf(pt,"alter"))||0);
-          ev.midi=trans?w+trans.ch+12*trans.oc:w-12;
-        }else if(kid(c,"unpitched")){ev.dead=1;}
-        var nh=txtOf(c,"notehead");if(nh==="x"||nh==="cross")ev.dead=1;
+          ev.midi=trans?w+trans.ch+12*trans.oc:(isK?w:w-12);
+        }else if(up){if(isK){unmapped++;return;}ev.dead=1;}
+        var nh=txtOf(c,"notehead");if((nh==="x"||nh==="cross")&&!isK)ev.dead=1;
         var nots=c.getElementsByTagName("notations")[0];
         if(nots){
           var tech=nots.getElementsByTagName("technical")[0];
@@ -3654,9 +3740,9 @@ function convertPart(part,title){
           if(nots.querySelector("slur[type=stop],slide[type=stop],glissando[type=stop]"))ev.h=1;
           if(nots.querySelector("articulations accent, articulations strong-accent"))ev.a=1;
           if(nots.querySelector("articulations staccato, articulations staccatissimo"))ev.st=1;
-          if(nots.querySelector("technical harmonic"))ev.hm=1;
-          if(nots.querySelector("technical bend"))ev.bd=1;
-          if(nots.querySelector("ornaments wavy-line, ornaments vibrato"))ev.vb=1;
+          if(!isK&&nots.querySelector("technical harmonic"))ev.hm=1;
+          if(!isK&&nots.querySelector("technical bend"))ev.bd=1;
+          if(!isK&&nots.querySelector("ornaments wavy-line, ornaments vibrato"))ev.vb=1;
           var ties=nots.getElementsByTagName("tied");
           for(var q=0;q<ties.length;q++){var ty=ties[q].getAttribute("type");if(ty==="start")ev.tieStart=1;if(ty==="stop")ev.tieStop=1;}
         }
@@ -3666,35 +3752,43 @@ function convertPart(part,title){
       }
     });
   });
-  if(!evs.length){status("In dieser Stimme sind keine Noten.");return;}
+  var res={inst:inst,mInfo:mInfo,sigStr:sigStr,tempo:tempo,fifths:fifths,nb:measures.length,count:evs.length,warn:warn,dropped:0,unmapped:unmapped,lyr:lyr};
+  if(!evs.length){res.bars=[];return res;}
   var sg=validSig(sigStr||"4/4"),steps=sigOf(sg).steps,measSig=[],cs=sg;
   for(var mq=0;mq<measures.length;mq++){if(mInfo[mq]&&mInfo[mq].sig)cs=mInfo[mq].sig;measSig[mq]=sigOf(cs).steps;}
   function stepsAt(mi){return measSig[mi]||steps;}
-  var ns=maxString>4?5:4,useTab=maxString>0&&maxString<=5;
-  /* Oktavlage an das Griffbrett anpassen */
-  var lo=OPEN[ns][ns-1],hi=OPEN[ns][0]+24,pit=evs.filter(function(e){return e.midi!==null&&!(useTab&&e.s!==null)});
-  function frac(fn){if(!pit.length)return 0;var k=0;pit.forEach(function(e){if(fn(e.midi+shift))k++});return k/pit.length}
-  var shift=0,g=0;
-  while(frac(function(m){return m<lo})>0.1&&g++<4)shift+=12;
-  g=0;while(frac(function(m){return m>hi})>0.1&&frac(function(m){return m-12<lo})<0.1&&g++<4)shift-=12;
-  if(shift)warn.shift=shift;
-  /* Bindebögen zusammenfassen */
+  var ns=isD?7:isK?88:inst==="guitar"?6:(maxString>4?5:4),useTab=!isK&&!isD&&maxString>0&&maxString<=ns;
+  var lo=isK?21:OPEN[ns][ns-1],hi=isK?108:OPEN[ns][0]+24,pit=evs.filter(function(e){return e.midi!==null&&!(useTab&&e.s!==null)});
+  var shift=0;
+  if(!isK&&!isD){
+    var frac=function(fn){if(!pit.length)return 0;var k=0;pit.forEach(function(e){if(fn(e.midi+shift))k++});return k/pit.length};
+    var g=0;
+    while(frac(function(m){return m<lo})>0.1&&g++<4)shift+=12;
+    g=0;while(frac(function(m){return m>hi})>0.1&&frac(function(m){return m-12<lo})<0.1&&g++<4)shift-=12;
+    if(shift)warn.shift=shift;
+  }
   var out=[],pend={};
   evs.forEach(function(e){
     if(e.midi!==null)e.midi+=shift;
-    var key=e.dead?"x":e.midi;
+    var key=isD?"d"+e.dr:e.dead?"x":e.midi;
     if(e.tieStop&&pend[key]){pend[key].len+=e.len;if(!e.tieStart)delete pend[key];return;}
     out.push(e);
     if(e.tieStart)pend[key]=e;
   });
-  /* Saite und Bund festlegen */
-  var bars=[],hasRep=false;for(var b=0;b<measures.length;b++){var eb=emptyBar(),mi2=mInfo[b];if(mi2){for(var kk in mi2){eb[kk]=mi2[kk];if(kk==="rs"||kk==="re"||kk==="v")hasRep=true;}}bars.push(eb);}
+  var bars=[];for(var b=0;b<measures.length;b++)bars.push(emptyBar());
   restEvs.forEach(function(e){var bb=bars[e.bar];if(!bb||e.pos>=stepsAt(e.bar))return;bb.r=bb.r||{};bb.r[e.pos]=Math.min(e.len,stepsAt(e.bar)-e.pos);});
   var ref=3,dropped=0;
   out.sort(function(a,c){return a.bar-c.bar||a.pos-c.pos||(c.midi||0)-(a.midi||0)});
   out.forEach(function(e){
     if(e.pos>=stepsAt(e.bar)){dropped++;return;}
     var bar=bars[e.bar],s=null,f=null;
+    if(isD){s=e.dr;if(bar.n[s+"_"+e.pos])return;bar.n[s+"_"+e.pos]={f:0,len:1};return;}
+    if(isK){
+      var mk=e.midi;while(mk<21)mk+=12;while(mk>108)mk-=12;if(mk!==e.midi)warn.oct=1;
+      s=pIdx(mk);if(bar.n[s+"_"+e.pos])return;
+      var nk={f:0,len:Math.min(e.len,256)};if(e.h)nk.h=1;if(e.a)nk.a=1;if(e.st)nk.st=1;
+      bar.n[s+"_"+e.pos]=nk;return;
+    }
     if(useTab&&e.s!==null&&e.s<ns&&e.f<=24&&!bar.n[e.s+"_"+e.pos]){s=e.s;f=e.f;}
     else if(e.midi!==null){
       var m=e.midi;
@@ -3717,18 +3811,59 @@ function convertPart(part,title){
     bar.n[s+"_"+e.pos]=n;
     if(typeof f==="number"&&f>0)ref=f;
   });
-  var sn={id:uid(),name:String(title).slice(0,60),bpm:Math.max(30,Math.min(220,tempo||80)),sig:sg,strings:ns,key:fifths===null?0:Math.max(-7,Math.min(7,fifths)),acc:"b",mod:Date.now(),bars:bars};
+  res.bars=bars;res.ns=isD?4:isK?4:ns;res.useTab=useTab;res.dropped=dropped;res.sig=sg;
+  return res;
+}
+function buildMXL(sel,title,total){
+  var R=sel.map(function(it){var r=parsePart(it.part,it.inst,it.o);r.name=it.name;r.guess=it.guess;return r;});
+  var ok=R.filter(function(r){return r.count>0}),msg=[];
+  R.forEach(function(r){if(!r.count)msg.push("<b>"+esc(r.name)+"</b>: "+(r.unmapped?r.unmapped+(r.unmapped===1?" Ton":" Töne")+" ohne passendes Ziel in der App (z. B. unbekannte Trommel) – Spur nicht übernommen":"keine Noten gefunden – Spur nicht übernommen"));});
+  if(!ok.length){if(msg.length)infoDialog("Import nicht möglich","Keines der gewählten Instrumente ließ sich übernehmen:",msg);else status("In der Datei sind keine Noten.");return;}
+  var nb=0;ok.forEach(function(r){nb=Math.max(nb,r.nb)});
+  function first(k){for(var i=0;i<ok.length;i++)if(ok[i][k]!==null&&ok[i][k]!==undefined&&ok[i][k]!==0)return ok[i][k];return null;}
+  var sigStr=validSig(first("sigStr")||"4/4"),tempo=first("tempo")||80,fifths=first("fifths");
+  var bars=[],hasRep=false;
+  for(var b=0;b<nb;b++){
+    var eb=emptyBar();
+    ok.forEach(function(r){var mi=r.mInfo[b];if(!mi)return;
+      ["rs","re","rt","v","sig","key"].forEach(function(k){if(mi[k]!==undefined&&eb[k]===undefined){eb[k]=mi[k];if(k==="rs"||k==="re"||k==="v")hasRep=true;}});
+      if(mi.ch){eb.ch=eb.ch||{};for(var p in mi.ch)if(eb.ch[p]===undefined)eb.ch[p]=mi.ch[p];}
+      if(mi.tb){eb.tb=eb.tb||{};for(var q in mi.tb)eb.tb[q]=1;}
+    });
+    bars.push(eb);
+  }
+  var pa=0;for(var i=0;i<ok.length;i++)if(ok[i].inst==="bass"){pa=i;break;}
+  var parts=ok.length>1?ok.map(function(r){return {id:uid(),name:r.name,inst:r.inst,strings:r.ns}}):null;
+  ok.forEach(function(r,i){
+    for(var b=0;b<nb;b++){var src=r.bars[b];if(!src)continue;
+      if(i===pa){bars[b].n=src.n;if(src.r)bars[b].r=src.r;}
+      else if(Object.keys(src.n).length||src.r){bars[b].p=bars[b].p||{};var d={n:src.n};if(src.r)d.r=src.r;bars[b].p[parts[i].id]=d;}
+    }
+  });
+  var A=ok[pa],nm=ok.length===1&&total>1?title+" – "+A.name:title;
+  var sn={id:uid(),name:String(nm).slice(0,60),bpm:Math.max(30,Math.min(220,tempo)),sig:sigStr,strings:A.ns,key:fifths===null?0:Math.max(-7,Math.min(7,fifths)),acc:"b",mod:Date.now(),bars:bars};
+  if(A.inst!=="bass")sn.inst=A.inst;
+  if(parts){sn.parts=parts;sn.pa=pa;}
   S.songs.push(sn);S.cur=S.songs.length-1;loadSong();save();
-  var notes=[];
-  if(warn.voices)notes.push("nur Stimme 1 übernommen");
-  if(warn.tuplet)notes.push("Triolen auf Sechzehntel gerundet");
-  if(warn.grace)notes.push("Vorschläge weggelassen");
-  if(warn.sig)notes.push("Taktwechsel nicht übernommen ("+sg+" durchgehend)");
-  if(dropped)notes.push(dropped+" Noten passten nicht in den Takt");
-  if(warn.shift)notes.push("um "+Math.abs(warn.shift/12)+" Oktave(n) "+(warn.shift>0?"höher":"tiefer")+" gesetzt");
-  if(warn.oct)notes.push("einzelne Töne außerhalb des Griffbretts oktaviert");
-  if(hasRep)notes.push("Wiederholungen und Klammern übernommen");
-  status("Importiert: „"+sn.name+"“, "+bars.length+" Takte"+(useTab?" (mit Tab-Angaben)":"")+"."+(notes.length?" Hinweis: "+notes.join("; ")+".":""));
+  var info=[];
+  ok.forEach(function(r){
+    var w=r.warn,n=[];
+    if(r.guess)n.push("kein eigenes Instrument in der App – als "+INAME[r.inst]+" übernommen");
+    if(w.voices)n.push("nur Stimme 1 übernommen");
+    if(w.tuplet)n.push("Triolen auf Sechzehntel gerundet");
+    if(w.grace)n.push("Vorschläge weggelassen");
+    if(w.sig)n.push("Taktwechsel nicht übernommen");
+    if(r.dropped)n.push(r.dropped+(r.dropped===1?" Note passte":" Noten passten")+" nicht (Takt voll oder außerhalb des Tonumfangs)");
+    if(r.unmapped)n.push(r.unmapped+(r.unmapped===1?" Ton":" Töne")+" ohne passendes Ziel weggelassen"+(r.inst==="drums"?" (Trommel gibt es in der App nicht)":""));
+    if(w.shift)n.push("um "+Math.abs(w.shift/12)+" Oktave(n) "+(w.shift>0?"höher":"tiefer")+" gesetzt");
+    if(w.oct)n.push("einzelne Töne außerhalb des Tonumfangs oktaviert");
+    if(r.lyr)n.push("Liedtext nicht übernommen");
+    if(n.length)info.push("<b>"+esc(r.name)+"</b> ("+INAME[r.inst]+"): "+n.join("; "));
+  });
+  var lost=msg.concat(info);
+  var head="Importiert: „"+sn.name+"“, "+nb+" Takte, "+ok.length+" Spur"+(ok.length>1?"en":"")+(hasRep?", Wiederholungen übernommen":"")+".";
+  if(lost.length)infoDialog("Import – bitte prüfen",head+" Folgendes hat nicht (ganz) geklappt:",lost);
+  status(head+(lost.length?" Hinweise siehe Fenster.":""));
 }
 
 /* ---------- Foto als Vorlage ---------- */
@@ -4262,7 +4397,7 @@ var HELP=[
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander) – im Modus ♪ Namen/🎼 Zeile und beim Klavier dagegen: 1–7 = Notenlänge</td></tr><tr><td>Umschalt + 1–7</td><td>Notenlänge in jedem Modus: 1 = 1/16, 2 = 1/8, 3 = 1/8., 4 = 1/4, 5 = 1/4., 6 = 1/2, 7 = 1/1 (wie die Knöpfe von links)</td></tr><tr><td>Alt + 1–7</td><td>Pause dieser Länge</td></tr><tr><td>.</td><td>punktiert an/aus (1/8 ↔ 1/8., 1/4 ↔ 1/4.)</td></tr><tr><td>r</td><td>Pause in der gewählten Länge</td></tr><tr><td>Tab-Taste</td><td>⇥ Sprung (weiter ohne Note)</td></tr><tr><td>t / &gt; / k / l</td><td>Bogen / Akzent / Akkord an-aus / Lage wechseln</td></tr><tr><td>+</td><td>Takt einfügen</td></tr><tr><td>Bild ↑ / Bild ↓ · Pos1</td><td>voriger / nächster Takt · Taktanfang</td></tr><tr><td>Strg + Z</td><td>Zurück</td></tr><tr><td>?</td><td>Hilfe</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
 {t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Dreizehn Übungen in drei Gruppen wie im Wiki: <b>Töne und Griffbrett</b>, <b>Tonleitern und Harmonie</b>, <b>Rhythmus und Spiel</b>. Tippe eine Gruppe an, um ihre Übungen aufzuklappen; 🎤 = braucht das Mikrofon. Die zuletzt gewählte Übung und Stufe bleiben eingestellt.</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Akkord → Grundton</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und den Grundton auf dem Bass antippen; danach siehst du alle Stellen und hörst den Akkord.</li><li><b>Akkordtöne</b>: Der Grundton (lila ●) ist vorgegeben; finde im hellen Bereich alle Töne des Akkords. Gefundene Töne zeigen ihre Stufe (1, 3, ♭3, 5, ♭7 …), danach kommt das Griffmuster vom Grundton aus. Stufen: Dur → Moll → Septakkorde → m7/maj7 mit allen Grundtönen → dim/sus4 → m7♭5/aug.</li><li><b>Gehör: Grundton</b>: Ein Akkord erklingt (ohne Symbol). Tippe Bünde an – du hörst jeden Ton – bis du den Grundton findest, dann „✓ Das ist der Grundton“. „▶ Akkord hören“ spielt ihn erneut.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran.</p><p><b>📅 Karten wie bei Anki:</b> Jeder Ton bzw. Akkord, den du in einer Übung beantwortest, wird zur Karte. Richtig → er kommt nach 1 Tag wieder, dann nach 6 Tagen, danach in immer größeren Abständen. Falsch → er kommt nach 10 Minuten wieder und fängt von vorn an. Oben im Training steht „Heute fällig“, an den Übungen ein gelbes Schild. Mit <b>📅 fällige üben</b> kommen nur die fälligen Karten dran; mit „Los geht's“ übst du die Stufe wie bisher, fällige Karten kommen dabei öfter. Gilt für die Übungen mit einzelnen Tönen oder Akkorden, nicht für Vom Blatt, Rhythmus, Mitspielen und Probelinien. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
 {t:"e",h:"Als PDF speichern oder drucken",b:"<p>Menü <b>⋯ → 📄 Als PDF speichern / drucken</b>. Titel, Untertitel (z. B. Komponist) und eine Bemerkung eintragen, Inhalt wählen (Noten + Tab, nur Noten, nur Tab), optional Zählzeiten und Saitenfarben. Dann <b>PDF erstellen</b> und im Druckfenster <b>„Als PDF speichern“</b> wählen.</p><p>Das PDF zeigt oben groß den Titel, darunter Untertitel, Tempo, Tonart, Taktart und Saitenzahl. Die Takte laufen durchgehend als Notenzeilen wie in einem Notenheft: Schlüssel und Vorzeichen nur am Zeilenanfang, Taktnummer klein über jedem Takt, unten Seitenzahl.</p>",k:"pdf drucken export ausdruck titel"},
-{t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Fotos der Vorlage sind nicht in der Sicherung.</p><p><b>Frühere Stände:</b> unter ⋯ „💾 Stand sichern“ legt eine Momentaufnahme an. Zusätzlich sichert die App einmal am Tag automatisch, bevor du ein Stück zum ersten Mal änderst. Unter „🕘 Frühere Stände“ holst du einen Stand zurück (der jetzige wird vorher gesichert) oder öffnest ihn als Kopie. Pro Stück bleiben bis zu 30 Stände.</p><p><b>Schutz 🔒:</b> Geschützte Stücke (z. B. das Beispiel) bleiben unverändert. Sobald du etwas änderst, entsteht automatisch eine Kopie. Schutz an/aus unter ⋯.</p><p><b>Papierkorb:</b> Gelöschte Stücke liegen 30 Tage im Papierkorb (☰ ganz unten) und lassen sich zurückholen. ↶ nimmt jetzt auch Name, Tempo, Tonart und Takt zurück.</p><p>Ist der Speicher voll, warnt die App. Dann gleich ein Backup machen und Platz schaffen.</p>",k:"backup speichern import musicxml papierkorb stand version wiederherstellen schutz vorlage kopie"},
+{t:"e",h:"Speichern, Sichern, Importieren",b:"<p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Enthält die Datei mehrere Instrumente, wählst du: <b>alle übernehmen</b> oder einzelne per Häkchen – jedes wird eine eigene Spur (Instrument antippen = ändern). Was nicht übernommen werden kann, steht danach in einem Hinweisfenster. Fotos der Vorlage sind nicht in der Sicherung.</p><p><b>Frühere Stände:</b> unter ⋯ „💾 Stand sichern“ legt eine Momentaufnahme an. Zusätzlich sichert die App einmal am Tag automatisch, bevor du ein Stück zum ersten Mal änderst. Unter „🕘 Frühere Stände“ holst du einen Stand zurück (der jetzige wird vorher gesichert) oder öffnest ihn als Kopie. Pro Stück bleiben bis zu 30 Stände.</p><p><b>Schutz 🔒:</b> Geschützte Stücke (z. B. das Beispiel) bleiben unverändert. Sobald du etwas änderst, entsteht automatisch eine Kopie. Schutz an/aus unter ⋯.</p><p><b>Papierkorb:</b> Gelöschte Stücke liegen 30 Tage im Papierkorb (☰ ganz unten) und lassen sich zurückholen. ↶ nimmt jetzt auch Name, Tempo, Tonart und Takt zurück.</p><p>Ist der Speicher voll, warnt die App. Dann gleich ein Backup machen und Platz schaffen.</p>",k:"backup speichern import musicxml papierkorb stand version wiederherstellen schutz vorlage kopie"},
 /* ===== Musikzeichen ===== */
 {t:"z",h:"Notensystem und Bassschlüssel",b:"<p>Fünf Linien bilden das <b>Notensystem</b>. Der <b>Bassschlüssel</b> (F-Schlüssel) markiert mit seinen zwei Punkten die vierte Linie von unten als Ton <b>F</b>. Von unten gelesen: Linien G-H-D-F-A, Zwischenräume A-C-E-G.</p>"+exStaff([[3,0,3,4],[3,4,7,4],[2,8,5,4],[1,12,3,4]])+"<p>Bass-Noten werden eine <b>Oktave höher notiert als sie klingen</b> – sonst bräuchte man sehr viele Hilfslinien. Die App rechnet das automatisch um.</p>",k:"schlüssel f-schlüssel linien"},
 {t:"z",h:"Notenwerte",b:"<p>Ganze (16), Halbe (8), Viertel (4), Achtel (2), Sechzehntel (1) – in Klammern die Anzahl Sechzehntel. Achtel und Sechzehntel haben Fähnchen oder werden pro Schlag mit <b>Balken</b> verbunden. Beispiel: Halbe, Viertel, Achtel, zwei Sechzehntel.</p>"+exStaff([[3,0,5,8],[3,8,5,4],[3,12,5,2],[3,14,5,1],[3,15,5,1]])+ply("33:8 33:4 33:2 33:1 33:1"),k:"ganze halbe viertel achtel sechzehntel balken"},
