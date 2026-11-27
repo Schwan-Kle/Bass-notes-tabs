@@ -356,7 +356,9 @@ button.danger{color:var(--warn);border-color:var(--warn)}
 .tbn.mk b{display:block;width:8px;height:8px;border-radius:50%;background:#8E9A95;margin:2px auto 0}
 .tbn.mk2 b{box-shadow:12px 0 0 #8E9A95;transform:translateX(-6px)}
 .trbig2{font-size:44px;font-weight:800;text-align:center;padding:6px 0;color:var(--a-train)}
-.trkeys.k7{grid-template-columns:repeat(7,1fr)}.trkeys.k3{grid-template-columns:repeat(3,1fr)}
+.trkeys.k7{grid-template-columns:repeat(7,1fr)}.trkeys.k6{grid-template-columns:repeat(6,1fr)}.trkeys.k2{grid-template-columns:repeat(2,1fr)}#trEarQK button{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px}#trEarQK small{font-size:11px;font-weight:600}.trkeys.k4{grid-template-columns:repeat(4,1fr)}
+.trkeys.k6 button{min-height:50px;font-size:15px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center}.trkeys.k6 button small,.trkeys.k4 button small{font-size:11px;font-weight:600}
+.trkeys.k4 button{min-height:50px;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center}.trkeys.k3{grid-template-columns:repeat(3,1fr)}
 .trkeys button{min-height:58px;font-size:22px;font-weight:700}
 .trkeys.k3 button{min-height:40px;font-size:18px}
 .trheard{text-align:center;font-size:16px}.trheard b{font-size:30px;color:var(--main)}
@@ -1149,6 +1151,9 @@ button.sub{border-style:solid!important;border-left:3px solid #C98A12!important;
         <div class="chips" id="trAllAct" hidden><button id="trAllShow">Lösung zeigen</button></div>
         <div class="chips" id="trEarAct" hidden><button id="trEarPlay">▶ Akkord hören</button><button id="trEarOk" class="primary">✓ Das ist der Grundton</button></div>
       </div>
+      <div id="trChT" hidden><div id="trChK" class="trkeys k6"></div></div>
+      <div id="trIvK" class="trkeys k4" hidden></div>
+      <div id="trEarQ" hidden><div id="trEarQK" class="trkeys k3"></div><div class="chips"><button id="trEarQPlay">▶ Nochmal hören</button></div></div>
       <div id="trName" hidden>
         <div id="trNameAcc" class="trkeys k3"><button data-a="-1">♭</button><button data-a="0">♮</button><button data-a="1">♯</button></div>
         <div id="trNameL" class="trkeys k7"><button data-l="0">C</button><button data-l="1">D</button><button data-l="2">E</button><button data-l="3">F</button><button data-l="4">G</button><button data-l="5">A</button><button data-l="6">H</button></div>
@@ -4416,7 +4421,7 @@ var HELP=[
 {t:"e",h:"Metronom, Schleife, Tempo-Trainer",b:"<p>Zu finden unter <b>⋯ → ⚙ Einstellungen</b> oder durch Antippen der Tempo-Zahl.</p><ul><li><b>Metronom</b>: aus, nur auf die 1, jeder Schlag, Achtel, Sechzehntel; 1 betonen; 1 Takt einzählen; Lautstärken; Bass eine Oktave höher (für Handy-Lautsprecher).</li><li><b>Schleife</b>: wiederholt Takt x bis y endlos.</li><li><b>Tempo-Trainer</b>: startet langsam und erhöht das Tempo nach jeder (oder jeder n-ten) Runde bis zum Ziel.</li><li><b>Dieses Stück</b>: Taktart, 4 oder 5 Saiten, Tonart, Schreibweise ohne Tonart (♭ oder ♯), Ansicht.</li></ul>",k:"metronom schleife trainer tonart taktart"},
 {t:"e",h:"Farben und Markierungen in der Tabulatur",b:"<ul><li><span class='sw y'></span> gelbes Feld = Cursor</li><li><span class='sw g'></span> grüner Balken = Note klingt weiter</li><li><b style='color:var(--warn)'>orange Zahl</b> = Akzent</li><li><b style='color:var(--muted)'>graues x</b> = Dead Note</li><li>Bogen über der Zahl = gebunden</li><li>grüner Rahmen um Takte = Schleifenbereich</li><li>grün getönte Felder = Triolen-Schlag, schraffiertes Feld = nicht belegbar</li><li><b>?</b> = Platzhalter aus dem Rhythmus-Modus</li><li>senkrechte Linien = Schläge</li></ul>",k:"farbe markierung"},
 {t:"e",h:"Tastatur am Rechner",b:"<table><tr><td>0–9</td><td>Bund (zweistellig: zwei Ziffern schnell hintereinander) – im Modus ♪ Namen/🎼 Zeile und beim Klavier dagegen: 1–7 = Notenlänge</td></tr><tr><td>Umschalt + 1–7</td><td>Notenlänge in jedem Modus: 1 = 1/16, 2 = 1/8, 3 = 1/8., 4 = 1/4, 5 = 1/4., 6 = 1/2, 7 = 1/1 (wie die Knöpfe von links)</td></tr><tr><td>Alt + 1–7</td><td>Pause dieser Länge</td></tr><tr><td>.</td><td>punktiert an/aus (1/8 ↔ 1/8., 1/4 ↔ 1/4.)</td></tr><tr><td>r</td><td>Pause in der gewählten Länge</td></tr><tr><td>Tab-Taste</td><td>⇥ Sprung (weiter ohne Note)</td></tr><tr><td>t / &gt; / k / l</td><td>Bogen / Akzent / Akkord an-aus / Lage wechseln</td></tr><tr><td>+</td><td>Takt einfügen</td></tr><tr><td>Bild ↑ / Bild ↓ · Pos1</td><td>voriger / nächster Takt · Taktanfang</td></tr><tr><td>Strg + Z</td><td>Zurück</td></tr><tr><td>?</td><td>Hilfe</td></tr><tr><td>x</td><td>Dead Note</td></tr><tr><td>c d e f g a h</td><td>Ton (b = B)</td></tr><tr><td>- / # / n</td><td>♭ / ♯ / ♮ für die nächste Note</td></tr><tr><td>, und ' oder Strg + ↑/↓</td><td>Oktave tiefer / höher</td></tr><tr><td>Umschalt + ↑/↓</td><td>Halbton höher / tiefer</td></tr><tr><td>Pfeile</td><td>Cursor bewegen</td></tr><tr><td>Rücktaste</td><td>löschen</td></tr><tr><td>Leertaste</td><td>Start / Stopp</td></tr><tr><td>Esc</td><td>Fenster schließen</td></tr></table>",k:"tastatur kurzbefehl shortcut"},
-{t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Dreizehn Übungen in drei Gruppen wie im Wiki: <b>Töne und Griffbrett</b>, <b>Tonleitern und Harmonie</b>, <b>Rhythmus und Spiel</b>. Tippe eine Gruppe an, um ihre Übungen aufzuklappen; 🎤 = braucht das Mikrofon. Die zuletzt gewählte Übung und Stufe bleiben eingestellt.</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Akkord → Grundton</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und den Grundton auf dem Bass antippen; danach siehst du alle Stellen und hörst den Akkord.</li><li><b>Akkordtöne</b>: Der Grundton (lila ●) ist vorgegeben; finde im hellen Bereich alle Töne des Akkords. Gefundene Töne zeigen ihre Stufe (1, 3, ♭3, 5, ♭7 …), danach kommt das Griffmuster vom Grundton aus. Stufen: Dur → Moll → Septakkorde → m7/maj7 mit allen Grundtönen → dim/sus4 → m7♭5/aug.</li><li><b>Gehör: Grundton</b>: Ein Akkord erklingt (ohne Symbol). Tippe Bünde an – du hörst jeden Ton – bis du den Grundton findest, dann „✓ Das ist der Grundton“. „▶ Akkord hören“ spielt ihn erneut.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran.</p><p><b>📅 Karten wie bei Anki:</b> Jeder Ton bzw. Akkord, den du in einer Übung beantwortest, wird zur Karte. Richtig → er kommt nach 1 Tag wieder, dann nach 6 Tagen, danach in immer größeren Abständen. Falsch → er kommt nach 10 Minuten wieder und fängt von vorn an. Oben im Training steht „Heute fällig“, an den Übungen ein gelbes Schild. Mit <b>📅 fällige üben</b> kommen nur die fälligen Karten dran; mit „Los geht's“ übst du die Stufe wie bisher, fällige Karten kommen dabei öfter. Gilt für die Übungen mit einzelnen Tönen oder Akkorden, nicht für Vom Blatt, Rhythmus, Mitspielen und Probelinien. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
+{t:"e",h:"Notenlese-Training",b:"<p>Unter <b>⋯ → 🎓 Notenlese-Training</b>. Fünfzehn Übungen in drei Gruppen wie im Wiki: <b>Töne und Griffbrett</b>, <b>Tonleitern und Harmonie</b>, <b>Rhythmus und Spiel</b>. Tippe eine Gruppe an, um ihre Übungen aufzuklappen; 🎤 = braucht das Mikrofon. Die zuletzt gewählte Übung und Stufe bleiben eingestellt.</p><ul><li><b>Note → Name</b>: Note lesen und den Tonnamen tippen. In den Stufen mit Vorzeichen stehen die ♯/♭ als Tonart am Zeilenanfang – du musst sie selbst auf die Note anwenden (vorher ♭/♮/♯ wählen). Nach der Antwort steht, welche Tonart es war.</li><li><b>Note → Griffbrett</b>: Note lesen und den Bund auf dem Griffbrett antippen. Die Oktave zählt. Danach sind alle Stellen markiert, an denen der Ton liegt.</li><li><b>Griffbrett → Note</b>: Ein Bund ist markiert – wie heißt der Ton? Danach siehst du die Note im Notenbild und einen Merksatz zum Griffbrett.</li><li><b>Alle Orte finden</b>: Ein Tonname (z. B. A) – tippe alle Stellen auf dem Griffbrett an, an denen er liegt. „Lösung zeigen“ deckt den Rest auf.</li><li><b>Gemischt</b>: die vier Übungen oben im zufälligen Wechsel – so bleibt es am besten hängen.</li><li><b>Intervalle</b>: Grundton (●) und zweiter Ton (?) sind auf dem Griffbrett markiert, du hörst beide. Benenne den Abstand (Quinte, kleine Terz …). Danach siehst du das Griffmuster. Stufen: Quinte/Oktave → + Quarte → + Terzen → + Septimen → + Sekunden/Sexten → alle.</li><li><b>Akkord → Töne</b>: Akkordsymbol (englische Schreibweise, B = H) lesen und alle Töne des Akkords antippen, Reihenfolge egal. Gefundene Töne zeigen die richtige Schreibweise und ihre Stufe (1, ♭3, 5 …). Stufen: Dur → Moll → Sept → m7/maj7 → dim/sus4 → m7♭5/aug.</li><li><b>Akkordtöne</b>: Finde im hellen Bereich alle Töne des Akkords auf dem Griffbrett. Bis Stufe 3 ist der Grundton (lila ●) vorgegeben, ab Stufe 4 tippst du ihn zuerst selbst an. Gefundene Töne zeigen ihre Stufe, danach kommt das Griffmuster vom Grundton aus.</li><li><b>Tonleiter finden</b>: Vom markierten Grundton aus alle Töne der Tonleiter bis zur Oktave antippen (drei Saiten, eine Lage). Stufen: Dur → natürliches Moll → Dur-Pentatonik → Moll-Pentatonik → Blues → gemischt. Am Ende hörst du die Tonleiter.</li><li><b>Gehör</b>: Ein Akkord erklingt ohne Symbol. Stufe 1–2: <b>Dur oder Moll?</b> (ab Stufe 2 auch Sept) – Dur klingt hell, Moll dunkler, Sept will weiter. Ab Stufe 3: <b>Grundton heraushören</b> – Bünde antippen (du hörst jeden Ton), dann „✓ Das ist der Grundton“. Die Stufen werden übers Hören schwerer: erst bis Bund 5, dann mehr Grundtöne, Septakkorde und zuletzt Umkehrungen, bei denen der Grundton nicht unten liegt.</li><li><b>Mitspielen nach Gehör</b> (Mikrofon): Vier Akkorde erscheinen als Kästchen, die Begleitung spielt, du spielst Bass dazu. Je nach Stufe: Grundton auf die 1 → Grundton auf jeden Schlag → Grundton + Quinte → Akkordtöne → Septakkorde (ii–V–I) → Walking. „▶ Vormachen“ spielt eine passende Basslinie vor. Danach siehst du, welche Takte gepasst haben, und den ersten Fehler. Mit Kopfhörern hört das Mikrofon nur deinen Bass.</li><li><b>Probelinien</b> (Mikrofon): Vier Takte Basslinie mit Akkordsymbolen in einem Stil: Halbe, Rock-Achtel, Country (Grundton–Quinte), Disco-Oktaven, Pop-Arpeggio, Jazz-Walking. Erst anhören, dann mit Begleitung spielen; jede Note wird auf Ton und Zeitpunkt geprüft, danach kommt ein Stil-Tipp.</li><li><b>Note → auf dem Bass</b>: Note lesen und auf dem echten Bass spielen; das Mikrofon prüft, auch die Oktave.</li><li><b>Vom Blatt spielen</b>: zweitaktige Linie lesen, „Spielen &amp; prüfen“, nach dem Einzähler im Tempo mitspielen; jede Note wird auf Ton und Zeitpunkt geprüft.</li><li><b>Rhythmus lesen</b>: Rhythmus ablesen und nach dem Einzähler auf jede Note auf die große Fläche tippen; zu früh/zu spät wird angezeigt.</li></ul><p><b>Stufen</b> 1–6 (leere Saiten → ganzes Griffbrett, bei Rhythmus Ganze → Synkopen) oder <b>Frei</b> mit eigenem Tonbereich. Bestwerte stehen an der Stufe, ✓ ab 90 %. Noten, bei denen du oft danebenliegst, kommen automatisch häufiger dran.</p><p><b>📅 Karten wie bei Anki:</b> Jeder Ton bzw. Akkord, den du in einer Übung beantwortest, wird zur Karte. Richtig → er kommt nach 1 Tag wieder, dann nach 6 Tagen, danach in immer größeren Abständen. Falsch → er kommt nach 10 Minuten wieder und fängt von vorn an. Oben im Training steht „Heute fällig“, an den Übungen ein gelbes Schild. Mit <b>📅 fällige üben</b> kommen nur die fälligen Karten dran; mit „Los geht's“ übst du die Stufe wie bisher, fällige Karten kommen dabei öfter. Gilt für die Übungen mit einzelnen Tönen oder Akkorden, nicht für Vom Blatt, Rhythmus, Mitspielen und Probelinien. Mikrofon-Übungen gehen nur in der installierten App.</p>",k:"training notenlesen üben vom blatt rhythmus stufe griffbrett bund tonart vorzeichen"},
 {t:"e",h:"Als PDF speichern oder drucken",b:"<p>Menü <b>⋯ → 📄 Als PDF speichern / drucken</b>. Titel, Untertitel (z. B. Komponist) und eine Bemerkung eintragen, Inhalt wählen (Noten + Tab, nur Noten, nur Tab), optional Zählzeiten und Saitenfarben. Dann <b>PDF erstellen</b> und im Druckfenster <b>„Als PDF speichern“</b> wählen.</p><p>Das PDF zeigt oben groß den Titel, darunter Untertitel, Tempo, Tonart, Taktart und Saitenzahl. Die Takte laufen durchgehend als Notenzeilen wie in einem Notenheft: Schlüssel und Vorzeichen nur am Zeilenanfang, Taktnummer klein über jedem Takt, unten Seitenzahl.</p>",k:"pdf drucken export ausdruck titel"},
 {t:"e",h:"Speichern, Sichern, Importieren",b:"<p><b>Bibliothek:</b> ☰ → „📚 Bibliothek“ enthält freie Lieder, Klassik und Übungen zum Öffnen sowie Links zu Seiten mit freien MusicXML-Noten.</p><p>Alles wird automatisch auf dem Gerät gespeichert. Sicherungen: im Menü <b>☰</b> unter ⋯ „Als Datei speichern“ (ein Stück) oder unten „Alle Stücke sichern“. <b>Datei öffnen</b> lädt diese Dateien wieder und außerdem <b>MusicXML</b> (.musicxml, .xml, .mxl) aus Notenprogrammen oder Scanner-Apps. Enthält die Datei mehrere Instrumente, wählst du: <b>alle übernehmen</b> oder einzelne per Häkchen – jedes wird eine eigene Spur (Instrument antippen = ändern). Was nicht übernommen werden kann, steht danach in einem Hinweisfenster. Fotos der Vorlage sind nicht in der Sicherung.</p><p><b>Frühere Stände:</b> unter ⋯ „💾 Stand sichern“ legt eine Momentaufnahme an. Zusätzlich sichert die App einmal am Tag automatisch, bevor du ein Stück zum ersten Mal änderst. Unter „🕘 Frühere Stände“ holst du einen Stand zurück (der jetzige wird vorher gesichert) oder öffnest ihn als Kopie. Pro Stück bleiben bis zu 30 Stände.</p><p><b>Schutz 🔒:</b> Geschützte Stücke (z. B. das Beispiel) bleiben unverändert. Sobald du etwas änderst, entsteht automatisch eine Kopie. Schutz an/aus unter ⋯.</p><p><b>Papierkorb:</b> Gelöschte Stücke liegen 30 Tage im Papierkorb (☰ ganz unten) und lassen sich zurückholen. ↶ nimmt jetzt auch Name, Tempo, Tonart und Takt zurück.</p><p>Ist der Speicher voll, warnt die App. Dann gleich ein Backup machen und Platz schaffen.</p>",k:"backup speichern import musicxml papierkorb stand version wiederherstellen schutz vorlage kopie"},
 /* ===== Musikzeichen ===== */
@@ -5183,9 +5188,10 @@ bpmLabel();
 $("setClose").onclick=function(){$("setDlg").classList.remove("open");};
 $("setDlg").addEventListener("click",function(e){if(e.target===$("setDlg"))$("setDlg").classList.remove("open");});
 /* ---------- Notenlese-Training ---------- */
+if(S.trLast&&S.trLast.m==="root")S.trLast.m="ctname";if(S.cards)Object.keys(S.cards).forEach(function(k){if(k.indexOf("root:")===0)delete S.cards[k];});
 var TR={mode:(S.trLast&&S.trLast.m)||"name",level:S.trLast&&S.trLast.l!==undefined?S.trLast.l:1,run:null,grp:-1};
 /* Gruppen wie im Wiki (gleiche Namen und Farben) */
-var TGROUPS=[["Töne und Griffbrett","in",["name","fret","fname","all","mix","play"]],["Tonleitern und Harmonie","train",["root","ctone","ear"]],["Rhythmus und Spiel","play",["rhythm","sight","jam","line"]]];
+var TGROUPS=[["Töne und Griffbrett","in",["name","fret","fname","all","mix","play"]],["Tonleitern und Harmonie","train",["iv","ctname","ctone","scale","ear"]],["Rhythmus und Spiel","play",["rhythm","sight","jam","line"]]];
 var TMIC={play:1,sight:1,jam:1,line:1};
 function trGrpOf(m){for(var g=0;g<TGROUPS.length;g++)if(TGROUPS[g][2].indexOf(m)>=0)return g;return 0;}
 var TLV=[
@@ -5196,11 +5202,11 @@ var TLV=[
  {n:"Bis Bund 12",d:"Stammtöne E1–G3",lo:28,hi:55,chrom:false,r:[4,2,1,6,3],rest:true},
  {n:"Ganzes Griffbrett",d:"alle Töne E1–G3",lo:28,hi:55,chrom:true,r:[4,2,1,6,3],rest:true,sync:true}
 ];
-var TMODES=[["name","Note → Name","Note lesen, Tonnamen tippen (mit Tonart-Vorzeichen ab Stufe 4)"],["fret","Note → Griffbrett","Note lesen, den Bund auf dem Griffbrett antippen"],["fname","Griffbrett → Note","Markierten Bund benennen"],["all","Alle Orte finden","Einen Ton überall auf dem Griffbrett finden"],["mix","Gemischt","Die vier Übungen oben im Wechsel – festigt am besten"],["root","Akkord → Grundton","Akkordsymbol lesen, Grundton auf dem Bass finden"],["ctone","Akkordtöne","Um den Grundton herum Terz, Quinte, Septime finden"],["ear","Gehör: Grundton","Akkord hören, Grundton auf dem Griffbrett suchen"],["jam","Mitspielen nach Gehör","Zur Akkordfolge Bass spielen – das Mikrofon prüft"],["line","Probelinien","Basslinien in verschiedenen Stilen nachspielen – das Mikrofon prüft"],["play","Note → auf dem Bass","Note lesen und spielen, das Mikrofon prüft"],["sight","Vom Blatt spielen","Kurze Linie im Tempo mitspielen"],["rhythm","Rhythmus lesen","Rhythmus ablesen und im Takt tippen"]];
+var TMODES=[["name","Note → Name","Note lesen, Tonnamen tippen (mit Tonart-Vorzeichen ab Stufe 4)"],["fret","Note → Griffbrett","Note lesen, den Bund auf dem Griffbrett antippen"],["fname","Griffbrett → Note","Markierten Bund benennen"],["all","Alle Orte finden","Einen Ton überall auf dem Griffbrett finden"],["mix","Gemischt","Die vier Übungen oben im Wechsel – festigt am besten"],["iv","Intervalle","Abstand zwischen zwei Punkten auf dem Griffbrett benennen"],["ctname","Akkord → Töne","Akkordsymbol lesen, alle Töne des Akkords nennen"],["ctone","Akkordtöne","Akkordtöne auf dem Griffbrett finden – ab Stufe 4 auch den Grundton selbst"],["scale","Tonleiter finden","Vom Grundton aus alle Töne einer Tonleiter greifen"],["ear","Gehör","Erst Dur oder Moll hören, dann den Grundton heraushören"],["jam","Mitspielen nach Gehör","Zur Akkordfolge Bass spielen – das Mikrofon prüft"],["line","Probelinien","Basslinien in verschiedenen Stilen nachspielen – das Mikrofon prüft"],["play","Note → auf dem Bass","Note lesen und spielen, das Mikrofon prüft"],["sight","Vom Blatt spielen","Kurze Linie im Tempo mitspielen"],["rhythm","Rhythmus lesen","Rhythmus ablesen und im Takt tippen"]];
 function trStats(){if(!S.trs)S.trs={};return S.trs}
 /* ---------- Karten-Prinzip (Wiederholung nach Abstand, wie Anki/SM-2) ----------
    Karte = Übung + Ton bzw. Akkord. Richtig: Abstand 1 → 6 Tage → × Leichtigkeit. Falsch: in 10 Min. wieder, Abstand zurück auf Anfang. */
-var CARD_MODES={name:1,fret:1,fname:1,all:1,root:1,ctone:1,ear:1,play:1},CDAY=864e5;
+var CARD_MODES={name:1,fret:1,fname:1,all:1,iv:1,ctname:1,ctone:1,scale:1,ear:1,play:1},CDAY=864e5;
 function cardMode(){return TR.mode==="mix"?(TR.sub||"name"):TR.mode;}
 function cards(){if(!S.cards)S.cards={};return S.cards;}
 function eod(){var d=new Date();d.setHours(23,59,59,999);return d.getTime();}
@@ -5243,7 +5249,7 @@ function trPick(){
   for(var i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i];}
   return pool[pool.length-1];
 }
-function trRec(m,ok){var it=String(m);if(["root","ctone","ear"].indexOf(cardMode())>=0&&/^[rce]/.test(it))it=it.slice(1);cardRec(it,ok);var st=trStats();st[m]=st[m]||{n:0,ok:0};st[m].n++;if(ok)st[m].ok++;if(st[m].n>40){st[m].n=Math.round(st[m].n/2);st[m].ok=Math.round(st[m].ok/2);}save();}
+function trRec(m,ok){var it=String(m);if(["ctname","ctone","ear","iv","scale"].indexOf(cardMode())>=0&&/^[tceis]/.test(it))it=it.slice(1);cardRec(it,ok);var st=trStats();st[m]=st[m]||{n:0,ok:0};st[m].n++;if(ok)st[m].ok++;if(st[m].n>40){st[m].n=Math.round(st[m].n/2);st[m].ok=Math.round(st[m].ok/2);}save();}
 function posOf(m){var c=[];for(var s=3;s>=0;s--){var f=m-OPEN[4][s];if(f>=0&&f<=24)c.push({s:s,f:f});}c.sort(function(a,b){return a.f-b.f});return c[0]||{s:3,f:0};}
 function trStaff(bars,sig,acc,key){
   var keep=S.cur,tmp={id:"tr",name:"tr",bpm:80,sig:sig,strings:4,key:key||0,acc:acc||"b",bars:bars},h="";
@@ -5331,15 +5337,17 @@ function trBegin(){
   TR.run={i:0,n:n,ok:0,bad:0,miss:{},prev:undefined};
   $("trHome").hidden=true;$("trRun").hidden=false;$("trEnd").hidden=true;
   ["trName","trPlay","trSight","trRhy"].forEach(function(id){$(id).hidden=true});
-  $("trBoardBox").hidden=true;$("trAllAct").hidden=true;$("trEarAct").hidden=true;$("trJam").hidden=true;
+  $("trBoardBox").hidden=true;$("trAllAct").hidden=true;$("trEarAct").hidden=true;$("trJam").hidden=true;$("trChT").hidden=true;$("trIvK").hidden=true;$("trEarQ").hidden=true;
   if(TR.mode==="name"){$("trName").hidden=false;trNameNext();}
   else if(TR.mode==="fret"){$("trBoardBox").hidden=false;trFretNext();}
   else if(TR.mode==="fname"){$("trBoardBox").hidden=false;$("trName").hidden=false;trFnameNext();}
   else if(TR.mode==="all"){$("trBoardBox").hidden=false;$("trAllAct").hidden=false;trAllNext();}
   else if(TR.mode==="mix")trMixNext();
-  else if(TR.mode==="root"){$("trBoardBox").hidden=false;trRootNext();}
+  else if(TR.mode==="ctname"){$("trChT").hidden=false;trCnNext();}
+  else if(TR.mode==="iv"){$("trBoardBox").hidden=false;$("trIvK").hidden=false;trIvNext();}
+  else if(TR.mode==="scale"){$("trBoardBox").hidden=false;$("trAllAct").hidden=false;trScNext();}
   else if(TR.mode==="ctone"){$("trBoardBox").hidden=false;$("trAllAct").hidden=false;trCtNext();}
-  else if(TR.mode==="ear"){$("trBoardBox").hidden=false;$("trEarAct").hidden=false;trEarNext();}
+  else if(TR.mode==="ear"){trEarNext();}
   else if(TR.mode==="jam"){$("trJam").hidden=false;trJamNext();}
   else if(TR.mode==="line"){$("trSight").hidden=false;trLineNext();}
   else if(TR.mode==="play"){$("trPlay").hidden=false;trPlayStart();}
@@ -5467,8 +5475,8 @@ var CHLV=[["Dur","C, F, G …"],["+ Moll","Am, Dm …"],["+ Septakkord","G7, D7 
 var CHQ={"":[0,4,7],"m":[0,3,7],"7":[0,4,7,10],"m7":[0,3,7,10],"maj7":[0,4,7,11],"dim":[0,3,6],"sus4":[0,5,7],"m7b5":[0,3,6,10],"aug":[0,4,8]};
 var CHQL=[[""],["","m"],["","m","7"],["","m","7","m7","maj7"],["","m","7","m7","maj7","dim","sus4"],["","m","7","m7","maj7","dim","sus4","m7b5","aug"]];
 var CHR=["C","D♭","D","E♭","E","F","F♯","G","A♭","A","B♭","B"],DEG={0:"1",3:"♭3",4:"3",5:"4",6:"♭5",7:"5",8:"♯5",10:"♭7",11:"7"};
-function trChordMode(){return ["root","ctone","ear","jam","line"].indexOf(TR.mode)>=0;}
-function trLvTxt(i){if(TR.mode==="jam")return JAMLV[i];if(TR.mode==="line")return LINELV[i];return CHLV[i];}
+function trChordMode(){return ["ctname","ctone","ear","jam","line","iv","scale"].indexOf(TR.mode)>=0;}
+function trLvTxt(i){if(TR.mode==="jam")return JAMLV[i];if(TR.mode==="line")return LINELV[i];if(TR.mode==="iv")return IVLV[i];if(TR.mode==="scale")return SCLV[i];if(TR.mode==="ear")return EARLV[i];if(TR.mode==="ctone"&&i>=3)return [CHLV[i][0]+" · Grundton selbst finden",CHLV[i][1]];return CHLV[i];}
 function trChordPick(){
   var lv=TR.level||6,qs=CHQL[lv-1],nat=lv<4,r,q,sym,tries=0;
   /* Karten: fällige Akkorde bevorzugen bzw. im Fällig-Modus nur diese */
@@ -5483,46 +5491,133 @@ function deName(pc){var n=["C","C♯/D♭","D","D♯/E♭","E","F","F♯/G♭","
 function chSymHTML(c){return '<div class="trbig2">'+c.sym+'</div>'+(c.r===11||c.r===10?'<div class="trsub">englisch '+CHR[c.r]+' = deutsch '+(c.r===11?'H':'B')+'</div>':'');}
 function chTip(c){var t=[];c.iv.forEach(function(i){if(i===4)t.push("Terz: 1 Saite höher, 1 Bund zurück");if(i===3)t.push("♭3: 1 Saite höher, 2 Bünde zurück");if(i===7)t.push("Quinte: 1 Saite höher, 2 Bünde weiter");if(i===10)t.push("♭7: 2 Saiten höher, gleicher Bund");if(i===11)t.push("7: 2 Saiten höher, 1 Bund weiter");if(i===6)t.push("♭5: 1 Saite höher, 1 Bund weiter");if(i===5)t.push("4 (sus): 1 Saite höher, gleicher Bund");if(i===8)t.push("♯5: 1 Saite höher, 3 Bünde weiter");});return "Vom Grundton aus: "+t.join(" · ");}
 function trChordSound(c,base){if(S.hear===false||!audioReady())return;var t0=ctx.currentTime+0.02;toneM(base,t0,0.9);c.iv.forEach(function(i,k){if(k)toneM(base+12+i,t0+0.25,0.9);});}
-/* Akkord -> Grundton */
-function trRootNext(){
-  var c=trChordPick(),F=TR.level<=3?7:12;TR.run.ch=c;TR.run.done=false;
-  trBoardDraw(F);$("trStaff").innerHTML=chSymHTML(c);
-  trFb("Wo liegt der <b>Grundton</b>? <small>Irgendeine Stelle bis Bund "+F+".</small>","");trProg();
-}
-function trRootTap(cell,s,f,mm){
-  var r=TR.run,c=r.ch,ok=((mm%12)+12)%12===c.r;r.done=true;
-  if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("r"+c.sym,ok);
-  if(!ok)tbMark(s,f,"bad",pcName(mm,"b"));
-  for(var q=0;q<4;q++)for(var k=0;k<=r.F;k++)if((OPEN[4][q]+k)%12===c.r)tbMark(q,k,q===s&&k===f?"ok":"sol",deName(c.r).split("/")[0]);
-  trChordSound(c,ok?mm:OPEN[4][3]+((c.r-4+12)%12));
-  trFb((ok?"✓ Richtig – Grundton <b>":"✗ Grundton ist <b>")+deName(c.r)+"</b><br><small>Der Grundton ist der Buchstabe vorn im Akkordsymbol; alles danach (m, 7 …) ändert nur die anderen Töne.</small>",ok?"ok":"bad");
-  trProg();trNextOrEnd(trRootNext,ok);
-}
 /* Akkordtöne um den Grundton */
 function trCtNext(){
-  var c=trChordPick(),cs=[3,2].map(function(q){var k=((c.r-OPEN[4][q])%12+12)%12;if(k<1)k+=12;return {s:q,f:k};}).filter(function(x){return x.f<=9;});
+  var self=TR.level>=4||TR.level===0,c=trChordPick(),cs=[3,2].map(function(q){var k=((c.r-OPEN[4][q])%12+12)%12;if(k<1)k+=12;return {s:q,f:k};}).filter(function(x){return x.f<=9;});
   if(!cs.length)cs=[{s:2,f:((c.r-OPEN[4][2])%12+12)%12||12}];var pk=cs[Math.floor(Math.random()*cs.length)],s=pk.s,f=pk.f;
   var lo=Math.max(0,f-2),hi=Math.min(12,f+3),t=[];
   for(var q=0;q<4;q++)for(var k=lo;k<=hi;k++){var d=((OPEN[4][q]+k-OPEN[4][s]-f)%12+12)%12;if(c.iv.indexOf(d)>=0&&!(q===s&&k===f))t.push(q+"_"+k+"_"+d);}
-  TR.run.ch=c;TR.run.root={s:s,f:f};TR.run.win=[lo,hi];TR.run.tg=t;TR.run.found={};TR.run.err=0;TR.run.done=false;
+  TR.run.ch=c;TR.run.root={s:s,f:f};TR.run.win=[lo,hi];TR.run.tg=t;TR.run.found={};TR.run.err=0;TR.run.done=false;TR.run.deg=null;TR.run.endFn=null;TR.run.need=self;
   trBoardDraw(Math.max(hi,5));
   Array.prototype.forEach.call(document.querySelectorAll("#trBoard .tbc"),function(x){var k=+x.dataset.f;if(k<lo||k>hi)x.classList.add("off");});
-  tbMark(s,f,"root","1");
   $("trStaff").innerHTML=chSymHTML(c);
-  trFb("Finde im hellen Bereich alle Töne von <b>"+c.sym+"</b> <small>("+t.length+" Stellen; ● = Grundton)</small>","");trProg();
+  if(self)trFb("Tippe zuerst im hellen Bereich den <b>Grundton</b> von <b>"+c.sym+"</b> an.","");
+  else{tbMark(s,f,"root","1");trFb("Finde im hellen Bereich alle Töne von <b>"+c.sym+"</b> <small>("+t.length+" Stellen; ● = Grundton)</small>","");}
+  trProg();
 }
 function trCtTap(cell,s,f,mm){
-  var r=TR.run;if(cell.classList.contains("off"))return;var d=((mm-OPEN[4][r.root.s]-r.root.f)%12+12)%12,key=s+"_"+f+"_"+d;
+  var r=TR.run;if(cell.classList.contains("off"))return;
+  if(r.need){ /* Akkordtöne ab Stufe 4: erst den Grundton selbst finden */
+    if(((mm%12)+12)%12===r.ch.r){r.need=false;r.root={s:s,f:f};
+      var t=[];for(var q=0;q<4;q++)for(var k=r.win[0];k<=r.win[1];k++){var dd=((OPEN[4][q]+k-mm)%12+12)%12;if(r.ch.iv.indexOf(dd)>=0&&!(q===s&&k===f))t.push(q+"_"+k+"_"+dd);}
+      r.tg=t;tbMark(s,f,"root","1");if(S.hear!==false&&audioReady())toneM(mm,ctx.currentTime+0.02,0.4);
+      trFb("✓ Grundton gefunden. Jetzt alle anderen Töne von <b>"+r.ch.sym+"</b> <small>("+t.length+" Stellen)</small>","");}
+    else{r.err++;tbMark(s,f,"bad",pcName(mm,"b"));setTimeout(function(){cell.classList.remove("bad");},800);}
+    return;}
+  var DG=r.deg||DEG,d=((mm-OPEN[4][r.root.s]-r.root.f)%12+12)%12,key=s+"_"+f+"_"+d;
   if(s===r.root.s&&f===r.root.f)return;if(r.found[key])return;
-  if(r.tg.indexOf(key)>=0){r.found[key]=1;tbMark(s,f,"ok",DEG[d]);if(S.hear!==false&&audioReady())toneM(mm,ctx.currentTime+0.02,0.4);if(Object.keys(r.found).length===r.tg.length)trCtEnd(false);}
-  else{r.err++;tbMark(s,f,"bad",DEG[d]||"✕");setTimeout(function(){if(!r.found[key])cell.classList.remove("bad");},800);}
+  if(r.tg.indexOf(key)>=0){r.found[key]=1;tbMark(s,f,"ok",DG[d]);if(S.hear!==false&&audioReady())toneM(mm,ctx.currentTime+0.02,0.4);if(Object.keys(r.found).length===r.tg.length)(r.endFn||trCtEnd)(false);}
+  else{r.err++;tbMark(s,f,"bad",DG[d]||"✕");setTimeout(function(){if(!r.found[key])cell.classList.remove("bad");},800);}
 }
 function trCtEnd(shown){
-  var r=TR.run,c=r.ch;r.done=true;var ok=!shown&&r.err===0;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("c"+c.sym,ok);
+  var r=TR.run,c=r.ch;r.done=true;if(r.need){r.need=false;tbMark(r.root.s,r.root.f,"sol","1");}var ok=!shown&&r.err===0;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("c"+c.sym,ok);
   r.tg.forEach(function(k){if(!r.found[k]){var q=k.split("_");tbMark(+q[0],+q[1],"sol",DEG[+q[2]]);}});
   trChordSound(c,OPEN[4][r.root.s]+r.root.f);
   trFb((ok?"✓ Alle Akkordtöne gefunden":shown?"Hier liegen die Töne von "+c.sym:"✓ Gefunden – mit "+r.err+" Fehlgriff"+(r.err>1?"en":""))+"<br><small>"+chTip(c)+"</small>",ok?"ok":"bad");
   trProg();trNextOrEnd(trCtNext,ok);
+}
+/* ---------- Akkord → Töne: alle Töne eines Akkordsymbols nennen ---------- */
+var DEGS={0:"1",1:"♭2",2:"2",3:"♭3",4:"3",5:"4",6:"♭5",7:"5",8:"♭6",9:"6",10:"♭7",11:"7"};
+var LSTEP={0:0,1:1,2:1,3:2,4:2,5:3,6:4,7:4,8:5,9:5,10:6,11:6},NATPC=[0,2,4,5,7,9,11];
+/* Richtig geschriebener Ton (deutsch: H, B = H♭) aus Grundton-Buchstabe und Intervall */
+function chSpell(c,iv,useAug){
+  var L0="CDEFGAB".indexOf((c.rl||CHR[c.r]).charAt(0)),st=(useAug&&iv===8)?4:LSTEP[iv],L=(L0+st)%7,pc=(c.r+iv)%12,a=((pc-NATPC[L])%12+12)%12;if(a>6)a-=12;
+  if(L===6&&a===-1)return "B";
+  return "CDEFGAH".charAt(L)+(a===-2?"𝄫":a===-1?"♭":a===1?"♯":a===2?"𝄪":"");
+}
+var CHALT={1:"C♯",3:"D♯",6:"G♭",8:"G♯",10:"A♯"};
+function chTones(c){var t=chTones0(c);if(CHALT[c.r]&&t.some(function(x){return /𝄫|𝄪/.test(x.n)})){c.rl=CHALT[c.r];c.sym=CHALT[c.r]+(c.q||"").replace("b5","♭5");t=chTones0(c);}return t;}
+function chTones0(c){var aug=c.q==="aug";return c.iv.map(function(iv){return {iv:iv,pc:(c.r+iv)%12,n:chSpell(c,iv,aug),d:(aug&&iv===8)?"♯5":(c.q==="dim"||c.q==="m7b5")&&iv===6?"♭5":DEGS[iv]}});}
+var CHKEYS=["C","C♯<br>D♭","D","D♯<br>E♭","E","F","F♯<br>G♭","G","G♯<br>A♭","A","A♯<br>B","H"];
+function trCnNext(){
+  var c=trChordPick();TR.run.ch=c;TR.run.tones=chTones(c);if(c.rl)TR.run.prevSym=c.sym;TR.run.found={};TR.run.err=0;TR.run.done=false;
+  $("trStaff").innerHTML=chSymHTML(c);
+  $("trChK").innerHTML=CHKEYS.map(function(n,pc){return '<button data-pc="'+pc+'">'+n+'</button>'}).join("");
+  trFb("Welche Töne hat <b>"+c.sym+"</b>? <small>Tippe alle "+c.iv.length+" Töne an, Reihenfolge egal.</small>","");trProg();
+}
+$("trChK").addEventListener("click",function(e){
+  var b=e.target.closest("button"),r=TR.run;if(!b||!r||r.done||TR.mode!=="ctname")return;
+  var pc=+b.dataset.pc,t=null;r.tones.forEach(function(x){if(x.pc===pc)t=x;});
+  if(r.found[pc])return;
+  if(t){r.found[pc]=1;b.classList.add("tright");b.innerHTML='<b>'+t.n+'</b><small>'+t.d+'</small>';if(S.hear!==false&&audioReady())toneM(48+pc,ctx.currentTime+0.02,0.4);
+    if(Object.keys(r.found).length===r.tones.length)trCnEnd(false);}
+  else{r.err++;b.classList.add("twrong");setTimeout(function(){b.classList.remove("twrong")},800);}
+});
+function trCnEnd(shown){
+  var r=TR.run,c=r.ch;r.done=true;var ok=!shown&&r.err===0;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("t"+c.sym,ok);
+  Array.prototype.forEach.call(document.querySelectorAll("#trChK button"),function(b){var pc=+b.dataset.pc;r.tones.forEach(function(t){if(t.pc===pc&&!r.found[pc]){b.classList.add("tright");b.innerHTML='<b>'+t.n+'</b><small>'+t.d+'</small>';}});});
+  trChordSound(c,36+c.r);
+  trFb((ok?"✓ Richtig":"✓ Geschafft – mit "+r.err+" Fehlgriff"+(r.err>1?"en":""))+": <b>"+c.sym+" = "+r.tones.map(function(t){return t.n}).join(" – ")+"</b><br><small>"+r.tones.map(function(t){return t.d}).join(" · ")+" – "+chTip(c)+"</small>",ok?"ok":"bad");
+  trProg();trNextOrEnd(trCnNext,ok);
+}
+/* ---------- Intervalle: Abstand zweier Punkte auf dem Griffbrett ---------- */
+var IVN={1:["kl. Sekunde","♭2"],2:["gr. Sekunde","2"],3:["kl. Terz","♭3"],4:["gr. Terz","3"],5:["Quarte","4"],6:["Tritonus","♭5"],7:["Quinte","5"],8:["kl. Sexte","♭6"],9:["gr. Sexte","6"],10:["kl. Septime","♭7"],11:["gr. Septime","7"],12:["Oktave","8"]};
+var IVSET=[[7,12],[5,7,12],[3,4,5,7,12],[3,4,5,7,10,11,12],[1,2,3,4,5,7,8,9,10,11,12],[1,2,3,4,5,6,7,8,9,10,11,12]];
+var IVLV=[["Quinte und Oktave","die zwei wichtigsten Abstände"],["+ Quarte","Grundton – Quarte – Quinte – Oktave"],["+ Terzen","Dur- und Mollterz"],["+ Septimen","♭7 und 7 für Septakkorde"],["+ Sekunden, Sexten","fast alle Abstände"],["Alle","mit Tritonus"]];
+var IVTIP={1:"1 Bund weiter",2:"2 Bünde weiter",3:"1 Saite höher, 2 Bünde zurück",4:"1 Saite höher, 1 Bund zurück",5:"1 Saite höher, gleicher Bund",6:"1 Saite höher, 1 Bund weiter",7:"1 Saite höher, 2 Bünde weiter",8:"2 Saiten höher, 3 Bünde zurück",9:"2 Saiten höher, 2 Bünde zurück",10:"2 Saiten höher, gleicher Bund",11:"2 Saiten höher, 1 Bund weiter",12:"2 Saiten höher, 2 Bünde weiter"};
+function trIvSet(){return IVSET[(TR.level||6)-1];}
+function trIvNext(){
+  var set=trIvSet(),w=set.map(function(n){return cardW(n)}),tot=w.reduce(function(a,b){return a+b},0),x=Math.random()*tot,j=0;
+  if(TR.due){var dl=dueList("iv").map(Number).filter(function(n){return set.indexOf(n)>=0||TR.due});if(dl.length){set=dl;w=dl.map(function(){return 1});tot=dl.length;x=Math.random()*tot;}}
+  for(;j<set.length-1;j++){x-=w[j];if(x<=0)break;}var iv=set[j];
+  if(iv===TR.run.prevIv&&set.length>1)iv=set[(j+1)%set.length];TR.run.prevIv=iv;
+  var opts=[];for(var q=1;q<4;q++)for(var f=1;f<=7;f++){var m0=OPEN[4][q]+f;for(var q2=q;q2>=Math.max(0,q-2);q2--)for(var f2=Math.max(0,f-4);f2<=f+4;f2++){if(q2===q&&f2<=f)continue;if(OPEN[4][q2]+f2-m0===iv)opts.push([q,f,q2,f2]);}}
+  var o=opts[Math.floor(Math.random()*opts.length)];
+  TR.run.iv=iv;TR.run.pos=o;TR.run.done=false;
+  trBoardDraw(Math.max(7,o[3]+1));tbMark(o[0],o[1],"root","1");tbMark(o[2],o[3],"dot","?");
+  $("trStaff").innerHTML='<div class="trbig2">● → ?</div>';
+  var all=trIvSet();$("trIvK").innerHTML=all.map(function(n){return '<button data-iv="'+n+'">'+IVN[n][0]+'<small>'+IVN[n][1]+'</small></button>'}).join("");
+  trFb("Welcher Abstand ist das? <small>● = Grundton, ? = zweiter Ton</small>","");trProg();
+  if(S.hear!==false&&audioReady()){var t0=ctx.currentTime+0.05;toneM(OPEN[4][o[0]]+o[1],t0,0.6);toneM(OPEN[4][o[2]]+o[3],t0+0.55,0.8);}
+}
+$("trIvK").addEventListener("click",function(e){
+  var b=e.target.closest("button"),r=TR.run;if(!b||!r||r.done||TR.mode!=="iv")return;
+  var a=+b.dataset.iv,ok=a===r.iv,o=r.pos;r.done=true;if(ok)r.ok++;else{r.bad++;r.miss[IVN[r.iv][0]]=(r.miss[IVN[r.iv][0]]||0)+1;}trRec("i"+r.iv,ok);
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("tright",+x.dataset.iv===r.iv);x.classList.toggle("twrong",!ok&&x===b);});
+  tbMark(o[2],o[3],"ok",IVN[r.iv][1]);
+  if(S.hear!==false&&audioReady()){var t0=ctx.currentTime+0.03;toneM(OPEN[4][o[0]]+o[1],t0,0.9);toneM(OPEN[4][o[2]]+o[3],t0,0.9);}
+  var ds=o[0]-o[2],df=o[3]-o[1],how=(ds?ds+" Saite"+(ds>1?"n":"")+" höher, ":"gleiche Saite, ")+(df===0?"gleicher Bund":Math.abs(df)+" Bün"+(Math.abs(df)>1?"de ":"d ")+(df>0?"weiter":"zurück"));
+  trFb((ok?"✓ Richtig: <b>":"✗ Das ist eine <b>")+IVN[r.iv][0]+"</b> ("+IVN[r.iv][1]+", "+r.iv+" Halbtöne)<br><small>Hier: "+how+". Typisch: "+IVTIP[r.iv]+".</small>",ok?"ok":"bad");
+  trProg();trNextOrEnd(trIvNext,ok);
+});
+/* ---------- Tonleiter finden ---------- */
+var SCT=[["Dur",[0,2,4,5,7,9,11]],["Moll",[0,2,3,5,7,8,10]],["Dur-Pentatonik",[0,2,4,7,9]],["Moll-Pentatonik",[0,3,5,7,10]],["Blues",[0,3,5,6,7,10]]];
+var SCLV=[["Dur","1 2 3 4 5 6 7"],["natürliches Moll","1 2 ♭3 4 5 ♭6 ♭7"],["Dur-Pentatonik","1 2 3 5 6"],["Moll-Pentatonik","1 ♭3 4 5 ♭7"],["Blues","1 ♭3 4 ♭5 5 ♭7"],["Gemischt","alle Tonleitern im Wechsel"]];
+function trScNext(){
+  var lv=TR.level||6,ti=lv<=5?lv-1:Math.floor(Math.random()*SCT.length),sc=SCT[ti],tries=0,q,f,r,root,t;
+  var nat=lv<3;
+  do{q=Math.random()<0.5?3:2;f=1+Math.floor(Math.random()*7);root=OPEN[4][q]+f;r=root%12;tries++;
+    if(nat&&NATPC.indexOf(r)<0)continue;
+    var key=sc[0]+":"+CHR[r];if(TR.due&&dueList("scale").indexOf(key)<0&&tries<40)continue;
+    t=[];var have={};
+    for(var qq=q;qq>=Math.max(0,q-2);qq--)for(var k=Math.max(0,f-2);k<=f+4;k++){var mm=OPEN[4][qq]+k,d=mm-root;if(d<=0||d>12)continue;if(sc[1].indexOf(d%12)<0)continue;if(have[d])continue;have[d]=1;t.push(qq+"_"+k+"_"+(d%12));}
+    var need=sc[1].length;if(Object.keys(have).length>=need)break;
+  }while(tries<80);
+  var lo=Math.max(0,f-2),hi=f+4;
+  TR.run.ch={r:r,sym:CHR[r]+" "+sc[0],iv:sc[1]};TR.run.sc=sc;TR.run.root={s:q,f:f};TR.run.win=[lo,hi];TR.run.tg=t;TR.run.found={};TR.run.err=0;TR.run.done=false;TR.run.deg=DEGS;TR.run.endFn=trScEnd;TR.run.need=false;
+  trBoardDraw(Math.max(hi,7));
+  Array.prototype.forEach.call(document.querySelectorAll("#trBoard .tbc"),function(x){var k=+x.dataset.f,qq=+x.dataset.s;if(k<lo||k>hi||qq>q||qq<q-2)x.classList.add("off");});
+  tbMark(q,f,"root","1");
+  $("trStaff").innerHTML='<div class="trbig2">'+chSpell({r:r,q:""},0)+' '+sc[0]+'</div><div class="trsub">'+SCLV[ti][1]+'</div>';
+  trFb("Spiel die Tonleiter aufwärts bis zur Oktave: tippe alle "+t.length+" Töne im hellen Bereich. <small>● = Grundton</small>","");trProg();
+}
+/* Ton tippen läuft über trCtTap (gleiche Logik wie Akkordtöne) */
+function trScEnd(shown){
+  var r=TR.run,c=r.ch;r.done=true;var ok=!shown&&r.err===0;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("s"+r.sc[0]+":"+CHR[c.r],ok);
+  r.tg.forEach(function(k){if(!r.found[k]){var q=k.split("_");tbMark(+q[0],+q[1],"sol",DEGS[+q[2]]);}});
+  if(S.hear!==false&&audioReady()){var t0=ctx.currentTime+0.05,root=OPEN[4][r.root.s]+r.root.f;c.iv.concat([12]).forEach(function(iv,k){toneM(root+iv,t0+k*0.28,0.3);});}
+  trFb((ok?"✓ Alle Töne gefunden":shown?"Hier liegt die Tonleiter":"✓ Gefunden – mit "+r.err+" Fehlgriff"+(r.err>1?"en":""))+"<br><small>Stufen: "+c.iv.map(function(i){return DEGS[i]}).join(" ")+" 8 – merk dir das Griffbild, es gilt für jeden Grundton.</small>",ok?"ok":"bad");
+  trProg();trNextOrEnd(trScNext,ok);
 }
 /* Akkordfolgen, Begleitung, Stil-Linien */
 var JAMLV=[["Grundton auf die 1","ganze Noten, einfache Folgen"],["Grundton auf jeden Schlag","♩ ♩ ♩ ♩"],["Grundton + Quinte","1 – 5 – 1 – 5, mit V7"],["Akkordtöne","1 auf Schlag 1, dann Akkordtöne"],["Septakkorde","ii–V–I, Akkordtöne"],["Walking","1 – Akkordtöne – Übergang"]];
@@ -5602,13 +5697,43 @@ function trJamEval(j,frames,sch){
   trProg();TR.run.i++;if(TR.run.i>=TR.run.n){TR.to=setTimeout(trFinish,2500);}
 }
 /* Gehör: Grundton finden */
-function trEarChord(c){if(!audioReady())return;var t0=ctx.currentTime+0.03,root=48+c.r,k0=DYN;DYN=0.9;try{c.iv.forEach(function(iv){playPiano({},pIdx(root+iv),t0,1.6);});}finally{DYN=k0;}}
-function trEarNext(){
-  var c=trChordPick(),F=TR.level<=3?7:12;TR.run.ch=c;TR.run.sel=null;TR.run.done=false;
-  trBoardDraw(F);$("trStaff").innerHTML='<div class="trbig2">🎧 ?</div>';
-  trFb("Hör dir den Akkord an und tippe Bünde an, bis du den <b>Grundton</b> findest. Dann „✓ Das ist der Grundton“.","");trProg();
-  setTimeout(function(){trEarChord(c);},250);
+/* ---------- Gehör: erst Dur/Moll unterscheiden, dann Grundton heraushören ---------- */
+var EARLV=[["Dur oder Moll?","Akkord hören, Klangfarbe bestimmen"],["Dur, Moll oder Sept?","+ Septakkord (G7 …)"],["Grundton hören","Dur/Moll, Grundtöne C D E F G A H, bis Bund 5"],["+ alle Grundtöne","auch ♯/♭, bis Bund 7"],["+ Septakkorde","ganzes Griffbrett bis Bund 12"],["+ Umkehrungen","Terz oder Quinte liegt unten – schwerer"]];
+var EARQ={"":"Dur","m":"Moll","7":"Sept"};
+function trEarChord(c){if(!audioReady())return;var t0=ctx.currentTime+0.03,root=48+c.r,k0=DYN,ns=c.iv.map(function(iv){return root+iv});
+  if(c.inv){for(var k=0;k<c.inv;k++){ns.push(ns.shift()+12);}var lo=Math.min.apply(null,ns);if(lo>55)ns=ns.map(function(n){return n-12});}
+  DYN=0.9;try{ns.forEach(function(n){playPiano({},pIdx(n),t0,1.6);});}finally{DYN=k0;}}
+function trEarPick(){
+  var lv=TR.level||6,qs=lv===1||lv===3||lv===4?["","m"]:lv===2?["","m","7"]:["","m","7","m7","maj7"],nat=lv===3,cand=[],w=[];
+  qs.forEach(function(q){for(var r=0;r<12;r++){if(nat&&NATPC.indexOf(r)<0)continue;var sym=CHR[r]+q,it=lv<=2?"Q"+(q||"dur")+":"+CHR[r]:sym;cand.push({r:r,q:q,sym:sym,iv:CHQ[q],it:it});w.push(cardW(it));}});
+  var tot=w.reduce(function(a,b){return a+b},0),x=Math.random()*tot,j=0;for(;j<cand.length-1;j++){x-=w[j];if(x<=0)break;}
+  var c=cand[j];if(c.sym===TR.run.prevSym)c=cand[(j+5)%cand.length];TR.run.prevSym=c.sym;
+  c.inv=lv===6&&Math.random()<0.6?1+Math.floor(Math.random()*2):0;return c;
 }
+function trEarNext(){
+  var lv=TR.level||6,c=trEarPick();TR.run.ch=c;TR.run.sel=null;TR.run.done=false;
+  $("trStaff").innerHTML='<div class="trbig2">'+lic("headphones")+' ?</div>';
+  if(lv<=2){
+    $("trEarQ").hidden=false;$("trBoardBox").hidden=true;$("trEarAct").hidden=true;
+    $("trEarQK").className="trkeys "+(lv===1?"k2":"k3");
+    $("trEarQK").innerHTML=(lv===1?["","m"]:["","m","7"]).map(function(q){return '<button data-q="'+q+'">'+EARQ[q]+'<small>'+(q===""?"hell, offen":q==="m"?"dunkel, weich":"spannend, will weiter")+'</small></button>'}).join("");
+    trFb("Hör dir den Akkord an: <b>"+(lv===1?"Dur oder Moll?":"Dur, Moll oder Sept?")+"</b>","");
+  }else{
+    $("trEarQ").hidden=true;$("trBoardBox").hidden=false;$("trEarAct").hidden=false;
+    var F=lv===3?5:lv===4?7:12;trBoardDraw(F);
+    trFb("Hör dir den Akkord an und tippe Bünde an, bis du den <b>Grundton</b> findest. Dann „✓ Das ist der Grundton“."+(c.inv?" <small>Achtung: Der Grundton liegt hier nicht unten.</small>":""),"");
+  }
+  trProg();setTimeout(function(){trEarChord(c);},250);
+}
+$("trEarQPlay").onclick=function(){if(TR.run&&TR.run.ch)trEarChord(TR.run.ch);};
+$("trEarQK").addEventListener("click",function(e){
+  var b=e.target.closest("button"),r=TR.run;if(!b||!r||r.done||TR.mode!=="ear")return;
+  var c=r.ch,ok=b.dataset.q===c.q;r.done=true;if(ok)r.ok++;else{r.bad++;r.miss[EARQ[c.q]]=(r.miss[EARQ[c.q]]||0)+1;}trRec("e"+c.it,ok);
+  Array.prototype.forEach.call(this.children,function(x){x.classList.toggle("tright",x.dataset.q===c.q);x.classList.toggle("twrong",!ok&&x===b);});
+  $("trStaff").innerHTML=chSymHTML(c);trEarChord(c);
+  trFb((ok?"✓ Richtig: ":"✗ Das war ")+"<b>"+EARQ[c.q]+"</b> ("+c.sym+")<br><small>"+(c.q==="m"?"Moll: kleine Terz (♭3) – klingt dunkler.":c.q==="7"?"Sept: Dur plus ♭7 – klingt, als müsse es weitergehen.":"Dur: große Terz (3) – klingt hell.")+"</small>",ok?"ok":"bad");
+  trProg();trNextOrEnd(trEarNext,ok);
+});
 function trEarTap(cell,s,f,mm){
   var r=TR.run;Array.prototype.forEach.call(document.querySelectorAll("#trBoard .tbc.dot"),function(x){x.classList.remove("dot");});
   tbMark(s,f,"dot","");r.sel={s:s,f:f,m:mm};if(audioReady())toneM(mm,ctx.currentTime+0.02,0.7);
@@ -5616,11 +5741,11 @@ function trEarTap(cell,s,f,mm){
 $("trEarPlay").onclick=function(){if(TR.run&&TR.run.ch)trEarChord(TR.run.ch);};
 $("trEarOk").onclick=function(){
   var r=TR.run;if(!r||r.done||TR.mode!=="ear")return;if(!r.sel){trFb("Tippe erst einen Bund an – du hörst dann den Ton.","");return;}
-  var c=r.ch,mm=r.sel.m,ok=((mm%12)+12)%12===c.r;r.done=true;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("e"+c.sym,ok);
+  var c=r.ch,mm=r.sel.m,ok=((mm%12)+12)%12===c.r;r.done=true;if(ok)r.ok++;else{r.bad++;r.miss[c.sym]=(r.miss[c.sym]||0)+1;}trRec("e"+c.it,ok);
   tbMark(r.sel.s,r.sel.f,ok?"ok":"bad",pcName(mm,"b"));
   for(var q=0;q<4;q++)for(var k=0;k<=r.F;k++)if((OPEN[4][q]+k)%12===c.r&&!(q===r.sel.s&&k===r.sel.f))tbMark(q,k,"sol",deName(c.r).split("/")[0]);
   $("trStaff").innerHTML=chSymHTML(c);trEarChord(c);
-  trFb((ok?"✓ Richtig: ":"✗ Das war ")+"<b>"+c.sym+"</b> – Grundton "+deName(c.r)+"<br><small>Tipp: Summ den tiefsten Ton des Akkords mit und such ihn auf der E- oder A-Saite. Passt der Ton, klingt er „ruhig“ mit dem Akkord.</small>",ok?"ok":"bad");
+  trFb((ok?"✓ Richtig: ":"✗ Das war ")+"<b>"+c.sym+"</b> – Grundton "+deName(c.r)+"<br><small>"+(c.inv?"Bei Umkehrungen liegt ein anderer Ton unten. Der Grundton ist der Ton, auf dem der Akkord „zur Ruhe kommt“.":"Tipp: Summ den tiefsten Ton des Akkords mit und such ihn auf der E- oder A-Saite. Passt der Ton, klingt er „ruhig“ mit dem Akkord.")+"</small>",ok?"ok":"bad");
   trProg();trNextOrEnd(trEarNext,ok);
 };
 /* Alle Orte finden */
@@ -5638,10 +5763,11 @@ function trAllEnd(shown){
   trFb((ok?"✓ Alle gefunden!":shown?"✗ Hier liegen alle "+pcName(r.cur.m):"✓ Alle gefunden – mit "+r.err+" Fehlgriff"+(r.err>1?"en":""))+"<br><small>Muster: Oktave = 2 Saiten höher, 2 Bünde weiter · gleicher Ton eine Saite höher = 5 Bünde tiefer.</small>",ok?"ok":"bad");
   trProg();trNextOrEnd(trNx(trAllNext),ok);
 }
-$("trAllShow").onclick=function(){if(!TR.run||TR.run.done)return;if(trM()==="all")trAllEnd(true);else if(TR.mode==="ctone")trCtEnd(true);};
+$("trAllShow").onclick=function(){if(!TR.run||TR.run.done)return;if(trM()==="all")trAllEnd(true);else if(TR.mode==="ctone")trCtEnd(true);else if(TR.mode==="scale")trScEnd(true);};
 $("trBoard").addEventListener("click",function(e){
   var c=e.target.closest(".tbc");if(!c||!TR.run||TR.run.done)return;var r=TR.run,s=+c.dataset.s,f=+c.dataset.f,mm=OPEN[4][s]+f;
-  if(TR.mode==="root")return trRootTap(c,s,f,mm);
+  if(TR.mode==="iv")return;
+  if(TR.mode==="scale")return trCtTap(c,s,f,mm);
   if(TR.mode==="ear")return trEarTap(c,s,f,mm);
   if(TR.mode==="ctone")return trCtTap(c,s,f,mm);
   if(trM()==="fret"){
