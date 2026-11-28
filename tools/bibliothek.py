@@ -2,8 +2,9 @@
 """Erzeugt die Bibliothek der App: lib/*.musicxml und lib/index.json.
 
 Alle Stücke sind eigene Notensetzungen für die App (CC0).
-Klassik und Volkslieder: nur gemeinfreie Melodien, aus dem Gedächtnis neu gesetzt,
-keine fremde Notenausgabe abgeschrieben. Übungen: eigene Muster.
+Volkslieder und frühe Klassik-Stücke: nur gemeinfreie Melodien, aus dem Gedächtnis neu gesetzt.
+Cello-Auszüge: gemeinfreie Werke, Tonhöhen/Rhythmus aus dem music21-Korpus (tools/cello_auszuege.json).
+Funk, Rock, Übungen: eigene Muster im Stil, keine Basslinien bekannter Songs.
 
 Schreibweise je Takt: "Ton:Länge" mit Länge in Sechzehnteln, getrennt durch Leerzeichen.
 Ton = klingende Tonhöhe am Bass (E1 = leere E-Saite), z. B. C2, F#1, Bb1; r = Pause.
@@ -19,9 +20,18 @@ TYPES = {16: ("whole", 0), 12: ("half", 1), 8: ("half", 0), 6: ("quarter", 1), 4
 KINDS = [("maj7", "major-seventh"), ("m7", "minor-seventh"), ("7", "dominant"), ("m", "minor"), ("", "major")]
 
 
-def note_xml(tok):
-    p, d = tok.split(":")
-    d = int(d)
+def split_len(d):
+    """Zerlegt eine Länge in darstellbare Notenwerte (werden übergebunden)."""
+    out = []
+    for v in (16, 12, 8, 6, 4, 3, 2, 1):
+        while d >= v:
+            out.append(v)
+            d -= v
+    return out
+
+
+def note_xml(p, d, tie_in, tie_out, mark, slur_start):
+    """p = Ton oder r; mark: x = Dead Note, a = Akzent, s = staccato, h = gebunden (Hammer-on/Legato) vom Vorton."""
     typ, dot = TYPES[d]
     x = "<note>"
     if p == "r":
@@ -35,8 +45,55 @@ def note_xml(tok):
         octave = int(rest) + 1  # Bass wird eine Oktave höher notiert, als er klingt
         x += "<pitch><step>%s</step>%s<octave>%d</octave></pitch>" % (
             step, "<alter>%d</alter>" % alter if alter else "", octave)
-    x += "<duration>%d</duration><voice>1</voice><type>%s</type>%s</note>" % (d, typ, "<dot/>" if dot else "")
-    return x, d
+    x += "<duration>%d</duration>" % d
+    if tie_in:
+        x += '<tie type="stop"/>'
+    if tie_out:
+        x += '<tie type="start"/>'
+    x += "<voice>1</voice><type>%s</type>%s" % (typ, "<dot/>" if dot else "")
+    if "x" in mark:
+        x += "<notehead>x</notehead>"
+    nots = ""
+    if tie_in:
+        nots += '<tied type="stop"/>'
+    if tie_out:
+        nots += '<tied type="start"/>'
+    if "h" in mark:
+        nots += '<slur type="stop"/>'
+    if slur_start:
+        nots += '<slur type="start"/>'
+    art = ("<accent/>" if "a" in mark else "") + ("<staccato/>" if "s" in mark else "")
+    if art:
+        nots += "<articulations>%s</articulations>" % art
+    if nots:
+        x += "<notations>%s</notations>" % nots
+    return x + "</note>"
+
+
+def bar_xml(bar, tie_in=False):
+    """Takt in Kurzschrift -> (MusicXML der Noten, Länge in Sechzehnteln).
+    Kurzschrift: Ton:Länge[Zeichen]; Zeichen ~ = Haltebogen zum nächsten Ton, x = Dead Note,
+    a = Akzent, s = staccato, h = gebunden vom vorigen Ton (Hammer-on/Legato)."""
+    evs = []
+    for tok in bar.split():
+        p, rest = tok.split(":")
+        num = "".join(c for c in rest if c.isdigit())
+        mark = rest[len(num):]
+        evs.append([p, int(num), mark])
+    out, tot = [], 0
+    for i, (p, d, mark) in enumerate(evs):
+        nxt = evs[i + 1] if i + 1 < len(evs) else None
+        slur_start = bool(nxt and "h" in nxt[2])
+        parts = split_len(d)
+        for j, v in enumerate(parts):
+            last = j == len(parts) - 1
+            t_out = p != "r" and (not last or "~" in mark)
+            t_in = p != "r" and (j > 0 or tie_in)
+            out.append(note_xml(p, v, t_in, t_out, mark if j == 0 else mark.replace("h", "").replace("a", ""),
+                                slur_start and last))
+        tie_in = "~" in mark and p != "r"
+        tot += d
+    return "".join(out), tot, tie_in
 
 
 def harmony_xml(sym, pos):
@@ -68,6 +125,7 @@ def score(p):
            '<midi-instrument id="P1-I1"><midi-program>34</midi-program></midi-instrument></score-part></part-list>',
            '<part id="P1">']
     chords = p.get("chords", [])
+    tie = False
     for i, bar in enumerate(p["bars"]):
         m = '<measure number="%d">' % (i + 1)
         if i == 0:
@@ -80,11 +138,8 @@ def score(p):
             for c in chords[i].split(","):
                 sym, _, pos = c.strip().partition("@")
                 m += harmony_xml(sym, int(pos or 0))
-        tot = 0
-        for tok in bar.split():
-            x, d = note_xml(tok)
-            m += x
-            tot += d
+        x, tot, tie = bar_xml(bar, tie)
+        m += x
         if tot != steps:
             raise SystemExit("%s: Takt %d hat %d statt %d Sechzehntel" % (p["id"], i + 1, tot, steps))
         if i == len(p["bars"]) - 1:
@@ -167,7 +222,7 @@ PIECES = [
                "A1:4 C#2:4 E2:4 F#2:4", "A2:4 G2:4 E2:4 F1:4", "E1:4 G#1:4 B1:4 C#2:4", "E2:4 D2:4 B1:4 A#1:4",
                "B1:4 D#2:4 F#2:4 A#1:4", "A1:4 C#2:4 E2:4 F1:4", "E1:4 G#1:4 B1:4 C#2:4", "B1:4 D#2:4 F#2:4 F1:4"],
          chords=[c + "7" for c in BL]),
-    dict(id="rock-achtel", title="Rock-Achtel", composer="Übung", cat="Übungen", level=1,
+    dict(id="rock-achtel", title="Rock-Achtel", composer="Übung", cat="Rock", level=1,
          source="eigene Übung", license=OWN, sig="4/4", key=1, bpm=110,
          bars=rep(["E1:2 " * 8, "C2:2 " * 8, "D2:2 " * 8, "E1:2 E1:2 E1:2 E1:2 D2:2 D2:2 B1:2 B1:2"], 2),
          chords=rep(["Em", "C", "D", "Em,D@8"], 2)),
@@ -175,7 +230,7 @@ PIECES = [
          source="eigene Übung: Schlag 1 frei lassen", license=OWN, sig="4/4", key=0, bpm=76,
          bars=rep(["r:4 A1:4 C2:2 E2:2 A1:4", "r:4 D2:4 F#2:2 A2:2 D2:4"], 4),
          chords=rep(["Am", "D"], 4)),
-    dict(id="funk-oktaven", title="Funk-Oktaven", composer="Übung", cat="Übungen", level=3,
+    dict(id="funk-oktaven", title="Funk-Oktaven", composer="Übung", cat="Funk", level=3,
          source="eigene Übung: Sechzehntel, Grundton und Oktave", license=OWN, sig="4/4", key=4, bpm=90,
          bars=rep(["E1:1 r:1 E2:1 r:1 E1:1 E1:1 E2:1 r:1 E1:1 r:1 E2:1 r:1 E1:1 E1:1 E2:1 E2:1"], 2)
               + rep(["A1:1 r:1 A2:1 r:1 A1:1 A1:1 A2:1 r:1 A1:1 r:1 A2:1 r:1 A1:1 A1:1 A2:1 A2:1"], 2),
@@ -196,19 +251,106 @@ PIECES = [
          bars=["C2:4 E2:4 G2:4 C3:4", "C3:4 G2:4 E2:4 C2:4", "F1:4 A1:4 C2:4 F2:4", "F2:4 C2:4 A1:4 F1:4",
                "G1:4 B1:4 D2:4 F2:4", "F2:4 D2:4 B1:4 G1:4", "A1:4 C2:4 E2:4 A2:4", "A2:4 E2:4 C2:4 A1:4"],
          chords=["C", "C", "F", "F", "G7", "G7", "Am", "Am"]),
+    # ---------- Funk (eigene Muster im Stil, keine Basslinien bekannter Songs) ----------
+    dict(id="funk-achtel-pausen", title="Funk 1 – Achtel und Pausen", composer="Übung", cat="Funk", level=1,
+         source="eigene Übung: kurze Töne, Pausen genau zählen", license=OWN, sig="4/4", key=1, bpm=90,
+         bars=["E1:2 r:2 E1:2 G1:2 A1:2 r:2 B1:2 D2:2", "E1:2 r:2 E1:2 G1:2 A1:2 B1:2 r:4"] * 2
+              + ["A1:2 r:2 A1:2 C#2:2 D2:2 r:2 E2:2 G2:2", "A1:2 r:2 A1:2 C#2:2 D2:2 E2:2 r:4",
+                 "E1:2 r:2 E1:2 G1:2 A1:2 r:2 B1:2 D2:2", "E1:2 r:2 E1:2 G1:2 A1:2 B1:2 r:4"],
+         chords=["Em7"] * 4 + ["A7", "A7", "Em7", "Em7"]),
+    dict(id="funk-deadnotes", title="Funk 2 – Sechzehntel mit Dead Notes", composer="Übung", cat="Funk", level=2,
+         source="eigene Übung: ✕ = Dead Note (Saite abdämpfen und anschlagen)", license=OWN, sig="4/4", key=1, bpm=85,
+         bars=["E1:2 r:1 E1:1x E2:1 r:1 E1:1 E1:1x r:1 G1:1 A1:1 r:1 B1:1 r:1 D2:1 E2:1",
+               "E1:2 r:1 E1:1x E2:1 r:1 E1:1 E1:1x r:2 D2:1 r:1 B1:2 A1:2"] * 2,
+         chords=["Em7"] * 4),
+    dict(id="funk-oktave-septime", title="Funk 3 – Oktave und Septime", composer="Übung", cat="Funk", level=2,
+         source="eigene Übung: Grundton, Oktave, kleine Septime", license=OWN, sig="4/4", key=0, bpm=92,
+         bars=["D2:1 r:1 D3:1 r:1 C3:1 r:1 D3:2 r:2 A2:1 C3:1 D2:2 D3:1 r:1",
+               "G1:1 r:1 G2:1 r:1 F2:1 r:1 G2:2 r:2 D2:1 F2:1 G1:2 B1:2"] * 2,
+         chords=["Dm7", "G7", "Dm7", "G7"]),
+    dict(id="funk-synkopen", title="Funk 4 – Synkopen auf „e“ und „+“", composer="Übung", cat="Funk", level=3,
+         source="eigene Übung: Töne zwischen den Schlägen, laut „1 e + a“ mitzählen", license=OWN, sig="4/4", key=-2, bpm=88,
+         bars=["G1:1 r:2 G1:1 r:1 Bb1:1 r:1 C2:1 r:1 D2:1 r:1 F2:1 r:1 G2:1 F2:1 D2:1",
+               "G1:1 r:2 G1:1x G1:1 r:1 G2:1 r:2 F2:1 r:1 D2:1 C2:2 Bb1:2"] * 2
+              + ["C2:1 r:2 C2:1 r:1 E2:1 r:1 G2:1 r:1 Bb2:1 r:1 G2:1 E2:2 D2:2"] * 2
+              + ["G1:1 r:2 G1:1 r:1 Bb1:1 r:1 C2:1 r:1 D2:1 r:1 F2:1 r:1 G2:1 F2:1 D2:1",
+                 "G1:1 r:2 G1:1x G1:1 r:1 G2:1 r:2 F2:1 r:1 D2:1 C2:2 Bb1:2"],
+         chords=["Gm7"] * 4 + ["C7", "C7", "Gm7", "Gm7"]),
+    dict(id="disco-oktaven", title="Disco-Oktaven", composer="Übung", cat="Funk", level=2,
+         source="eigene Übung: Achtel im Oktavsprung, Zeigefinger tief, kleiner Finger hoch", license=OWN, sig="4/4", key=0, bpm=112,
+         bars=(["A1:2 A2:2 " * 4, "G1:2 G2:2 " * 4, "F1:2 F2:2 " * 4, "E1:2 E2:2 " * 4]
+               + ["A1:2 A2:2 " * 4, "G1:2 G2:2 " * 4, "F1:2 F2:2 " * 4, "E1:2 E2:2 E1:2 E2:2 G#1:2 B1:2 D2:2 E2:2"]),
+         chords=["Am", "G", "F", "E7"] * 2),
+    dict(id="soul-groove", title="Soul-Groove mit Annäherungston", composer="Übung", cat="Funk", level=2,
+         source="eigene Übung: punktierte Achtel, letzter Ton führt zum nächsten Grundton", license=OWN, sig="4/4", key=0, bpm=100,
+         bars=["C2:3 C2:1 E2:2 G2:2 A2:4 G2:2 E2:2", "F1:3 F1:1 A1:2 C2:2 D2:4 C2:2 F#1:2",
+               "G1:3 G1:1 B1:2 D2:2 E2:4 D2:2 B1:2", "C2:3 C2:1 E2:2 G2:2 A2:2 G2:2 F2:2 E2:1 D2:1",
+               "C2:3 C2:1 E2:2 G2:2 A2:4 G2:2 E2:2", "F1:3 F1:1 A1:2 C2:2 D2:4 C2:2 F#1:2",
+               "G1:3 G1:1 B1:2 D2:2 E2:4 D2:2 B1:2", "C2:4 G1:4 C2:8"],
+         chords=["C", "F", "G", "C"] * 2),
+    # ---------- Rock (eigene Muster im Stil) ----------
+    dict(id="rock-viertel", title="Rock 1 – Viertel auf dem Grundton", composer="Übung", cat="Rock", level=1,
+         source="eigene Übung: gleichmäßig, jeder Ton gleich laut", license=OWN, sig="4/4", key=3, bpm=100,
+         bars=["A1:4 A1:4 A1:4 A1:4"] * 2 + ["D2:4 D2:4 D2:4 D2:4"] * 2 + ["E1:4 E1:4 E1:4 E1:4"] * 2
+              + ["A1:4 A1:4 A1:4 A1:4", "A1:4 A1:4 A1:8"],
+         chords=["A", "A", "D", "D", "E", "E", "A", "A"]),
+    dict(id="rock-quinte-oktave", title="Rock 2 – Grundton, Quinte, Oktave", composer="Übung", cat="Rock", level=1,
+         source="eigene Übung: ein Griffmuster für alle Akkorde", license=OWN, sig="4/4", key=1, bpm=105,
+         bars=["E1:2 E1:2 B1:2 B1:2 E2:2 E2:2 B1:2 B1:2", "G1:2 G1:2 D2:2 D2:2 G2:2 G2:2 D2:2 D2:2",
+               "A1:2 A1:2 E2:2 E2:2 A2:2 A2:2 E2:2 E2:2", "E1:2 E1:2 B1:2 B1:2 E2:2 E2:2 B1:2 B1:2",
+               "E1:2 E1:2 B1:2 B1:2 E2:2 E2:2 B1:2 B1:2", "G1:2 G1:2 D2:2 D2:2 G2:2 G2:2 D2:2 D2:2",
+               "A1:2 A1:2 E2:2 E2:2 A2:2 A2:2 E2:2 E2:2", "E1:2 E1:2 B1:2 B1:2 E2:8"],
+         chords=["Em", "G", "A", "Em"] * 2),
+    dict(id="rock-shuffle", title="Rock 3 – Shuffle (12-Takt in A)", composer="Übung", cat="Rock", level=2,
+         source="eigene Übung: 12/8, lang–kurz; Grundton, Quinte, Sexte", license=OWN, sig="12/8", key=3, bpm=120,
+         bars=blues({"A": "A1:4 A1:2 E2:4 E2:2 F#2:4 F#2:2 E2:4 E2:2",
+                     "D": "D2:4 D2:2 A2:4 A2:2 B2:4 B2:2 A2:4 A2:2",
+                     "E": "E1:4 E1:2 B1:4 B1:2 C#2:4 C#2:2 B1:4 B1:2"},
+                    ["A", "A", "A", "A", "D", "D", "A", "A", "E", "D", "A", "E"]),
+         chords=[c + "7" for c in ["A", "A", "A", "A", "D", "D", "A", "A", "E", "D", "A", "E"]]),
+    dict(id="punk-achtel", title="Rock 4 – Punk-Achtel", composer="Übung", cat="Rock", level=2,
+         source="eigene Übung: schnelle Achtel, nur Abschlag, Betonung auf 1 und 3", license=OWN, sig="4/4", key=2, bpm=150,
+         bars=["D2:2a D2:2 D2:2 D2:2 A1:2a A1:2 A1:2 A1:2", "B1:2a B1:2 B1:2 B1:2 G1:2a G1:2 G1:2 G1:2"] * 3
+              + ["D2:2a D2:2 D2:2 D2:2 A1:2a A1:2 A1:2 A1:2", "D2:4a r:4 D2:4a r:4"],
+         chords=["D,A@8", "Bm,G@8"] * 3 + ["D,A@8", "D"]),
+    dict(id="rock-galopp", title="Rock 5 – Galopp", composer="Übung", cat="Rock", level=3,
+         source="eigene Übung: Achtel + zwei Sechzehntel, gleichmäßig wechselschlagen", license=OWN, sig="4/4", key=1, bpm=120,
+         bars=["E1:2 E1:1 E1:1 " * 4] * 2 + ["C2:2 C2:1 C2:1 " * 4, "D2:2 D2:1 D2:1 " * 4] + ["E1:2 E1:1 E1:1 " * 4] * 2
+              + ["C2:2 C2:1 C2:1 " * 4, "E1:2 E1:1 E1:1 E1:2 E1:1 E1:1 G1:2 G1:1 G1:1 A1:2 B1:1 B1:1"],
+         chords=["Em", "Em", "C", "D", "Em", "Em", "C", "Em,G@8,A@12"]),
+    dict(id="rock-ballade", title="Rock 6 – Ballade mit Durchgangstönen", composer="Übung", cat="Rock", level=2,
+         source="eigene Übung: Basslinie läuft stufenweise abwärts", license=OWN, sig="4/4", key=0, bpm=72,
+         bars=["C2:4 C2:2 C2:2 C2:2 C2:2 B1:4", "B1:4 B1:2 B1:2 B1:2 B1:2 B1:2 A1:2",
+               "A1:4 A1:2 A1:2 A1:2 A1:2 G1:4", "F1:4 F1:2 F1:2 G1:4 G1:2 G1:2"] * 2 + ["C2:16"],
+         chords=["C", "G", "Am", "F,G@8"] * 2 + ["C"]),
 ]
+
+
+CELLO = ("Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, "
+         "für diese App neu gesetzt: CC0 (frei nutzbar)")
+KATS = ["Lieder", "Klassik", "Funk", "Rock", "Übungen"]
+
+
+def alle_stuecke():
+    """Eigene Stücke plus Cello-Auszüge (tools/cello_auszuege.json, erzeugt mit tools/cello_auszuege.py)."""
+    ps = list(PIECES)
+    fn = os.path.join(os.path.dirname(__file__), "cello_auszuege.json")
+    if os.path.exists(fn):
+        for c in json.load(open(fn, encoding="utf-8")):
+            ps.append(dict(c, license=CELLO))
+    return sorted(ps, key=lambda p: (KATS.index(p["cat"]), p["level"]))  # nach Kategorie, dann leicht → schwer
 
 
 def main():
     os.makedirs("lib", exist_ok=True)
     idx = []
-    for p in PIECES:
+    for p in alle_stuecke():
         fn = p["id"] + ".musicxml"
         with open(os.path.join("lib", fn), "w", encoding="utf-8") as f:
             f.write(score(p))
         idx.append({k: p[k] for k in ("id", "title", "composer", "cat", "level", "source", "license")} | {"file": fn})
     with open("lib/index.json", "w", encoding="utf-8") as f:
-        json.dump({"version": 1, "pieces": idx}, f, ensure_ascii=False, indent=1)
+        json.dump({"version": 2, "pieces": idx}, f, ensure_ascii=False, indent=1)
     print(len(idx), "Stücke geschrieben")
 
 

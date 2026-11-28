@@ -147,7 +147,7 @@ summary{cursor:pointer;color:var(--main);font-weight:700}
 .libbox .dhead{display:flex;justify-content:space-between;align-items:center}
 .libbox .dhead button{min-width:44px;min-height:44px}
 .libg{margin:10px 0 4px;font-size:14px;color:var(--text);border-left:4px solid var(--a-in);padding-left:8px}
-.libg.k{border-color:var(--a-play)}.libg.u{border-color:var(--a-train)}.libg.w{border-color:var(--a-help)}
+.libg.k{border-color:var(--a-play)}.libg.fk{border-color:var(--a-edit)}.libg.rk{border-color:var(--a-nav)}.libg.u{border-color:var(--a-train)}.libg.w{border-color:var(--a-help)}
 .libi{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:44px;padding:8px 10px;text-align:left;margin-top:1px}
 .libi b{font-size:15px}
 .libi small{font-size:12px;color:var(--muted);line-height:1.35}
@@ -3282,7 +3282,7 @@ var LIBWEB=[
  ["Hausmusik.ch","http://www.hausmusik.ch/","Volkslieder und Hausmusik (deutschsprachig)."],
  ["Übersicht: Music in MusicXML","https://www.musicxml.com/music-in-musicxml","Liste weiterer Seiten mit MusicXML-Noten."]
 ];
-var LIBCAT={"Lieder":"","Klassik":"k","Übungen":"u"};
+var LIBCAT={"Lieder":"","Klassik":"k","Funk":"fk","Rock":"rk","Übungen":"u"};
 function libLevel(n){return '<span class="lv">'+["","●○○ leicht","●●○ mittel","●●● schwer"][n||1]+'</span>';}
 function libDraw(){
   var h="";

@@ -1,5 +1,5 @@
 {
- "version": 1,
+ "version": 2,
  "pieces": [
   {
    "id": "alle-meine-entchen",
@@ -62,6 +62,76 @@
    "file": "kanon-pachelbel-bass.musicxml"
   },
   {
+   "id": "mozart-k80-adagio",
+   "title": "Quartett G-Dur KV 80 – Adagio (Cello)",
+   "composer": "Wolfgang Amadeus Mozart (1756–1791)",
+   "cat": "Klassik",
+   "level": 1,
+   "source": "1. Satz, Takte 1–12, Cellostimme",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "mozart-k80-adagio.musicxml"
+  },
+  {
+   "id": "mozart-k156-presto",
+   "title": "Quartett G-Dur KV 156 – Presto (Cello)",
+   "composer": "Wolfgang Amadeus Mozart (1756–1791)",
+   "cat": "Klassik",
+   "level": 1,
+   "source": "1. Satz, Takte 1–24, Cellostimme, tiefe Töne unter E eine Oktave höher (1×)",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "mozart-k156-presto.musicxml"
+  },
+  {
+   "id": "mozart-k155-allegro",
+   "title": "Quartett D-Dur KV 155 – Allegro (Cello)",
+   "composer": "Wolfgang Amadeus Mozart (1756–1791)",
+   "cat": "Klassik",
+   "level": 1,
+   "source": "1. Satz, Takte 1–12, Cellostimme, tiefe Töne unter E eine Oktave höher (2×)",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "mozart-k155-allegro.musicxml"
+  },
+  {
+   "id": "haydn-op1-1",
+   "title": "Quartett B-Dur op. 1 Nr. 1 – Presto (Cello)",
+   "composer": "Joseph Haydn (1732–1809)",
+   "cat": "Klassik",
+   "level": 2,
+   "source": "1. Satz, Takte 1–14, Cellostimme",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "haydn-op1-1.musicxml"
+  },
+  {
+   "id": "mozart-k458-jagd",
+   "title": "„Jagdquartett“ B-Dur KV 458 – Allegro vivace (Cello)",
+   "composer": "Wolfgang Amadeus Mozart (1756–1791)",
+   "cat": "Klassik",
+   "level": 2,
+   "source": "1. Satz, Takte 1–16, Cellostimme",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "mozart-k458-jagd.musicxml"
+  },
+  {
+   "id": "beethoven-op59-1-thema",
+   "title": "Rasumowsky-Quartett F-Dur op. 59 Nr. 1 – Thema (Cello)",
+   "composer": "Ludwig van Beethoven (1770–1827)",
+   "cat": "Klassik",
+   "level": 2,
+   "source": "1. Satz, Takte 1–8: das Thema beginnt im Cello",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "beethoven-op59-1-thema.musicxml"
+  },
+  {
+   "id": "beethoven-op18-1-scherzo",
+   "title": "Quartett F-Dur op. 18 Nr. 1 – Scherzo (Cello)",
+   "composer": "Ludwig van Beethoven (1770–1827)",
+   "cat": "Klassik",
+   "level": 2,
+   "source": "3. Satz, Takte 1–16, Cellostimme",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "beethoven-op18-1-scherzo.musicxml"
+  },
+  {
    "id": "cello-suite-1-praeludium",
    "title": "Cello-Suite Nr. 1 – Präludium (Anfang)",
    "composer": "Johann Sebastian Bach (1685–1750)",
@@ -72,6 +142,156 @@
    "file": "cello-suite-1-praeludium.musicxml"
   },
   {
+   "id": "beethoven-op18-1-allegro",
+   "title": "Quartett F-Dur op. 18 Nr. 1 – Allegro con brio (Cello)",
+   "composer": "Ludwig van Beethoven (1770–1827)",
+   "cat": "Klassik",
+   "level": 3,
+   "source": "1. Satz, Takte 1–20, Cellostimme",
+   "license": "Werk gemeinfrei; Tonhöhen und Rhythmus aus dem music21-Korpus übernommen, für diese App neu gesetzt: CC0 (frei nutzbar)",
+   "file": "beethoven-op18-1-allegro.musicxml"
+  },
+  {
+   "id": "funk-achtel-pausen",
+   "title": "Funk 1 – Achtel und Pausen",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 1,
+   "source": "eigene Übung: kurze Töne, Pausen genau zählen",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-achtel-pausen.musicxml"
+  },
+  {
+   "id": "funk-deadnotes",
+   "title": "Funk 2 – Sechzehntel mit Dead Notes",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 2,
+   "source": "eigene Übung: ✕ = Dead Note (Saite abdämpfen und anschlagen)",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-deadnotes.musicxml"
+  },
+  {
+   "id": "funk-oktave-septime",
+   "title": "Funk 3 – Oktave und Septime",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 2,
+   "source": "eigene Übung: Grundton, Oktave, kleine Septime",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-oktave-septime.musicxml"
+  },
+  {
+   "id": "disco-oktaven",
+   "title": "Disco-Oktaven",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 2,
+   "source": "eigene Übung: Achtel im Oktavsprung, Zeigefinger tief, kleiner Finger hoch",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "disco-oktaven.musicxml"
+  },
+  {
+   "id": "soul-groove",
+   "title": "Soul-Groove mit Annäherungston",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 2,
+   "source": "eigene Übung: punktierte Achtel, letzter Ton führt zum nächsten Grundton",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "soul-groove.musicxml"
+  },
+  {
+   "id": "funk-oktaven",
+   "title": "Funk-Oktaven",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 3,
+   "source": "eigene Übung: Sechzehntel, Grundton und Oktave",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-oktaven.musicxml"
+  },
+  {
+   "id": "funk-synkopen",
+   "title": "Funk 4 – Synkopen auf „e“ und „+“",
+   "composer": "Übung",
+   "cat": "Funk",
+   "level": 3,
+   "source": "eigene Übung: Töne zwischen den Schlägen, laut „1 e + a“ mitzählen",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "funk-synkopen.musicxml"
+  },
+  {
+   "id": "rock-achtel",
+   "title": "Rock-Achtel",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 1,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-achtel.musicxml"
+  },
+  {
+   "id": "rock-viertel",
+   "title": "Rock 1 – Viertel auf dem Grundton",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 1,
+   "source": "eigene Übung: gleichmäßig, jeder Ton gleich laut",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-viertel.musicxml"
+  },
+  {
+   "id": "rock-quinte-oktave",
+   "title": "Rock 2 – Grundton, Quinte, Oktave",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 1,
+   "source": "eigene Übung: ein Griffmuster für alle Akkorde",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-quinte-oktave.musicxml"
+  },
+  {
+   "id": "rock-shuffle",
+   "title": "Rock 3 – Shuffle (12-Takt in A)",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 2,
+   "source": "eigene Übung: 12/8, lang–kurz; Grundton, Quinte, Sexte",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-shuffle.musicxml"
+  },
+  {
+   "id": "punk-achtel",
+   "title": "Rock 4 – Punk-Achtel",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 2,
+   "source": "eigene Übung: schnelle Achtel, nur Abschlag, Betonung auf 1 und 3",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "punk-achtel.musicxml"
+  },
+  {
+   "id": "rock-ballade",
+   "title": "Rock 6 – Ballade mit Durchgangstönen",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 2,
+   "source": "eigene Übung: Basslinie läuft stufenweise abwärts",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-ballade.musicxml"
+  },
+  {
+   "id": "rock-galopp",
+   "title": "Rock 5 – Galopp",
+   "composer": "Übung",
+   "cat": "Rock",
+   "level": 3,
+   "source": "eigene Übung: Achtel + zwei Sechzehntel, gleichmäßig wechselschlagen",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "rock-galopp.musicxml"
+  },
+  {
    "id": "blues-grundton",
    "title": "12-Takt-Blues in E – Grundton",
    "composer": "Übung",
@@ -80,56 +300,6 @@
    "source": "eigene Übung",
    "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
    "file": "blues-grundton.musicxml"
-  },
-  {
-   "id": "blues-boogie",
-   "title": "12-Takt-Blues in E – Boogie",
-   "composer": "Übung",
-   "cat": "Übungen",
-   "level": 2,
-   "source": "eigene Übung",
-   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
-   "file": "blues-boogie.musicxml"
-  },
-  {
-   "id": "blues-walking",
-   "title": "12-Takt-Blues in E – Walking Bass",
-   "composer": "Übung",
-   "cat": "Übungen",
-   "level": 3,
-   "source": "eigene Übung: Grundton, Terz, Quinte, Annäherung an den nächsten Grundton",
-   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
-   "file": "blues-walking.musicxml"
-  },
-  {
-   "id": "rock-achtel",
-   "title": "Rock-Achtel",
-   "composer": "Übung",
-   "cat": "Übungen",
-   "level": 1,
-   "source": "eigene Übung",
-   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
-   "file": "rock-achtel.musicxml"
-  },
-  {
-   "id": "reggae",
-   "title": "Reggae-Muster",
-   "composer": "Übung",
-   "cat": "Übungen",
-   "level": 2,
-   "source": "eigene Übung: Schlag 1 frei lassen",
-   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
-   "file": "reggae.musicxml"
-  },
-  {
-   "id": "funk-oktaven",
-   "title": "Funk-Oktaven",
-   "composer": "Übung",
-   "cat": "Übungen",
-   "level": 3,
-   "source": "eigene Übung: Sechzehntel, Grundton und Oktave",
-   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
-   "file": "funk-oktaven.musicxml"
   },
   {
    "id": "country",
@@ -152,6 +322,26 @@
    "file": "tonleitern.musicxml"
   },
   {
+   "id": "blues-boogie",
+   "title": "12-Takt-Blues in E – Boogie",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 2,
+   "source": "eigene Übung",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "blues-boogie.musicxml"
+  },
+  {
+   "id": "reggae",
+   "title": "Reggae-Muster",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 2,
+   "source": "eigene Übung: Schlag 1 frei lassen",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "reggae.musicxml"
+  },
+  {
    "id": "arpeggien",
    "title": "Arpeggien: C, F, G7, Am",
    "composer": "Übung",
@@ -160,6 +350,16 @@
    "source": "eigene Übung: Dreiklänge auf und ab",
    "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
    "file": "arpeggien.musicxml"
+  },
+  {
+   "id": "blues-walking",
+   "title": "12-Takt-Blues in E – Walking Bass",
+   "composer": "Übung",
+   "cat": "Übungen",
+   "level": 3,
+   "source": "eigene Übung: Grundton, Terz, Quinte, Annäherung an den nächsten Grundton",
+   "license": "Eigene Übung für diese App: CC0 (frei nutzbar)",
+   "file": "blues-walking.musicxml"
   }
  ]
 }
